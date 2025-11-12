@@ -1,0 +1,74 @@
+[gd_scene load_steps=2 format=3 uid="uid://co8jp6sy2u541"]
+
+[ext_resource type="Script" path="res://Scenes/MainMenu.gd" id="1_12pkj"]
+
+[node name="Control" type="Control"]
+layout_mode = 3
+anchors_preset = 0
+script = ExtResource("1_12pkj")
+
+[node name="CenterContainer" type="CenterContainer" parent="."]
+layout_mode = 1
+offset_right = 1304.0
+offset_bottom = 719.0
+
+[node name="Panel" type="Panel" parent="CenterContainer"]
+layout_mode = 2
+
+[node name="MarginContainer" type="MarginContainer" parent="CenterContainer/Panel"]
+layout_mode = 0
+offset_left = -568.0
+offset_top = -305.0
+offset_right = 580.0
+offset_bottom = 328.0
+theme_override_constants/margin_left = 100
+theme_override_constants/margin_top = 16
+
+[node name="VBoxContainer" type="VBoxContainer" parent="CenterContainer/Panel/MarginContainer"]
+layout_mode = 2
+theme_override_constants/separation = 16
+
+[node name="Label" type="Label" parent="CenterContainer/Panel/MarginContainer/VBoxContainer"]
+layout_mode = 2
+theme_override_font_sizes/font_size = 50
+text = "Godot Animation Manager
+"
+
+[node name="HBoxContainer" type="HBoxContainer" parent="CenterContainer/Panel/MarginContainer/VBoxContainer"]
+layout_mode = 2
+
+[node name="NewProject" type="Button" parent="CenterContainer/Panel/MarginContainer/VBoxContainer/HBoxContainer"]
+layout_mode = 2
+text = "New Project"
+
+[node name="OpenProject" type="Button" parent="CenterContainer/Panel/MarginContainer/VBoxContainer/HBoxContainer"]
+layout_mode = 2
+text = "Open Project"
+
+[node name="Control" type="Control" parent="CenterContainer/Panel/MarginContainer/VBoxContainer/HBoxContainer"]
+layout_mode = 2
+
+[node name="Label2" type="Label" parent="CenterContainer/Panel/MarginContainer/VBoxContainer"]
+layout_mode = 2
+text = "Recent Projects"
+
+[node name="RecentList" type="ItemList" parent="CenterContainer/Panel/MarginContainer/VBoxContainer"]
+layout_mode = 2
+
+[node name="HBoxContainer2" type="HBoxContainer" parent="CenterContainer/Panel/MarginContainer/VBoxContainer"]
+layout_mode = 2
+
+[node name="Remove" type="Button" parent="CenterContainer/Panel/MarginContainer/VBoxContainer/HBoxContainer2"]
+layout_mode = 2
+text = "Remove Selected"
+
+[node name="Quit" type="Button" parent="CenterContainer/Panel/MarginContainer/VBoxContainer/HBoxContainer2"]
+layout_mode = 2
+text = "Quit"
+
+[node name="NewDialog" type="FileDialog" parent="CenterContainer/Panel/MarginContainer/VBoxContainer"]
+size = Vector2i(392, 159)
+
+[node name="OpenDialog" type="FileDialog" parent="CenterContainer/Panel/MarginContainer/VBoxContainer"]
+
+[node name="NoticeDialog" type="AcceptDialog" parent="CenterContainer/Panel/MarginContainer/VBoxContainer"]

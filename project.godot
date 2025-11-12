@@ -11,8 +11,17 @@ config_version=5
 [application]
 
 config/name="GodotAnimationManager"
+run/main_scene="res://Scenes/MainMenu.tscn"
 config/features=PackedStringArray("4.2", "GL Compatibility")
 config/icon="res://icon.svg"
+
+[autoload]
+
+AppState="*res://ProjectSettings/Autoload/AppState.gd"
+
+[display]
+
+window/size/mode=2
 
 [dotnet]
 
