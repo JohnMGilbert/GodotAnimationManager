@@ -1,6 +1,8 @@
-[gd_scene load_steps=2 format=3 uid="uid://bqa0mw31xhwuj"]
+[gd_scene load_steps=4 format=3 uid="uid://bqa0mw31xhwuj"]
 
 [ext_resource type="Script" path="res://Scenes/workspace.gd" id="1_myusm"]
+[ext_resource type="Texture2D" uid="uid://m6fplntqdpwe" path="res://Assets/art-studies.png" id="2_mcmut"]
+[ext_resource type="Texture2D" uid="uid://co0e07tc2y558" path="res://Assets/wave-sound.png" id="3_bgert"]
 
 [node name="Workspace" type="Control"]
 layout_mode = 3
@@ -9,8 +11,8 @@ script = ExtResource("1_myusm")
 
 [node name="RootVBox" type="VBoxContainer" parent="."]
 layout_mode = 0
-offset_right = 1149.0
-offset_bottom = 647.0
+offset_right = 1163.0
+offset_bottom = 649.0
 theme_override_constants/separation = 6
 
 [node name="VS_Main_Assets" type="VSplitContainer" parent="RootVBox"]
@@ -19,59 +21,79 @@ layout_mode = 2
 [node name="HS_Edit_Sidebar" type="HSplitContainer" parent="RootVBox/VS_Main_Assets"]
 layout_mode = 2
 
-[node name="BuilderPanel" type="Panel" parent="RootVBox/VS_Main_Assets/HS_Edit_Sidebar"]
-custom_minimum_size = Vector2(800, 360)
+[node name="BuilderPanel" type="PanelContainer" parent="RootVBox/VS_Main_Assets/HS_Edit_Sidebar"]
+custom_minimum_size = Vector2(600, 500)
 layout_mode = 2
+size_flags_horizontal = 3
 
 [node name="BuilderView" type="Control" parent="RootVBox/VS_Main_Assets/HS_Edit_Sidebar/BuilderPanel"]
-layout_mode = 1
-anchor_right = 1.0
-anchor_bottom = 1.0
-grow_horizontal = 2
-grow_vertical = 2
+layout_mode = 2
 
 [node name="VS_Preview_Inspector" type="VSplitContainer" parent="RootVBox/VS_Main_Assets/HS_Edit_Sidebar"]
 layout_mode = 2
 
 [node name="PreviewPanel" type="PanelContainer" parent="RootVBox/VS_Main_Assets/HS_Edit_Sidebar/VS_Preview_Inspector"]
-custom_minimum_size = Vector2(200, 300)
+custom_minimum_size = Vector2(50, 50)
 layout_mode = 2
+size_flags_vertical = 3
 
 [node name="PreviewView" type="Control" parent="RootVBox/VS_Main_Assets/HS_Edit_Sidebar/VS_Preview_Inspector/PreviewPanel"]
 layout_mode = 2
 
 [node name="InspectorPanel" type="PanelContainer" parent="RootVBox/VS_Main_Assets/HS_Edit_Sidebar/VS_Preview_Inspector"]
-custom_minimum_size = Vector2(320, 380)
+custom_minimum_size = Vector2(300, 375)
 layout_mode = 2
+size_flags_vertical = 3
 
 [node name="InspectorTabs" type="TabContainer" parent="RootVBox/VS_Main_Assets/HS_Edit_Sidebar/VS_Preview_Inspector/InspectorPanel"]
 layout_mode = 2
+theme_override_font_sizes/font_size = 13
 
-[node name="PropertiesTab" type="Control" parent="RootVBox/VS_Main_Assets/HS_Edit_Sidebar/VS_Preview_Inspector/InspectorPanel/InspectorTabs"]
+[node name="Properties" type="Control" parent="RootVBox/VS_Main_Assets/HS_Edit_Sidebar/VS_Preview_Inspector/InspectorPanel/InspectorTabs"]
 layout_mode = 2
 
-[node name="ExportTab" type="Control" parent="RootVBox/VS_Main_Assets/HS_Edit_Sidebar/VS_Preview_Inspector/InspectorPanel/InspectorTabs"]
+[node name="Export" type="Control" parent="RootVBox/VS_Main_Assets/HS_Edit_Sidebar/VS_Preview_Inspector/InspectorPanel/InspectorTabs"]
 visible = false
 layout_mode = 2
 
+[node name="Label" type="Label" parent="RootVBox/VS_Main_Assets/HS_Edit_Sidebar/VS_Preview_Inspector/InspectorPanel/InspectorTabs/Export"]
+layout_mode = 0
+offset_right = 40.0
+offset_bottom = 23.0
+
 [node name="AssetsPanel" type="PanelContainer" parent="RootVBox/VS_Main_Assets"]
-custom_minimum_size = Vector2(2.08165e-12, 180)
 layout_mode = 2
 
 [node name="HSplitContainer" type="HSplitContainer" parent="RootVBox/VS_Main_Assets/AssetsPanel"]
+layout_direction = 2
 layout_mode = 2
+collapsed = true
+dragger_visibility = 2
 
 [node name="AssetsTabBar" type="VBoxContainer" parent="RootVBox/VS_Main_Assets/AssetsPanel/HSplitContainer"]
 layout_mode = 2
 
-[node name="Tab_Sprites" type="Button" parent="RootVBox/VS_Main_Assets/AssetsPanel/HSplitContainer/AssetsTabBar"]
+[node name="Tab_Sprites" type="TextureButton" parent="RootVBox/VS_Main_Assets/AssetsPanel/HSplitContainer/AssetsTabBar"]
+custom_minimum_size = Vector2(40, 40)
 layout_mode = 2
+size_flags_horizontal = 4
+size_flags_vertical = 6
+texture_normal = ExtResource("2_mcmut")
+ignore_texture_size = true
+stretch_mode = 0
 
-[node name="Tab_Sound" type="Button" parent="RootVBox/VS_Main_Assets/AssetsPanel/HSplitContainer/AssetsTabBar"]
+[node name="Tab_Sound" type="TextureButton" parent="RootVBox/VS_Main_Assets/AssetsPanel/HSplitContainer/AssetsTabBar"]
+custom_minimum_size = Vector2(40, 40)
 layout_mode = 2
+size_flags_horizontal = 4
+size_flags_vertical = 6
+texture_normal = ExtResource("3_bgert")
+ignore_texture_size = true
+stretch_mode = 0
 
 [node name="AssetsTab" type="TabContainer" parent="RootVBox/VS_Main_Assets/AssetsPanel/HSplitContainer"]
 layout_mode = 2
+tabs_visible = false
 
 [node name="TabPage_Sprites" type="VBoxContainer" parent="RootVBox/VS_Main_Assets/AssetsPanel/HSplitContainer/AssetsTab"]
 layout_mode = 2
@@ -80,6 +102,7 @@ layout_mode = 2
 layout_mode = 2
 
 [node name="Search_Sprites" type="LineEdit" parent="RootVBox/VS_Main_Assets/AssetsPanel/HSplitContainer/AssetsTab/TabPage_Sprites/Toolbar_Sprites"]
+custom_minimum_size = Vector2(200, 2.08165e-12)
 layout_mode = 2
 
 [node name="Filter_Sprites" type="OptionButton" parent="RootVBox/VS_Main_Assets/AssetsPanel/HSplitContainer/AssetsTab/TabPage_Sprites/Toolbar_Sprites"]

@@ -26,6 +26,11 @@ const FALLBACK_MIN_ASSETS    := Vector2i(400, 180)
 @onready var assets_tabbar: Control   = $RootVBox/VS_Main_Assets/AssetsPanel/HSplitContainer/AssetsTabBar
 @onready var assets_tabs: Control     = $RootVBox/VS_Main_Assets/AssetsPanel/HSplitContainer/AssetsTab  # If yours is "AssetsTabs", change here.
 
+# --- Assets vertical tabs (Sprites / Sound) ---
+@onready var tab_sprites_btn: TextureButton   = $RootVBox/VS_Main_Assets/AssetsPanel/HSplitContainer/AssetsTabBar/Tab_Sprites
+@onready var tab_sound_btn: TextureButton     = $RootVBox/VS_Main_Assets/AssetsPanel/HSplitContainer/AssetsTabBar/Tab_Sound
+@onready var tab_buttons: Array[TextureButton] = []
+
 func _ready() -> void:
 
 	# 1) Make sure everything can expand
@@ -37,6 +42,10 @@ func _ready() -> void:
 	# 3) Refit on window/viewport resize (deferred)
 	get_window().size_changed.connect(func(): call_deferred("_apply_responsive_splits_deferred"))
 	get_viewport().size_changed.connect(func(): call_deferred("_apply_responsive_splits_deferred"))
+	
+	tab_buttons = [tab_sprites_btn, tab_sound_btn]
+	_connect_asset_tabs()
+	_select_asset_tab(0)  # default to Sprites
 
 func _apply_responsive_splits_deferred() -> void:
 	# Wait one more frame to ensure sizes are final during resize drags on some platforms
@@ -166,3 +175,21 @@ func _assert_two_children(split: SplitContainer) -> void:
 	if split == null: return
 	if split.get_child_count() != 2:
 		push_warning("%s should have exactly 2 children, has %d" % [split.name, split.get_child_count()])
+
+
+func _connect_asset_tabs() -> void:
+	for i in tab_buttons.size():
+		var b: TextureButton = tab_buttons[i]
+		b.toggle_mode = true
+		b.button_pressed = false
+		b.pressed.connect(func(idx := i) -> void:
+			_select_asset_tab(idx))
+
+func _select_asset_tab(index: int) -> void:
+	var max_index: int = assets_tabs.get_tab_count() - 1
+	index = clamp(index, 0, max_index)
+
+	for j in tab_buttons.size():
+		tab_buttons[j].button_pressed = (j == index)
+
+	assets_tabs.current_tab = index
