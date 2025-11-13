@@ -1,0 +1,15 @@
+{
+	"animations": [],
+	"assets": {
+		"audio": [],
+		"sprites": [
+			"assets/sprites/dndbackground.jpg",
+			"assets/sprites/dndbackground_1.jpg",
+			"assets/sprites/art-studies.png"
+		]
+	},
+	"created_at": "2025-11-12T17:25:55",
+	"name": "testing_import",
+	"schema": "aam.v1",
+	"tags": []
+}

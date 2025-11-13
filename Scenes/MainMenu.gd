@@ -95,9 +95,21 @@ func _on_recent_activated(index: int) -> void:
 	_goto_project(path)
 
 func _goto_project(path: String) -> void:
-	# TODO: Replace with your actual Project Workspace scene once ready.
-	# For now, just show a notice so the flow is testable.
-	_alert("Opened project:\n%s" % path)
+	# Normalize to absolute, open the .aam
+	var abs: String = ProjectSettings.globalize_path(path)
+	var err: int = ProjectModel.open(abs)
+	if err != OK:
+		_alert("Could not open project:\n%s\n\nError: %s" % [abs, error_string(err)])
+		return
+
+	# Close any open modal to avoid blocking the scene change
+	if is_instance_valid($CenterContainer/Panel/MarginContainer/VBoxContainer/NoticeDialog) and $CenterContainer/Panel/MarginContainer/VBoxContainer/NoticeDialog.visible:
+		$CenterContainer/Panel/MarginContainer/VBoxContainer/NoticeDialog.hide()
+
+	# Change to workspace
+	var scene_err := get_tree().change_scene_to_file("res://scenes/Workspace.tscn")
+	if scene_err != OK:
+		_alert("Failed to load Workspace.tscn\nError: %s" % error_string(scene_err))
 
 func _alert(msg: String) -> void:
 	notice.title = "Notice"

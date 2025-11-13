@@ -18,6 +18,7 @@ config/icon="res://icon.svg"
 [autoload]
 
 AppState="*res://ProjectSettings/Autoload/AppState.gd"
+ProjectModel="*res://ProjectSettings/Autoload/ProjectModel.gd"
 
 [display]
 
@@ -29,7 +30,12 @@ window/stretch/aspect="expand"
 
 project/assembly_name="GodotAnimationManager"
 
+[gui]
+
+theme/default_font_multichannel_signed_distance_field=true
+
 [rendering]
 
+textures/canvas_textures/default_texture_filter=2
 renderer/rendering_method="gl_compatibility"
 renderer/rendering_method.mobile="gl_compatibility"

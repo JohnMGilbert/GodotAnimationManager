@@ -1,0 +1,25 @@
+{
+	"animation": {
+		"sequences": [
+			[
+				"assets/sprites/mario_walk_1.png",
+				"assets/sprites/Mario_walk_2.png",
+				"assets/sprites/Mario_walk_3.png",
+				"assets/sprites/Mario_walk_3.png"
+			]
+		]
+	},
+	"animations": [],
+	"assets": {
+		"audio": [],
+		"sprites": [
+			"assets/sprites/mario_walk_1.png",
+			"assets/sprites/Mario_walk_2.png",
+			"assets/sprites/Mario_walk_3.png"
+		]
+	},
+	"created_at": "2025-11-13T01:06:49",
+	"name": "mario",
+	"schema": "aam.v1",
+	"tags": []
+}

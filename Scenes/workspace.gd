@@ -31,6 +31,21 @@ const FALLBACK_MIN_ASSETS    := Vector2i(400, 180)
 @onready var tab_sound_btn: TextureButton     = $RootVBox/VS_Main_Assets/AssetsPanel/HSplitContainer/AssetsTabBar/Tab_Sound
 @onready var tab_buttons: Array[TextureButton] = []
 
+# Sprites UI
+@onready var list_sprites: ItemList    = $RootVBox/VS_Main_Assets/AssetsPanel/HSplitContainer/AssetsTab/TabPage_Sprites/List_Sprites
+@onready var btn_import_sprites: Button = $RootVBox/VS_Main_Assets/AssetsPanel/HSplitContainer/AssetsTab/TabPage_Sprites/Toolbar_Sprites/Btn_ImportSprites
+@onready var fd_import_sprites: FileDialog = $FD_Import_Sprites
+
+@onready var builder_view: Node = $RootVBox/VS_Main_Assets/HS_Edit_Sidebar/BuilderPanel/BuilderView
+@onready var preview_sprite: AnimatedSprite2D = $RootVBox/VS_Main_Assets/HS_Edit_Sidebar/VS_Preview_Inspector/PreviewPanel/PreviewView/PreviewSprite
+
+@onready var btn_builder_settings: TextureButton = $RootVBox/VS_Main_Assets/HS_Edit_Sidebar/BuilderPanel/BuilderOverlay/Btn_BuilderSettings
+@onready var settings_window: Window = $RootVBox/SettingsWindow
+
+var preview_fps: float = 8.0
+var export_repo_path: String = ""   # Godot project / destination repo
+
+
 func _ready() -> void:
 
 	# 1) Make sure everything can expand
@@ -46,6 +61,46 @@ func _ready() -> void:
 	tab_buttons = [tab_sprites_btn, tab_sound_btn]
 	_connect_asset_tabs()
 	_select_asset_tab(0)  # default to Sprites
+	
+	_wire_sprite_import_ui()
+	_refresh_sprite_list()
+
+	# OS drag-and-drop (drop files from desktop)
+	# TEMP: test OS-level file drop
+	var win := get_window()
+	if win:
+		win.files_dropped.connect(_on_os_files_dropped)
+	
+	_setup_sprite_list()
+	_refresh_sprite_list()
+	
+	if builder_view:
+		builder_view.sequences_changed.connect(_on_builder_sequences_changed)
+		# Seed once at scene load
+		_on_builder_sequences_changed(builder_view.get_row_sequences())
+		
+	if btn_builder_settings:
+		btn_builder_settings.pressed.connect(_on_builder_settings_pressed)
+
+	if settings_window:
+		settings_window.settings_applied.connect(_on_settings_applied)
+		
+
+func _on_os_files_dropped(files: PackedStringArray) -> void:
+	var imgs: Array[String] = []
+	for f in files:
+		var ext := f.get_extension().to_lower()
+		if ext == "png" or ext == "jpg" or ext == "jpeg" or ext == "webp":
+			imgs.append(f)
+	if imgs.is_empty():
+		print("Dropped files, but none were images:", files)
+		return
+
+	var err := ProjectModel.import_sprites(imgs)
+	if err != OK:
+		_notify("Failed to import some sprites from OS drop (code %d)." % err)
+
+	_refresh_sprite_list()
 
 func _apply_responsive_splits_deferred() -> void:
 	# Wait one more frame to ensure sizes are final during resize drags on some platforms
@@ -176,6 +231,32 @@ func _assert_two_children(split: SplitContainer) -> void:
 	if split.get_child_count() != 2:
 		push_warning("%s should have exactly 2 children, has %d" % [split.name, split.get_child_count()])
 
+func _on_builder_settings_pressed() -> void:
+	print("Pressed settings button")
+	if settings_window:
+		if builder_view:
+			settings_window.set_current_values(builder_view.cell_size, preview_fps, export_repo_path)
+		settings_window.popup_centered()
+
+func _on_settings_applied(grid_cell_size: int, preview_fps_new: float, repo_path: String) -> void:
+	# Save repo path (even if empty)
+	export_repo_path = repo_path
+
+	# Apply to grid
+	if builder_view:
+		builder_view.cell_size = grid_cell_size
+		builder_view._update_grid_dims()
+		builder_view.queue_redraw()
+		builder_view._emit_sequences()
+
+	# Apply to preview
+	preview_fps = preview_fps_new
+	_on_builder_sequences_changed(builder_view.get_row_sequences())
+
+	# Optional: persist in ProjectModel (see next section)
+	if repo_path != "":
+		ProjectModel.set_export_repo(repo_path)
+
 
 func _connect_asset_tabs() -> void:
 	for i in tab_buttons.size():
@@ -193,3 +274,137 @@ func _select_asset_tab(index: int) -> void:
 		tab_buttons[j].button_pressed = (j == index)
 
 	assets_tabs.current_tab = index
+	
+	
+func _wire_sprite_import_ui() -> void:
+	if btn_import_sprites:
+		btn_import_sprites.pressed.connect(func() -> void:
+			if fd_import_sprites:
+				fd_import_sprites.access = FileDialog.ACCESS_FILESYSTEM
+				fd_import_sprites.file_mode = FileDialog.FILE_MODE_OPEN_FILES
+				fd_import_sprites.filters = PackedStringArray([
+					"*.png ; PNG Images",
+					"*.jpg, *.jpeg ; JPEG Images",
+					"*.webp ; WebP Images"
+				])
+				fd_import_sprites.popup_centered_ratio(0.75)
+		)
+
+	if fd_import_sprites:
+		fd_import_sprites.files_selected.connect(_on_sprite_files_selected)
+
+func _on_sprite_files_selected(files: PackedStringArray) -> void:
+	var ok := ProjectModel.import_sprites(files)
+	if ok != OK:
+		_notify("Failed to import some sprites (code %d)." % ok)
+	_refresh_sprite_list()
+
+func _on_files_dropped(files: PackedStringArray) -> void:
+	var imgs: Array[String] = []
+	for f in files:
+		var ext := f.get_extension().to_lower()
+		if ext == "png" or ext == "jpg" or ext == "jpeg" or ext == "webp":
+			imgs.append(f)
+	if imgs.is_empty():
+		return
+	var ok := ProjectModel.import_sprites(imgs)
+	if ok != OK:
+		_notify("Failed to import some sprites (code %d)." % ok)
+	_refresh_sprite_list()
+
+func _setup_sprite_list() -> void:
+	if list_sprites == null: return
+	# Nice grid of thumbnails:
+	list_sprites.icon_mode = ItemList.ICON_MODE_TOP       # icon above text
+	list_sprites.same_column_width = true
+	list_sprites.fixed_icon_size = Vector2i(96, 96)        # thumbnail box
+	list_sprites.max_columns = 0                           # auto columns
+	list_sprites.allow_reselect = true
+
+
+func _refresh_sprite_list() -> void:
+	if list_sprites == null: return
+	list_sprites.clear()
+
+	if ProjectModel.project_dir == "":
+		push_warning("No project open; cannot list sprites.")
+		return
+
+	var rel_paths: Array[String] = ProjectModel.get_sprites()
+	if rel_paths.is_empty():
+		list_sprites.add_item("(no sprites yet)")
+		return
+
+	for rel in rel_paths:
+		var abs := ProjectModel.project_dir.path_join(rel)
+		var tex := _thumb_from_path(abs, 96)
+		var label := rel.get_file()
+		var idx := list_sprites.add_item(label)
+		list_sprites.set_item_metadata(idx, rel)   # <-- this line is essential
+		if tex != null:
+			list_sprites.set_item_icon(idx, tex)
+			
+func _sprite_abs_path(rel: String) -> String:
+	# rel e.g. "assets/sprites/hero_idle.png"
+	return ProjectModel.project_dir.path_join(rel)
+
+func _thumb_from_path(abs: String, box: int) -> Texture2D:
+	var img := Image.new()
+	var err: int = img.load(abs)
+	if err != OK:
+		return null
+
+	# Keep aspect; fit longest side into 'box'
+	var w: int = img.get_width()
+	var h: int = img.get_height()
+	var longest: float = float(max(w, h))
+	if longest > float(box):
+		var scale := float(box) / longest
+		var nw := int(round(w * scale))
+		var nh := int(round(h * scale))
+		img.resize(nw, nh, Image.INTERPOLATE_LANCZOS)
+
+	return ImageTexture.create_from_image(img)
+
+func _notify(msg: String) -> void:
+	# lightweight notification; wire to an AcceptDialog if you already have one
+	print(msg)
+
+
+func _on_builder_sequences_changed(sequences: Array) -> void:
+	if preview_sprite == null:
+		return
+
+	if sequences.is_empty():
+		preview_sprite.sprite_frames = null
+		return
+
+	var first_seq: Array = sequences[0]  # use the first row/run as the preview
+	if first_seq.is_empty():
+		preview_sprite.sprite_frames = null
+		return
+
+	var frames := SpriteFrames.new()
+	var anim_name := "preview"
+	frames.add_animation(anim_name)
+	frames.set_animation_speed(anim_name, 8.0)  # tweak FPS as you like
+	frames.set_animation_loop(anim_name, true)
+
+	for rel in first_seq:
+		var tex: Texture2D = _texture_from_sprite_rel(String(rel))
+		if tex != null:
+			frames.add_frame(anim_name, tex)
+
+	preview_sprite.sprite_frames = frames
+	preview_sprite.animation = anim_name
+	preview_sprite.play()
+	
+	ProjectModel.set_sequences_from_builder(sequences)
+
+func _texture_from_sprite_rel(rel: String) -> Texture2D:
+	var abs: String = ProjectModel.project_dir.path_join(rel)
+	var img := Image.new()
+	var err: int = img.load(abs)
+	if err != OK:
+		return null
+	return ImageTexture.create_from_image(img)
