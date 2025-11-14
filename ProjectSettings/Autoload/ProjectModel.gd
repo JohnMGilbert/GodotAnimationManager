@@ -124,3 +124,105 @@ func set_export_repo(path: String) -> void:
 	export_dict["repo_path"] = path
 	data["export"] = export_dict
 	save()
+	
+const ERR_NO_PROJECT        := 1001
+const ERR_NO_REPO           := 1002
+const ERR_NO_SEQUENCES      := 1003
+const ERR_COPY_FAILED       := 1004
+const ERR_MANIFEST_FAILED   := 1005
+
+func export_animation() -> int:
+	# 1) Basic validation
+	if project_dir == "":
+		push_error("ProjectModel.export_animation: no project open.")
+		return ERR_NO_PROJECT
+
+	if export_repo_path == "":
+		push_error("ProjectModel.export_animation: no export repo path set.")
+		return ERR_NO_REPO
+
+	if not data.has("animation"):
+		push_error("ProjectModel.export_animation: no 'animation' block in data.")
+		return ERR_NO_SEQUENCES
+
+	var anim_block = data["animation"]
+	if not (anim_block is Dictionary) or not anim_block.has("sequences"):
+		push_error("ProjectModel.export_animation: no 'sequences' in animation block.")
+		return ERR_NO_SEQUENCES
+
+	var sequences: Array = anim_block["sequences"]
+	if sequences.is_empty():
+		push_error("ProjectModel.export_animation: sequences array is empty.")
+		return ERR_NO_SEQUENCES
+
+	# 2) Decide export layout under the game repo
+	var repo_root := export_repo_path.rstrip("/")  # absolute dir
+	# Use the builder project folder name as animation name
+	var anim_name := project_dir.get_file()  # e.g., "GoblinWalkProject"
+
+	var frames_rel_dir := "art/sprites/%s" % anim_name
+	var frames_abs_dir := repo_root.path_join(frames_rel_dir)
+
+	var manifest_rel_path := "art/animations/%s.json" % anim_name
+	var manifest_abs_path := repo_root.path_join(manifest_rel_path)
+
+	# 3) Create directories
+	var err := DirAccess.make_dir_recursive_absolute(frames_abs_dir)
+	if err != OK:
+		push_error("export_animation: failed to create frames dir: %s (err %d)" % [frames_abs_dir, err])
+		return ERR_COPY_FAILED
+
+	err = DirAccess.make_dir_recursive_absolute(manifest_abs_path.get_base_dir())
+	if err != OK:
+		push_error("export_animation: failed to create manifest dir: %s (err %d)" % [manifest_abs_path.get_base_dir(), err])
+		return ERR_MANIFEST_FAILED
+
+	# 4) Copy all referenced sprite files into frames_abs_dir
+	var copied: Dictionary = {}  # src_abs -> dst_filename (to avoid duplicate copies)
+	var sequences_filenames: Array = []  # Array[Array[String]] of filenames only
+
+	for seq in sequences:
+		if not (seq is Array):
+			continue
+		var seq_names: Array = []
+		for rel in seq:
+			var rel_str := String(rel)
+			var src_abs := project_dir.path_join(rel_str)
+			var file_name := rel_str.get_file()
+			var dst_abs := frames_abs_dir.path_join(file_name)
+
+			if not copied.has(src_abs):
+				# Copy if not already done
+				var copy_err := DirAccess.copy_absolute(src_abs, dst_abs)
+				if copy_err != OK:
+					push_error("export_animation: failed to copy %s -> %s (err %d)" % [src_abs, dst_abs, copy_err])
+					return ERR_COPY_FAILED
+				copied[src_abs] = file_name
+
+			seq_names.append(file_name)
+		if not seq_names.is_empty():
+			sequences_filenames.append(seq_names)
+
+	if sequences_filenames.is_empty():
+		push_error("export_animation: no usable frames after processing sequences.")
+		return ERR_NO_SEQUENCES
+
+	# 5) Write a simple JSON manifest
+	var manifest: Dictionary = {
+		"name": anim_name,
+		"frames_dir": frames_rel_dir,          # e.g., "art/sprites/GoblinWalkProject"
+		"sequences": sequences_filenames      # e.g., [["idle_1.png", "idle_2.png"], ["run_1.png", ...]]
+	}
+
+	var file := FileAccess.open(manifest_abs_path, FileAccess.WRITE)
+	if file == null:
+		push_error("export_animation: could not open manifest for writing: %s" % manifest_abs_path)
+		return ERR_MANIFEST_FAILED
+
+	var json_str := JSON.stringify(manifest, "\t")
+	file.store_string(json_str)
+	file.close()
+
+	print("Exported animation manifest to: ", manifest_abs_path)
+	print("Frames directory: ", frames_abs_dir)
+	return OK

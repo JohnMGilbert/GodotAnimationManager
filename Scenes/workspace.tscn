@@ -34,12 +34,9 @@ size_flags_horizontal = 3
 layout_mode = 2
 script = ExtResource("2_fn6k4")
 
-[node name="BuilderOverlay" type="Control" parent="RootVBox/VS_Main_Assets/HS_Edit_Sidebar/BuilderPanel"]
-layout_mode = 2
-mouse_filter = 1
+[node name="BuilderOverlay" type="CanvasLayer" parent="RootVBox/VS_Main_Assets/HS_Edit_Sidebar/BuilderPanel"]
 
 [node name="Btn_BuilderSettings" type="TextureButton" parent="RootVBox/VS_Main_Assets/HS_Edit_Sidebar/BuilderPanel/BuilderOverlay"]
-layout_mode = 0
 offset_right = 512.0
 offset_bottom = 512.0
 scale = Vector2(0.1, 0.1)
@@ -72,16 +69,23 @@ layout_mode = 2
 theme_override_font_sizes/font_size = 13
 
 [node name="Properties" type="Control" parent="RootVBox/VS_Main_Assets/HS_Edit_Sidebar/VS_Preview_Inspector/InspectorPanel/InspectorTabs"]
+visible = false
 layout_mode = 2
 
 [node name="Export" type="Control" parent="RootVBox/VS_Main_Assets/HS_Edit_Sidebar/VS_Preview_Inspector/InspectorPanel/InspectorTabs"]
-visible = false
 layout_mode = 2
+
+[node name="Btn_Export" type="Button" parent="RootVBox/VS_Main_Assets/HS_Edit_Sidebar/VS_Preview_Inspector/InspectorPanel/InspectorTabs/Export"]
+layout_mode = 0
+offset_right = 8.0
+offset_bottom = 8.0
+text = "Export"
 
 [node name="Label" type="Label" parent="RootVBox/VS_Main_Assets/HS_Edit_Sidebar/VS_Preview_Inspector/InspectorPanel/InspectorTabs/Export"]
 layout_mode = 0
 offset_right = 40.0
 offset_bottom = 23.0
+text = "Export"
 
 [node name="AssetsPanel" type="PanelContainer" parent="RootVBox/VS_Main_Assets"]
 layout_mode = 2

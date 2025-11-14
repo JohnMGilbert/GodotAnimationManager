@@ -42,6 +42,9 @@ const FALLBACK_MIN_ASSETS    := Vector2i(400, 180)
 @onready var btn_builder_settings: TextureButton = $RootVBox/VS_Main_Assets/HS_Edit_Sidebar/BuilderPanel/BuilderOverlay/Btn_BuilderSettings
 @onready var settings_window: Window = $RootVBox/SettingsWindow
 
+@onready var btn_export: Button = $RootVBox/VS_Main_Assets/HS_Edit_Sidebar/VS_Preview_Inspector/InspectorPanel/InspectorTabs/Export/Btn_Export
+@onready var lbl_export_status: Label = $RootVBox/VS_Main_Assets/HS_Edit_Sidebar/VS_Preview_Inspector/InspectorPanel/InspectorTabs/Export/Label
+
 var preview_fps: float = 8.0
 var export_repo_path: String = ""   # Godot project / destination repo
 
@@ -84,6 +87,9 @@ func _ready() -> void:
 
 	if settings_window:
 		settings_window.settings_applied.connect(_on_settings_applied)
+		
+	if btn_export:
+		btn_export.pressed.connect(_on_export_pressed)
 		
 
 func _on_os_files_dropped(files: PackedStringArray) -> void:
@@ -408,3 +414,20 @@ func _texture_from_sprite_rel(rel: String) -> Texture2D:
 	if err != OK:
 		return null
 	return ImageTexture.create_from_image(img)
+	
+func _on_export_pressed() -> void:
+	# Ensure the repo path is in ProjectModel (if you track it in workspace)
+	if export_repo_path != "":
+		ProjectModel.set_export_repo(export_repo_path)
+
+	var err := ProjectModel.export_animation()
+	if err != OK:
+		var msg := "Export failed (code %d)." % err
+		_notify(msg)
+		if lbl_export_status:
+			lbl_export_status.text = msg
+	else:
+		var msg := "Export complete."
+		_notify(msg)
+		if lbl_export_status:
+			lbl_export_status.text = msg
