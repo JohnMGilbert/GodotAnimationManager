@@ -42,8 +42,22 @@ const FALLBACK_MIN_ASSETS    := Vector2i(400, 180)
 @onready var btn_builder_settings: TextureButton = $RootVBox/VS_Main_Assets/HS_Edit_Sidebar/BuilderPanel/BuilderOverlay/Btn_BuilderSettings
 @onready var settings_window: Window = $RootVBox/SettingsWindow
 
-@onready var btn_export: Button = $RootVBox/VS_Main_Assets/HS_Edit_Sidebar/VS_Preview_Inspector/InspectorPanel/InspectorTabs/Export/Btn_Export
-@onready var lbl_export_status: Label = $RootVBox/VS_Main_Assets/HS_Edit_Sidebar/VS_Preview_Inspector/InspectorPanel/InspectorTabs/Export/Label
+@onready var le_repo_path: LineEdit = $RootVBox/VS_Main_Assets/HS_Edit_Sidebar/VS_Preview_Inspector/InspectorPanel/InspectorTabs/Export/Section_Destination/HBoxContainer/LineEdit_GameRepoPath
+@onready var le_anim_name: LineEdit = $RootVBox/VS_Main_Assets/HS_Edit_Sidebar/VS_Preview_Inspector/InspectorPanel/InspectorTabs/Export/Section_Destination/Section_AnimName/LineEdit_AnimName
+
+@onready var rb_json: RadioButton = $RootVBox
+@onready var rb_tres: RadioButton = $RootVBox
+@onready var rb_tscn: RadioButton = $RootVBox/.../ExportTab/Section_Format/.../RB_Format_TSCN
+
+@onready var cb_trim: CheckBox = $RootVBox/.../ExportTab/Section_Options/CheckBox_Trim
+@onready var cb_rename: CheckBox = $RootVBox/.../ExportTab/Section_Options/CheckBox_Rename
+@onready var cb_overwrite: CheckBox = $RootVBox/.../ExportTab/Section_Options/CheckBox_Overwrite
+@onready var cb_open: CheckBox = $RootVBox/.../ExportTab/Section_Options/CheckBox_OpenFolder
+
+@onready var btn_export: Button = $RootVBox/.../ExportTab/Btn_Export
+@onready var lbl_status: Label = $RootVBox/.../ExportTab/Label_ExportStatus
+#@onready var btn_export: Button = $RootVBox/VS_Main_Assets/HS_Edit_Sidebar/VS_Preview_Inspector/InspectorPanel/InspectorTabs/Export/Section_Destination/Btn_Export
+#@onready var lbl_export_status: Label = $RootVBox/VS_Main_Assets/HS_Edit_Sidebar/VS_Preview_Inspector/InspectorPanel/InspectorTabs/Export/Section_Destination/Label_Export_Status
 
 var preview_fps: float = 8.0
 var export_repo_path: String = ""   # Godot project / destination repo
