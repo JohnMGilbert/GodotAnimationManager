@@ -76,106 +76,106 @@ layout_mode = 0
 offset_right = 40.0
 offset_bottom = 22.3333
 
-[node name="Export" type="Control" parent="RootVBox/VS_Main_Assets/HS_Edit_Sidebar/VS_Preview_Inspector/InspectorPanel/InspectorTabs"]
-visible = false
+[node name="Export" type="ScrollContainer" parent="RootVBox/VS_Main_Assets/HS_Edit_Sidebar/VS_Preview_Inspector/InspectorPanel/InspectorTabs"]
 layout_mode = 2
 
-[node name="Section_Destination" type="VBoxContainer" parent="RootVBox/VS_Main_Assets/HS_Edit_Sidebar/VS_Preview_Inspector/InspectorPanel/InspectorTabs/Export"]
-layout_mode = 0
-offset_top = 27.0
-offset_right = 279.0
-offset_bottom = 427.0
+[node name="Export_Root" type="VBoxContainer" parent="RootVBox/VS_Main_Assets/HS_Edit_Sidebar/VS_Preview_Inspector/InspectorPanel/InspectorTabs/Export"]
+layout_mode = 2
 
-[node name="Label" type="Label" parent="RootVBox/VS_Main_Assets/HS_Edit_Sidebar/VS_Preview_Inspector/InspectorPanel/InspectorTabs/Export/Section_Destination"]
+[node name="Section_Destination" type="VBoxContainer" parent="RootVBox/VS_Main_Assets/HS_Edit_Sidebar/VS_Preview_Inspector/InspectorPanel/InspectorTabs/Export/Export_Root"]
+layout_mode = 2
+
+[node name="Label" type="Label" parent="RootVBox/VS_Main_Assets/HS_Edit_Sidebar/VS_Preview_Inspector/InspectorPanel/InspectorTabs/Export/Export_Root/Section_Destination"]
 layout_mode = 2
 text = "Destination"
 
-[node name="HBoxContainer" type="HBoxContainer" parent="RootVBox/VS_Main_Assets/HS_Edit_Sidebar/VS_Preview_Inspector/InspectorPanel/InspectorTabs/Export/Section_Destination"]
+[node name="HBoxContainer" type="HBoxContainer" parent="RootVBox/VS_Main_Assets/HS_Edit_Sidebar/VS_Preview_Inspector/InspectorPanel/InspectorTabs/Export/Export_Root/Section_Destination"]
 layout_mode = 2
 
-[node name="LineEdit_GameRepoPath" type="LineEdit" parent="RootVBox/VS_Main_Assets/HS_Edit_Sidebar/VS_Preview_Inspector/InspectorPanel/InspectorTabs/Export/Section_Destination/HBoxContainer"]
+[node name="LineEdit_GameRepoPath" type="LineEdit" parent="RootVBox/VS_Main_Assets/HS_Edit_Sidebar/VS_Preview_Inspector/InspectorPanel/InspectorTabs/Export/Export_Root/Section_Destination/HBoxContainer"]
 layout_mode = 2
 
-[node name="Btn_ChangeRepo" type="Button" parent="RootVBox/VS_Main_Assets/HS_Edit_Sidebar/VS_Preview_Inspector/InspectorPanel/InspectorTabs/Export/Section_Destination/HBoxContainer"]
+[node name="Btn_ChangeRepo" type="Button" parent="RootVBox/VS_Main_Assets/HS_Edit_Sidebar/VS_Preview_Inspector/InspectorPanel/InspectorTabs/Export/Export_Root/Section_Destination/HBoxContainer"]
 layout_mode = 2
 text = "Change Repo"
 
-[node name="Btn_OpenRepo" type="Button" parent="RootVBox/VS_Main_Assets/HS_Edit_Sidebar/VS_Preview_Inspector/InspectorPanel/InspectorTabs/Export/Section_Destination/HBoxContainer"]
+[node name="Btn_OpenRepo" type="Button" parent="RootVBox/VS_Main_Assets/HS_Edit_Sidebar/VS_Preview_Inspector/InspectorPanel/InspectorTabs/Export/Export_Root/Section_Destination/HBoxContainer"]
 layout_mode = 2
 text = "Open Repo"
 
-[node name="HSeparator" type="HSeparator" parent="RootVBox/VS_Main_Assets/HS_Edit_Sidebar/VS_Preview_Inspector/InspectorPanel/InspectorTabs/Export/Section_Destination"]
+[node name="HSeparator" type="HSeparator" parent="RootVBox/VS_Main_Assets/HS_Edit_Sidebar/VS_Preview_Inspector/InspectorPanel/InspectorTabs/Export/Export_Root/Section_Destination"]
 layout_mode = 2
 
-[node name="Section_AnimName" type="VBoxContainer" parent="RootVBox/VS_Main_Assets/HS_Edit_Sidebar/VS_Preview_Inspector/InspectorPanel/InspectorTabs/Export/Section_Destination"]
+[node name="Section_AnimName" type="VBoxContainer" parent="RootVBox/VS_Main_Assets/HS_Edit_Sidebar/VS_Preview_Inspector/InspectorPanel/InspectorTabs/Export/Export_Root/Section_Destination"]
 layout_mode = 2
 
-[node name="Label" type="Label" parent="RootVBox/VS_Main_Assets/HS_Edit_Sidebar/VS_Preview_Inspector/InspectorPanel/InspectorTabs/Export/Section_Destination/Section_AnimName"]
+[node name="Label" type="Label" parent="RootVBox/VS_Main_Assets/HS_Edit_Sidebar/VS_Preview_Inspector/InspectorPanel/InspectorTabs/Export/Export_Root/Section_Destination/Section_AnimName"]
 layout_mode = 2
 text = "Animation Name:"
 
-[node name="LineEdit_AnimName" type="LineEdit" parent="RootVBox/VS_Main_Assets/HS_Edit_Sidebar/VS_Preview_Inspector/InspectorPanel/InspectorTabs/Export/Section_Destination/Section_AnimName"]
+[node name="LineEdit_AnimName" type="LineEdit" parent="RootVBox/VS_Main_Assets/HS_Edit_Sidebar/VS_Preview_Inspector/InspectorPanel/InspectorTabs/Export/Export_Root/Section_Destination/Section_AnimName"]
 layout_mode = 2
 
-[node name="HSeparator2" type="HSeparator" parent="RootVBox/VS_Main_Assets/HS_Edit_Sidebar/VS_Preview_Inspector/InspectorPanel/InspectorTabs/Export/Section_Destination"]
+[node name="HSeparator2" type="HSeparator" parent="RootVBox/VS_Main_Assets/HS_Edit_Sidebar/VS_Preview_Inspector/InspectorPanel/InspectorTabs/Export/Export_Root/Section_Destination"]
 layout_mode = 2
 
-[node name="Section_Format" type="VBoxContainer" parent="RootVBox/VS_Main_Assets/HS_Edit_Sidebar/VS_Preview_Inspector/InspectorPanel/InspectorTabs/Export/Section_Destination"]
+[node name="Section_Format" type="VBoxContainer" parent="RootVBox/VS_Main_Assets/HS_Edit_Sidebar/VS_Preview_Inspector/InspectorPanel/InspectorTabs/Export/Export_Root/Section_Destination"]
 layout_mode = 2
 
-[node name="Label" type="Label" parent="RootVBox/VS_Main_Assets/HS_Edit_Sidebar/VS_Preview_Inspector/InspectorPanel/InspectorTabs/Export/Section_Destination/Section_Format"]
+[node name="Label" type="Label" parent="RootVBox/VS_Main_Assets/HS_Edit_Sidebar/VS_Preview_Inspector/InspectorPanel/InspectorTabs/Export/Export_Root/Section_Destination/Section_Format"]
 layout_mode = 2
 text = "Export Format"
 
-[node name="VBoxContainer" type="VBoxContainer" parent="RootVBox/VS_Main_Assets/HS_Edit_Sidebar/VS_Preview_Inspector/InspectorPanel/InspectorTabs/Export/Section_Destination/Section_Format"]
+[node name="VBoxContainer" type="VBoxContainer" parent="RootVBox/VS_Main_Assets/HS_Edit_Sidebar/VS_Preview_Inspector/InspectorPanel/InspectorTabs/Export/Export_Root/Section_Destination/Section_Format"]
 layout_mode = 2
 
-[node name="HBoxContainer" type="HBoxContainer" parent="RootVBox/VS_Main_Assets/HS_Edit_Sidebar/VS_Preview_Inspector/InspectorPanel/InspectorTabs/Export/Section_Destination/Section_Format/VBoxContainer"]
+[node name="HBoxContainer" type="HBoxContainer" parent="RootVBox/VS_Main_Assets/HS_Edit_Sidebar/VS_Preview_Inspector/InspectorPanel/InspectorTabs/Export/Export_Root/Section_Destination/Section_Format/VBoxContainer"]
 layout_mode = 2
 
-[node name="VBoxContainer" type="VBoxContainer" parent="RootVBox/VS_Main_Assets/HS_Edit_Sidebar/VS_Preview_Inspector/InspectorPanel/InspectorTabs/Export/Section_Destination/Section_Format/VBoxContainer/HBoxContainer"]
+[node name="VBoxContainer" type="VBoxContainer" parent="RootVBox/VS_Main_Assets/HS_Edit_Sidebar/VS_Preview_Inspector/InspectorPanel/InspectorTabs/Export/Export_Root/Section_Destination/Section_Format/VBoxContainer/HBoxContainer"]
 layout_mode = 2
 
-[node name="CheckBox" type="CheckBox" parent="RootVBox/VS_Main_Assets/HS_Edit_Sidebar/VS_Preview_Inspector/InspectorPanel/InspectorTabs/Export/Section_Destination/Section_Format/VBoxContainer/HBoxContainer/VBoxContainer"]
+[node name="CheckBox" type="CheckBox" parent="RootVBox/VS_Main_Assets/HS_Edit_Sidebar/VS_Preview_Inspector/InspectorPanel/InspectorTabs/Export/Export_Root/Section_Destination/Section_Format/VBoxContainer/HBoxContainer/VBoxContainer"]
 layout_mode = 2
 text = "JSON"
 
-[node name="CheckBox2" type="CheckBox" parent="RootVBox/VS_Main_Assets/HS_Edit_Sidebar/VS_Preview_Inspector/InspectorPanel/InspectorTabs/Export/Section_Destination/Section_Format/VBoxContainer/HBoxContainer/VBoxContainer"]
+[node name="CheckBox2" type="CheckBox" parent="RootVBox/VS_Main_Assets/HS_Edit_Sidebar/VS_Preview_Inspector/InspectorPanel/InspectorTabs/Export/Export_Root/Section_Destination/Section_Format/VBoxContainer/HBoxContainer/VBoxContainer"]
 layout_mode = 2
 text = ".tres"
 
-[node name="CheckBox3" type="CheckBox" parent="RootVBox/VS_Main_Assets/HS_Edit_Sidebar/VS_Preview_Inspector/InspectorPanel/InspectorTabs/Export/Section_Destination/Section_Format/VBoxContainer/HBoxContainer/VBoxContainer"]
+[node name="CheckBox3" type="CheckBox" parent="RootVBox/VS_Main_Assets/HS_Edit_Sidebar/VS_Preview_Inspector/InspectorPanel/InspectorTabs/Export/Export_Root/Section_Destination/Section_Format/VBoxContainer/HBoxContainer/VBoxContainer"]
 layout_mode = 2
 text = ".tscn"
 
-[node name="HSeparator3" type="HSeparator" parent="RootVBox/VS_Main_Assets/HS_Edit_Sidebar/VS_Preview_Inspector/InspectorPanel/InspectorTabs/Export/Section_Destination"]
+[node name="HSeparator3" type="HSeparator" parent="RootVBox/VS_Main_Assets/HS_Edit_Sidebar/VS_Preview_Inspector/InspectorPanel/InspectorTabs/Export/Export_Root/Section_Destination"]
 layout_mode = 2
 
-[node name="Section_Options" type="VBoxContainer" parent="RootVBox/VS_Main_Assets/HS_Edit_Sidebar/VS_Preview_Inspector/InspectorPanel/InspectorTabs/Export/Section_Destination"]
+[node name="Section_Options" type="VBoxContainer" parent="RootVBox/VS_Main_Assets/HS_Edit_Sidebar/VS_Preview_Inspector/InspectorPanel/InspectorTabs/Export/Export_Root/Section_Destination"]
 layout_mode = 2
 
-[node name="Label" type="Label" parent="RootVBox/VS_Main_Assets/HS_Edit_Sidebar/VS_Preview_Inspector/InspectorPanel/InspectorTabs/Export/Section_Destination/Section_Options"]
+[node name="Label" type="Label" parent="RootVBox/VS_Main_Assets/HS_Edit_Sidebar/VS_Preview_Inspector/InspectorPanel/InspectorTabs/Export/Export_Root/Section_Destination/Section_Options"]
 layout_mode = 2
 text = "Options"
 
-[node name="CheckBox_Trim" type="CheckBox" parent="RootVBox/VS_Main_Assets/HS_Edit_Sidebar/VS_Preview_Inspector/InspectorPanel/InspectorTabs/Export/Section_Destination/Section_Options"]
+[node name="CheckBox_Trim" type="CheckBox" parent="RootVBox/VS_Main_Assets/HS_Edit_Sidebar/VS_Preview_Inspector/InspectorPanel/InspectorTabs/Export/Export_Root/Section_Destination/Section_Options"]
 layout_mode = 2
 text = "Trim Transparent Edges"
 
-[node name="CheckBox_Rename" type="CheckBox" parent="RootVBox/VS_Main_Assets/HS_Edit_Sidebar/VS_Preview_Inspector/InspectorPanel/InspectorTabs/Export/Section_Destination/Section_Options"]
+[node name="CheckBox_Rename" type="CheckBox" parent="RootVBox/VS_Main_Assets/HS_Edit_Sidebar/VS_Preview_Inspector/InspectorPanel/InspectorTabs/Export/Export_Root/Section_Destination/Section_Options"]
 layout_mode = 2
 text = "Rename Frames Sequentially"
 
-[node name="CheckBox_Overwrite" type="CheckBox" parent="RootVBox/VS_Main_Assets/HS_Edit_Sidebar/VS_Preview_Inspector/InspectorPanel/InspectorTabs/Export/Section_Destination/Section_Options"]
+[node name="CheckBox_Overwrite" type="CheckBox" parent="RootVBox/VS_Main_Assets/HS_Edit_Sidebar/VS_Preview_Inspector/InspectorPanel/InspectorTabs/Export/Export_Root/Section_Destination/Section_Options"]
 layout_mode = 2
 
-[node name="HSeparator4" type="HSeparator" parent="RootVBox/VS_Main_Assets/HS_Edit_Sidebar/VS_Preview_Inspector/InspectorPanel/InspectorTabs/Export/Section_Destination"]
+[node name="HSeparator4" type="HSeparator" parent="RootVBox/VS_Main_Assets/HS_Edit_Sidebar/VS_Preview_Inspector/InspectorPanel/InspectorTabs/Export/Export_Root/Section_Destination"]
 layout_mode = 2
 
-[node name="Btn_Export" type="Button" parent="RootVBox/VS_Main_Assets/HS_Edit_Sidebar/VS_Preview_Inspector/InspectorPanel/InspectorTabs/Export/Section_Destination"]
+[node name="Btn_Export" type="Button" parent="RootVBox/VS_Main_Assets/HS_Edit_Sidebar/VS_Preview_Inspector/InspectorPanel/InspectorTabs/Export/Export_Root/Section_Destination"]
 layout_mode = 2
+text = "Export"
 
-[node name="Label_Export_Status" type="Label" parent="RootVBox/VS_Main_Assets/HS_Edit_Sidebar/VS_Preview_Inspector/InspectorPanel/InspectorTabs/Export/Section_Destination"]
+[node name="Label_Export_Status" type="Label" parent="RootVBox/VS_Main_Assets/HS_Edit_Sidebar/VS_Preview_Inspector/InspectorPanel/InspectorTabs/Export/Export_Root/Section_Destination"]
 layout_mode = 2
 
 [node name="AssetsPanel" type="PanelContainer" parent="RootVBox/VS_Main_Assets"]
