@@ -45,7 +45,7 @@ const TAB_BG_ACTIVE  := Color("#666666")    # Blue-ish highlight
 @onready var btn_builder_settings: TextureButton = %Btn_BuilderSettings
 @onready var settings_window: Window = %SettingsWindow
 
-@onready var le_repo_path: LineEdit = %LineEdit_RepoPath
+#@onready var le_repo_path: LineEdit = %LineEdit_RepoPath # Change this one
 @onready var le_anim_name: LineEdit = %LineEdit_AnimName
 
 @onready var rb_json: CheckBox = %CheckBox
@@ -262,12 +262,11 @@ func _on_settings_applied(grid_cell_size: int, preview_fps_new: float, repo_path
 	# Save repo path (even if empty)
 	export_repo_path = repo_path
 
-	# Apply to grid
 	if builder_view:
 		builder_view.cell_size = grid_cell_size
 		builder_view._update_grid_dims()
 		builder_view.queue_redraw()
-		builder_view._emit_sequences()
+		# No _emit_sequences() here
 
 	# Apply to preview
 	preview_fps = preview_fps_new
@@ -419,7 +418,7 @@ func _on_builder_sequences_changed(sequences: Array) -> void:
 	var frames := SpriteFrames.new()
 	var anim_name := "preview"
 	frames.add_animation(anim_name)
-	frames.set_animation_speed(anim_name, 8.0)  # tweak FPS as you like
+	frames.set_animation_speed(anim_name, preview_fps)  # or 8.0
 	frames.set_animation_loop(anim_name, true)
 
 	for rel in first_seq:
@@ -430,9 +429,9 @@ func _on_builder_sequences_changed(sequences: Array) -> void:
 	preview_sprite.sprite_frames = frames
 	preview_sprite.animation = anim_name
 	preview_sprite.play()
+	# IMPORTANT: do NOT call ProjectModel.set_sequences_from_builder(sequences) here
 	
-	ProjectModel.set_sequences_from_builder(sequences)
-
+	
 func _texture_from_sprite_rel(rel: String) -> Texture2D:
 	var abs: String = ProjectModel.project_dir.path_join(rel)
 	var img := Image.new()
@@ -442,18 +441,62 @@ func _texture_from_sprite_rel(rel: String) -> Texture2D:
 	return ImageTexture.create_from_image(img)
 	
 func _on_export_pressed() -> void:
-	# Ensure the repo path is in ProjectModel (if you track it in workspace)
-	if export_repo_path != "":
-		ProjectModel.set_export_repo(export_repo_path)
+	# --- 1) Ensure repo path is set ---
+	var repo := export_repo_path
 
+	if repo == "":
+		var msg := "Export failed: Please set a Godot project folder (repo path) in Settings before exporting."
+		_notify(msg)
+		if lbl_export_status:
+			lbl_export_status.text = msg
+		return
+
+	# Persist into ProjectModel
+	ProjectModel.set_export_repo(repo)
+
+	# --- 2) Determine animation name ---
+	var anim_name = ProjectModel.data.get("current_animation", "")
+	if anim_name == "":
+		if le_anim_name:
+			anim_name = le_anim_name.text.strip_edges()
+		if anim_name == "":
+			anim_name = "default"
+
+	# --- 3) Build animation data from the grid (BuilderView) ---
+	if builder_view == null:
+		var msg2 := "Export failed: BuilderView is missing."
+		_notify(msg2)
+		if lbl_export_status:
+			lbl_export_status.text = msg2
+		return
+
+	# BuilderView.gd must have:
+	# func build_animation_data() -> Dictionary:
+	#     return {"sequences": get_row_sequences()}
+	var anim_data = builder_view.build_animation_data()
+	anim_data["name"] = anim_name
+
+	# If there are literally no frames, fail early with a clear message
+	var seqs: Array = anim_data.get("sequences", [])
+	if seqs.is_empty():
+		var msg3 := "Export failed: current grid has no sequences/frames to export."
+		_notify(msg3)
+		if lbl_export_status:
+			lbl_export_status.text = msg3
+		return
+
+	# --- 4) Update ProjectModel with this animation and mark it current ---
+	ProjectModel.set_animation(anim_name, anim_data)
+
+	# --- 5) Run the exporter ---
 	var err := ProjectModel.export_animation()
 	if err != OK:
-		var msg := "Export failed (code %d)." % err
-		_notify(msg)
+		var msg4 := "Export failed (code %d)." % err
+		_notify(msg4)
 		if lbl_export_status:
-			lbl_export_status.text = msg
+			lbl_export_status.text = msg4
 	else:
-		var msg := "Export complete."
-		_notify(msg)
+		var msg_ok := "Export complete."
+		_notify(msg_ok)
 		if lbl_export_status:
-			lbl_export_status.text = msg
+			lbl_export_status.text = msg_ok

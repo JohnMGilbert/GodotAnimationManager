@@ -198,11 +198,11 @@ func load_from_animation_data(anim: Dictionary) -> void:
 		row_idx += 1
 
 	queue_redraw()
-	# Optionally emit, in case other UI listens to this
-	_emit_sequences()
+	# DO NOT call _emit_sequences() here
 
 func build_animation_data() -> Dictionary:
-	# BuilderOverlay uses this when the user presses Save
+	# Called by workspace when saving/exporting.
+	# Packs the current grid into a simple animation dictionary.
 	return {
 		"sequences": get_row_sequences()
 	}

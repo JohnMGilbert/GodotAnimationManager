@@ -124,8 +124,8 @@ func _goto_project(path: String) -> void:
 		return
 
 	# Close any open modal to avoid blocking the scene change
-	if is_instance_valid($CenterContainer/Panel/MarginContainer/VBoxContainer/NoticeDialog) and $CenterContainer/Panel/MarginContainer/VBoxContainer/NoticeDialog.visible:
-		$CenterContainer/Panel/MarginContainer/VBoxContainer/NoticeDialog.hide()
+	if is_instance_valid(%NoticeDialog) and %NoticeDialog.visible:
+		%NoticeDialog.hide()
 
 	# Change to workspace
 	var scene_err := get_tree().change_scene_to_file("res://Scenes/workspace.tscn")

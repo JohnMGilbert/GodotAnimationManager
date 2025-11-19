@@ -1,14 +1,13 @@
 {
 	"animation": {
-		"sequences": [
-			[
-				"assets/sprites/mario_walk_1.png",
-				"assets/sprites/Mario_walk_2.png",
-				"assets/sprites/Mario_walk_3.png"
-			]
-		]
+		"sequences": []
 	},
-	"animations": [],
+	"animations": {
+		"default": {
+			"name": "default",
+			"sequences": []
+		}
+	},
 	"assets": {
 		"audio": [],
 		"sprites": [
@@ -18,8 +17,9 @@
 		]
 	},
 	"created_at": "2025-11-13T01:06:49",
+	"current_animation": "default",
 	"export": {
-		"repo_path": "/Users/johngilbert/Desktop/GameDev/art"
+		"repo_path": "/Users/johngilbert/Desktop/MISC"
 	},
 	"name": "mario",
 	"schema": "aam.v1",

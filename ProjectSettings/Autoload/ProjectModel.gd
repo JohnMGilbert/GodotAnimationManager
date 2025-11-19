@@ -231,24 +231,25 @@ func set_sequences_from_builder(seq_rows: Array) -> void:
 	# seq_rows: Array[Array[String]] of relative sprite paths
 	var current_name: String = data.get("current_animation", "")
 	if current_name == "":
-		push_warning("ProjectModel.set_sequences_from_builder: no current animation selected.")
+		# No current animation yet; nothing to update
 		return
 
-	# Update the current animation in the animations dict
-	var anim: Dictionary = get_animation(current_name)
-	if anim.is_empty():
-		anim = {"name": current_name}
+	# Ensure animations dictionary exists
+	if not data.has("animations") or not (data["animations"] is Dictionary):
+		data["animations"] = {}
 
+	# Get or create animation entry
+	var anim: Dictionary = data["animations"].get(current_name, {"name": current_name})
 	anim["sequences"] = seq_rows
-	set_animation(current_name, anim)  # updates data + emits signals
+	data["animations"][current_name] = anim
 
-	# Mirror into legacy data["animation"] block for export_animation() compatibility
+	# OPTIONAL: keep legacy block in sync for older code paths
 	if not data.has("animation") or not (data["animation"] is Dictionary):
 		data["animation"] = {}
 	data["animation"]["sequences"] = seq_rows
 
+	# IMPORTANT: do NOT call set_animation() here (no signals)
 	save()
-	
 	
 func set_export_repo(path: String) -> void:
 	export_repo_path = path
@@ -277,24 +278,30 @@ func export_animation() -> int:
 		push_error("ProjectModel.export_animation: no export repo path set.")
 		return ERR_NO_REPO
 
-	if not data.has("animation"):
-		push_error("ProjectModel.export_animation: no 'animation' block in data.")
+	var current_name: String = data.get("current_animation", "")
+	if current_name == "":
+		push_error("ProjectModel.export_animation: no current animation selected.")
 		return ERR_NO_SEQUENCES
 
-	var anim_block = data["animation"]
-	if not (anim_block is Dictionary) or not anim_block.has("sequences"):
-		push_error("ProjectModel.export_animation: no 'sequences' in animation block.")
+	var anim: Dictionary = get_animation(current_name)
+	if anim.is_empty():
+		push_error("ProjectModel.export_animation: current animation '%s' has no data." % current_name)
 		return ERR_NO_SEQUENCES
 
-	var sequences: Array = anim_block["sequences"]
+	if not anim.has("sequences"):
+		push_error("ProjectModel.export_animation: animation '%s' has no 'sequences' field." % current_name)
+		return ERR_NO_SEQUENCES
+
+	var sequences: Array = anim["sequences"]
 	if sequences.is_empty():
-		push_error("ProjectModel.export_animation: sequences array is empty.")
+		push_error("ProjectModel.export_animation: sequences array is empty for '%s'." % current_name)
 		return ERR_NO_SEQUENCES
 
 	# 2) Decide export layout under the game repo
 	var repo_root := export_repo_path.rstrip("/")  # absolute dir
-	# Use the builder project folder name as animation name
-	var anim_name := project_dir.get_file()  # e.g., "GoblinWalkProject"
+
+	# Use the animation name as the export name (not the project folder name)
+	var anim_name := current_name
 
 	var frames_rel_dir := "art/sprites/%s" % anim_name
 	var frames_abs_dir := repo_root.path_join(frames_rel_dir)
@@ -314,7 +321,7 @@ func export_animation() -> int:
 		return ERR_MANIFEST_FAILED
 
 	# 4) Copy all referenced sprite files into frames_abs_dir
-	var copied: Dictionary = {}  # src_abs -> dst_filename (to avoid duplicate copies)
+	var copied: Dictionary = {}  # src_abs -> dst_filename
 	var sequences_filenames: Array = []  # Array[Array[String]] of filenames only
 
 	for seq in sequences:
@@ -328,7 +335,6 @@ func export_animation() -> int:
 			var dst_abs := frames_abs_dir.path_join(file_name)
 
 			if not copied.has(src_abs):
-				# Copy if not already done
 				var copy_err := DirAccess.copy_absolute(src_abs, dst_abs)
 				if copy_err != OK:
 					push_error("export_animation: failed to copy %s -> %s (err %d)" % [src_abs, dst_abs, copy_err])
@@ -336,18 +342,19 @@ func export_animation() -> int:
 				copied[src_abs] = file_name
 
 			seq_names.append(file_name)
+
 		if not seq_names.is_empty():
 			sequences_filenames.append(seq_names)
 
 	if sequences_filenames.is_empty():
-		push_error("export_animation: no usable frames after processing sequences.")
+		push_error("export_animation: no usable frames after processing sequences for '%s'." % current_name)
 		return ERR_NO_SEQUENCES
 
 	# 5) Write a simple JSON manifest
 	var manifest: Dictionary = {
 		"name": anim_name,
-		"frames_dir": frames_rel_dir,          # e.g., "art/sprites/GoblinWalkProject"
-		"sequences": sequences_filenames      # e.g., [["idle_1.png", "idle_2.png"], ["run_1.png", ...]]
+		"frames_dir": frames_rel_dir,
+		"sequences": sequences_filenames
 	}
 
 	var file := FileAccess.open(manifest_abs_path, FileAccess.WRITE)
@@ -359,6 +366,6 @@ func export_animation() -> int:
 	file.store_string(json_str)
 	file.close()
 
-	print("Exported animation manifest to: ", manifest_abs_path)
+	print("Exported animation '%s' manifest to: %s" % [anim_name, manifest_abs_path])
 	print("Frames directory: ", frames_abs_dir)
 	return OK

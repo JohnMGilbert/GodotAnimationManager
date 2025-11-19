@@ -68,6 +68,10 @@ func _refresh_animation_list() -> void:
 # -------------------------------------------------------
 
 func _on_sequences_changed(seqs: Array) -> void:
+	# If nothing is selected yet, don't try to save
+	if _current_animation_name == "":
+		return
+
 	ProjectModel.set_sequences_from_builder(seqs)
 
 
@@ -94,7 +98,7 @@ func _on_save_pressed() -> void:
 		return
 
 	# Collect updated timeline data
-	var anim_data := _timeline.build_animation_data()
+	var anim_data = _timeline.build_animation_data()
 
 	# Save to project model
 	ProjectModel.set_animation(_current_animation_name, anim_data)
