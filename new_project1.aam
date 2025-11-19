@@ -1,0 +1,13 @@
+{
+	"animations": [],
+	"assets": {
+		"audio": [],
+		"sprites": [
+			"assets/sprites/mario_walk_1_3.png"
+		]
+	},
+	"created_at": "2025-11-18T00:21:47",
+	"name": "new_project1",
+	"schema": "aam.v1",
+	"tags": []
+}

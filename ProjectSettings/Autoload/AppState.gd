@@ -4,10 +4,16 @@ extends Node
 const RECENTS_FILE := "user://recents.cfg"
 const MAX_RECENTS  := 12
 
+const CONFIG_PATH := "user://settings.cfg"
+
+var _recents: Array[String] = []
+var last_project_dir: String = ""   # absolute dir that holds .aam files
+
 var recents: Array[String] = []
 
 func _ready() -> void:
 	_load_recents()
+	_load_settings()
 
 func _load_recents() -> void:
 	var cfg := ConfigFile.new()
@@ -23,6 +29,22 @@ func _load_recents() -> void:
 	else:
 		recents = []
 
+func _load_settings() -> void:
+	var cfg := ConfigFile.new()
+	var err := cfg.load(CONFIG_PATH)
+	if err == OK:
+		_recents = cfg.get_value("general", "recents", []) as Array
+		last_project_dir = String(cfg.get_value("general", "last_project_dir", ""))
+	else:
+		_recents = []
+		last_project_dir = ""
+
+func _save_settings() -> void:
+	var cfg := ConfigFile.new()
+	cfg.set_value("general", "recents", _recents)
+	cfg.set_value("general", "last_project_dir", last_project_dir)
+	cfg.save(CONFIG_PATH)
+
 func _save_recents() -> void:
 	var cfg := ConfigFile.new()
 	var list: Array = []          # plain Array for ConfigFile storage
@@ -31,21 +53,31 @@ func _save_recents() -> void:
 	cfg.set_value("projects", "recents", list)
 	cfg.save(RECENTS_FILE)
 
+func get_recents() -> Array[String]:
+	return _recents.duplicate()
+
 func add_recent(path: String) -> void:
-	var abs: String = ProjectSettings.globalize_path(path)
-	recents.erase(abs)
-	recents.push_front(abs)
-	if recents.size() > MAX_RECENTS:
-		recents.resize(MAX_RECENTS)
-	_save_recents()
+	path = ProjectSettings.globalize_path(path)
+	if _recents.has(path):
+		_recents.erase(path)
+	_recents.push_front(path)
+	_save_settings()
 
 func remove_recent(path: String) -> void:
-	var abs: String = ProjectSettings.globalize_path(path)
-	recents.erase(abs)
-	_save_recents()
+	path = ProjectSettings.globalize_path(path)
+	if _recents.has(path):
+		_recents.erase(path)
+	_save_settings()
 
-func get_recents() -> Array[String]:
-	return recents.duplicate() as Array[String]
+func set_last_project_dir(dir: String) -> void:
+	if dir == "":
+		return
+	# Normalize so it's always absolute
+	last_project_dir = ProjectSettings.globalize_path(dir)
+	_save_settings()
+
+func get_last_project_dir() -> String:
+	return last_project_dir
 
 func create_new_project(path: String) -> Error:
 	var data: Dictionary = {

@@ -2,9 +2,9 @@
 	"animation": {
 		"sequences": [
 			[
-				"assets/sprites/mario_walk_1_1.png",
+				"assets/sprites/Mario_walk_3_1.png",
 				"assets/sprites/Mario_walk_2_1.png",
-				"assets/sprites/Mario_walk_3_1.png"
+				"assets/sprites/mario_walk_1_1.png"
 			]
 		]
 	},

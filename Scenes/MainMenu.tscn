@@ -1,74 +1,140 @@
-[gd_scene load_steps=2 format=3 uid="uid://co8jp6sy2u541"]
+[gd_scene load_steps=6 format=3 uid="uid://co8jp6sy2u541"]
 
 [ext_resource type="Script" path="res://Scenes/MainMenu.gd" id="1_12pkj"]
+[ext_resource type="FontFile" uid="uid://lpycw074j1m6" path="res://Assets/Gixel.ttf" id="2_8c2vn"]
+[ext_resource type="Theme" uid="uid://b4ecs3e4crxki" path="res://Assets/mm_theme.tres" id="2_j0n5o"]
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_32dy1"]
+bg_color = Color(0.239216, 0.239216, 0.239216, 1)
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_ogilt"]
+bg_color = Color(0.878431, 0.878431, 0.878431, 1)
+corner_radius_top_left = 30
+corner_radius_top_right = 30
+corner_radius_bottom_right = 30
+corner_radius_bottom_left = 30
 
 [node name="Control" type="Control"]
 layout_mode = 3
 anchors_preset = 0
 script = ExtResource("1_12pkj")
 
-[node name="CenterContainer" type="CenterContainer" parent="."]
-layout_mode = 1
-offset_right = 1304.0
-offset_bottom = 719.0
-
-[node name="Panel" type="Panel" parent="CenterContainer"]
+[node name="Panel" type="Panel" parent="."]
 layout_mode = 2
+offset_left = -3.0
+offset_top = -2.0
+offset_right = 1217.0
+offset_bottom = 754.0
+theme_override_styles/panel = SubResource("StyleBoxFlat_32dy1")
 
-[node name="MarginContainer" type="MarginContainer" parent="CenterContainer/Panel"]
+[node name="Panel" type="Panel" parent="Panel"]
 layout_mode = 0
-offset_left = -568.0
-offset_top = -305.0
-offset_right = 580.0
-offset_bottom = 328.0
+offset_left = 74.0
+offset_top = 73.0
+offset_right = 1079.0
+offset_bottom = 619.0
+theme_override_styles/panel = SubResource("StyleBoxFlat_ogilt")
+
+[node name="CenterContainer" type="CenterContainer" parent="Panel"]
+layout_mode = 1
+anchors_preset = 8
+anchor_left = 0.5
+anchor_top = 0.5
+anchor_right = 0.5
+anchor_bottom = 0.5
+offset_left = -519.0
+offset_top = -339.0
+offset_right = 623.0
+offset_bottom = 332.0
+grow_horizontal = 2
+grow_vertical = 2
+
+[node name="MarginContainer" type="MarginContainer" parent="Panel/CenterContainer"]
+layout_mode = 2
 theme_override_constants/margin_left = 100
 theme_override_constants/margin_top = 16
+theme_override_constants/margin_right = 200
+theme_override_constants/margin_bottom = 200
 
-[node name="VBoxContainer" type="VBoxContainer" parent="CenterContainer/Panel/MarginContainer"]
+[node name="VBoxContainer" type="VBoxContainer" parent="Panel/CenterContainer/MarginContainer"]
 layout_mode = 2
-theme_override_constants/separation = 16
+theme_override_constants/separation = 64
+alignment = 1
 
-[node name="Label" type="Label" parent="CenterContainer/Panel/MarginContainer/VBoxContainer"]
+[node name="Title" type="Label" parent="Panel/CenterContainer/MarginContainer/VBoxContainer"]
+unique_name_in_owner = true
 layout_mode = 2
-theme_override_font_sizes/font_size = 50
-text = "Godot Animation Manager
+theme_override_colors/font_color = Color(0.4, 0.4, 0.4, 1)
+theme_override_colors/font_shadow_color = Color(0.239216, 0.239216, 0.239216, 1)
+theme_override_fonts/font = ExtResource("2_8c2vn")
+theme_override_font_sizes/font_size = 70
+text = "Animation Manager
 "
 
-[node name="HBoxContainer" type="HBoxContainer" parent="CenterContainer/Panel/MarginContainer/VBoxContainer"]
-layout_mode = 2
+[node name="NewDialog" type="FileDialog" parent="Panel/CenterContainer/MarginContainer/VBoxContainer"]
+unique_name_in_owner = true
+size = Vector2i(392, 159)
 
-[node name="NewProject" type="Button" parent="CenterContainer/Panel/MarginContainer/VBoxContainer/HBoxContainer"]
-layout_mode = 2
-text = "New Project"
+[node name="OpenDialog" type="FileDialog" parent="Panel/CenterContainer/MarginContainer/VBoxContainer"]
+unique_name_in_owner = true
 
-[node name="OpenProject" type="Button" parent="CenterContainer/Panel/MarginContainer/VBoxContainer/HBoxContainer"]
-layout_mode = 2
-text = "Open Project"
+[node name="NoticeDialog" type="AcceptDialog" parent="Panel/CenterContainer/MarginContainer/VBoxContainer"]
+unique_name_in_owner = true
 
-[node name="Control" type="Control" parent="CenterContainer/Panel/MarginContainer/VBoxContainer/HBoxContainer"]
+[node name="HBoxContainer2" type="HBoxContainer" parent="Panel"]
+layout_direction = 3
 layout_mode = 2
+offset_left = 609.0
+offset_top = 446.0
+offset_right = 724.0
+offset_bottom = 477.0
 
-[node name="Label2" type="Label" parent="CenterContainer/Panel/MarginContainer/VBoxContainer"]
-layout_mode = 2
-text = "Recent Projects"
-
-[node name="RecentList" type="ItemList" parent="CenterContainer/Panel/MarginContainer/VBoxContainer"]
-layout_mode = 2
-
-[node name="HBoxContainer2" type="HBoxContainer" parent="CenterContainer/Panel/MarginContainer/VBoxContainer"]
-layout_mode = 2
-
-[node name="Remove" type="Button" parent="CenterContainer/Panel/MarginContainer/VBoxContainer/HBoxContainer2"]
+[node name="Remove" type="Button" parent="Panel/HBoxContainer2"]
+unique_name_in_owner = true
+visible = false
 layout_mode = 2
 text = "Remove Selected"
 
-[node name="Quit" type="Button" parent="CenterContainer/Panel/MarginContainer/VBoxContainer/HBoxContainer2"]
+[node name="Quit" type="Button" parent="Panel/HBoxContainer2"]
+unique_name_in_owner = true
 layout_mode = 2
 text = "Quit"
 
-[node name="NewDialog" type="FileDialog" parent="CenterContainer/Panel/MarginContainer/VBoxContainer"]
-size = Vector2i(392, 159)
+[node name="VBoxContainer" type="VBoxContainer" parent="Panel"]
+layout_direction = 1
+layout_mode = 2
+offset_left = 478.0
+offset_top = 328.0
+offset_right = 1102.0
+offset_bottom = 406.0
+theme = ExtResource("2_j0n5o")
+alignment = 2
 
-[node name="OpenDialog" type="FileDialog" parent="CenterContainer/Panel/MarginContainer/VBoxContainer"]
+[node name="HBoxContainer" type="HBoxContainer" parent="Panel/VBoxContainer"]
+layout_mode = 2
 
-[node name="NoticeDialog" type="AcceptDialog" parent="CenterContainer/Panel/MarginContainer/VBoxContainer"]
+[node name="NewProject" type="Button" parent="Panel/VBoxContainer/HBoxContainer"]
+unique_name_in_owner = true
+layout_mode = 2
+text = "New Project"
+
+[node name="OpenProject" type="Button" parent="Panel/VBoxContainer/HBoxContainer"]
+unique_name_in_owner = true
+layout_mode = 2
+text = "Open Project"
+
+[node name="Control" type="Control" parent="Panel/VBoxContainer/HBoxContainer"]
+visible = false
+layout_mode = 2
+
+[node name="Label2" type="Label" parent="Panel/VBoxContainer"]
+visible = false
+layout_mode = 2
+text = "Recent Projects"
+
+[node name="RecentList" type="ItemList" parent="Panel/VBoxContainer"]
+unique_name_in_owner = true
+visible = false
+custom_minimum_size = Vector2(30, 30)
+layout_mode = 2
+size_flags_vertical = 3

@@ -1,0 +1,19 @@
+[gd_resource type="Theme" load_steps=2 format=3 uid="uid://b4eob2ew7phm"]
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_vd3yw"]
+bg_color = Color(0.878431, 0.878431, 0.878431, 1)
+
+[resource]
+Button/font_sizes/font_size = 8
+HBoxContainer/constants/separation = 8
+Label/font_sizes/font_size = 10
+LineEdit/font_sizes/font_size = 10
+MarginContainer/constants/margin_bottom = 8
+MarginContainer/constants/margin_left = 8
+MarginContainer/constants/margin_right = 8
+MarginContainer/constants/margin_top = 8
+PanelContainer/styles/panel = SubResource("StyleBoxFlat_vd3yw")
+TabBar/font_sizes/font_size = 8
+TabContainer/constants/side_margin = 5
+TabContainer/font_sizes/font_size = 12
+VBoxContainer/constants/separation = 4

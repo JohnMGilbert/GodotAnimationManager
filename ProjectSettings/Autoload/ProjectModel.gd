@@ -1,52 +1,173 @@
 # autoloads/ProjectModel.gd
 extends Node
 
+const PROJECTS_ROOT := "user://projects"  # where all animation projects live
+
+var project_dir: String = ""  # current project dir (user://projects/MyProject)
+
 const SPRITES_DIR := "assets/sprites"
 
 var project_path: String = ""                 # absolute path to .aam
-var project_dir: String = ""                  # absolute dir of the project
-var data: Dictionary = {}                     # in-memory .aam json
 
 var export_repo_path: String = ""  # absolute path to linked Godot project (optional)
+
+# DATA STORAGE
+
+
+signal project_loaded
+signal project_saved
+signal animation_list_changed
+signal animation_changed(animation_name: String)
+
+var data: Dictionary = {
+	"animations": {},
+	"current_animation": ""
+}
+
+
+func get_animation_names() -> PackedStringArray:
+	var anims = data.get("animations", {})
+	return PackedStringArray(anims.keys())
+
+
+func get_animation(name: String) -> Dictionary:
+	return data.get("animations", {}).get(name, {})
+
+
+func set_animation(name: String, anim: Dictionary) -> void:
+	if not data.has("animations"):
+		data["animations"] = {}
+	anim["name"] = name
+	data["animations"][name] = anim
+	data["current_animation"] = name
+	emit_signal("animation_changed", name)
+	emit_signal("animation_list_changed")
+
+
+func delete_animation(name: String) -> void:
+	if data.get("animations", {}).has(name):
+		data["animations"].erase(name)
+		emit_signal("animation_list_changed")
+		if data.get("current_animation", "") == name:
+			data["current_animation"] = ""
+			emit_signal("animation_changed", "")
+
+
+func _ready() -> void:
+	var da := DirAccess.open("user://")
+	if da == null:
+		push_error("ProjectModel: Cannot open user:// directory.")
+		return
+
+	if not da.dir_exists("projects"):
+		var err := da.make_dir("projects")
+		if err != OK:
+			push_error("ProjectModel: Could not create 'projects' dir (code %d)." % err)
+
+func create_project(name: String) -> int:
+	var safe_name := name.strip_edges()
+	if safe_name == "":
+		return ERR_INVALID_PARAMETER
+
+	# Ensure projects root exists (defensive, even though _ready() handles it)
+	var root_da := DirAccess.open("user://")
+	if root_da == null:
+		return ERR_CANT_OPEN
+	if not root_da.dir_exists("projects"):
+		var mk_root := root_da.make_dir("projects")
+		if mk_root != OK:
+			return mk_root
+
+	# e.g. user://projects/MyNewProject
+	var proj_path := PROJECTS_ROOT.path_join(safe_name)
+
+	var da := DirAccess.open(PROJECTS_ROOT)
+	if da == null:
+		return ERR_CANT_OPEN
+
+	if not da.dir_exists(safe_name):
+		var err := da.make_dir(safe_name)
+		if err != OK:
+			return err
+
+	project_dir = proj_path
+	project_path = project_dir.path_join("%s.aam" % safe_name)
+
+	# Initialize default project data
+	data = {
+		"animations": {},
+		"current_animation": "",
+		"assets": {
+			"sprites": []
+		},
+		"export": {}
+	}
+
+	var save_err := save()
+	if save_err != OK:
+		return save_err
+
+	emit_signal("project_loaded")
+	emit_signal("animation_list_changed")
+	emit_signal("animation_changed", "")
+
+	return OK
 
 func open(path: String) -> Error:
 	# absolute path preferred
 	project_path = ProjectSettings.globalize_path(path)
 	project_dir = project_path.get_base_dir()
+
 	if not FileAccess.file_exists(project_path):
 		return ERR_FILE_NOT_FOUND
+
 	var txt: String = FileAccess.get_file_as_string(project_path)
 	var parsed: Variant = JSON.parse_string(txt)
 	if not (parsed is Dictionary):
 		return ERR_PARSE_ERROR
+
 	data = parsed as Dictionary
-	if not data.has("assets"):
+
+	# Normalize assets block
+	if not data.has("assets") or not (data["assets"] is Dictionary):
 		data["assets"] = {}
-	if not (data["assets"] is Dictionary):
-		data["assets"] = {}
-	if not (data["assets"].has("sprites")):
+	if not data["assets"].has("sprites"):
 		data["assets"]["sprites"] = []
-	
-		# after data has been filled from JSON
-	var export_dict: Dictionary = {}
-	if data.has("export") and data["export"] is Dictionary:
-		export_dict = data["export"]
+
+	# Normalize export block + export_repo_path
+	if not data.has("export") or not (data["export"] is Dictionary):
+		data["export"] = {}
+	var export_dict: Dictionary = data["export"]
 	var repo_val: Variant = export_dict.get("repo_path", "")
 	if repo_val is String:
 		export_repo_path = repo_val
 	else:
 		export_repo_path = ""
-		
+
+	# Normalize animations structure
+	if not data.has("animations") or not (data["animations"] is Dictionary):
+		data["animations"] = {}
+	if not data.has("current_animation") or not (data["current_animation"] is String):
+		data["current_animation"] = ""
+
+	emit_signal("project_loaded")
+	emit_signal("animation_list_changed")
+	emit_signal("animation_changed", data.get("current_animation", ""))
+
 	return OK
 
 func save() -> Error:
 	if project_path == "":
 		return ERR_INVALID_DATA
+
 	var file := FileAccess.open(project_path, FileAccess.WRITE)
 	if file == null:
 		return ERR_CANT_OPEN
+
 	file.store_string(JSON.stringify(data, "\t"))
 	file.close()
+
+	emit_signal("project_saved")
 	return OK
 
 func get_sprites() -> Array[String]:
@@ -108,9 +229,24 @@ func import_sprites(paths: Array[String]) -> Error:
 
 func set_sequences_from_builder(seq_rows: Array) -> void:
 	# seq_rows: Array[Array[String]] of relative sprite paths
-	if not data.has("animation"):
+	var current_name: String = data.get("current_animation", "")
+	if current_name == "":
+		push_warning("ProjectModel.set_sequences_from_builder: no current animation selected.")
+		return
+
+	# Update the current animation in the animations dict
+	var anim: Dictionary = get_animation(current_name)
+	if anim.is_empty():
+		anim = {"name": current_name}
+
+	anim["sequences"] = seq_rows
+	set_animation(current_name, anim)  # updates data + emits signals
+
+	# Mirror into legacy data["animation"] block for export_animation() compatibility
+	if not data.has("animation") or not (data["animation"] is Dictionary):
 		data["animation"] = {}
 	data["animation"]["sequences"] = seq_rows
+
 	save()
 	
 	

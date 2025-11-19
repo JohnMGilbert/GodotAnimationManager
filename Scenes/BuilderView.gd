@@ -5,7 +5,7 @@ signal sequences_changed(sequences: Array)  # Array[Array[String]] of rel paths
 
 # --- Config ---
 @export var cell_size: int = 64
-@export var grid_color: Color = Color(0.22, 0.22, 0.25, 1.0)
+@export var grid_color: Color = Color(0.22, 0.22, 0.25, 0.3)
 @export var major_line_every: int = 4
 @export var major_grid_color: Color = Color(0.35, 0.35, 0.40, 1.0)
 @export var drop_highlight: Color = Color(0.2, 0.6, 1.0, 0.35)
@@ -168,3 +168,41 @@ func _get_texture(abs_path: String) -> Texture2D:
 	var tex: Texture2D = ImageTexture.create_from_image(img)
 	_tex_cache[abs_path] = tex
 	return tex
+	
+func clear_grid() -> void:
+	placed.clear()
+	queue_redraw()
+	_emit_sequences()
+	
+func load_from_animation_data(anim: Dictionary) -> void:
+	# Called by BuilderOverlay when switching animations
+	clear_grid()
+
+	if anim.is_empty():
+		return
+	if not anim.has("sequences"):
+		return
+
+	var sequences: Array = anim["sequences"]  # Array[Array[String]]
+	var row_idx: int = 0
+
+	for seq in sequences:
+		if not (seq is Array):
+			continue
+		var col_idx: int = 0
+		for rel in seq:
+			var rel_str := String(rel)
+			var cell := Vector2i(col_idx, row_idx)
+			placed[cell] = rel_str
+			col_idx += 1
+		row_idx += 1
+
+	queue_redraw()
+	# Optionally emit, in case other UI listens to this
+	_emit_sequences()
+
+func build_animation_data() -> Dictionary:
+	# BuilderOverlay uses this when the user presses Save
+	return {
+		"sequences": get_row_sequences()
+	}

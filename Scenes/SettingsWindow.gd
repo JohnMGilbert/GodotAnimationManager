@@ -3,16 +3,21 @@ class_name SettingsWindow
 
 signal settings_applied(grid_cell_size: int, preview_fps: float, repo_path: String)
 
-@onready var spin_cell_size: SpinBox = $MarginContainer/VBoxContainer/HBoxContainer/Spin_CellSize
-@onready var spin_preview_fps: SpinBox = $MarginContainer/VBoxContainer/HBoxContainer2/Spin_PreviewFPS
-@onready var line_repo_path: LineEdit = $MarginContainer/VBoxContainer/HBoxContainerRepo/LineEdit_RepoPath
-@onready var btn_browse_repo: Button = $MarginContainer/VBoxContainer/HBoxContainerRepo/Btn_BrowseRepo
+@onready var spin_cell_size: SpinBox = %Spin_CellSize
+@onready var spin_preview_fps: SpinBox = %Spin_PreviewFPS
+@onready var line_repo_path: LineEdit = %LineEdit_RepoPath
+@onready var btn_browse_repo: Button = %Btn_BrowseRepo
 
-@onready var btn_cancel: Button = $MarginContainer/VBoxContainer/HBoxContainer3/Btn_SettingsCancel
-@onready var btn_apply: Button = $MarginContainer/VBoxContainer/HBoxContainer3/Btn_SettingsApply
+@onready var btn_cancel: Button = %Btn_SettingsCancel
+@onready var btn_apply: Button = %Btn_SettingsApply
 @onready var fd_repo_dir: FileDialog = $FD_RepoDir
 
 func _ready() -> void:
+	var root := get_tree().root
+	#content_scale_mode = Window.CONTENT_SCALE_MODE_CANVAS_ITEMS
+	#content_scale_aspect = Window.CONTENT_SCALE_ASPECT_KEEP
+	#content_scale_factor = root.content_scale_factor
+	
 	btn_cancel.pressed.connect(func() -> void:
 		hide()
 	)

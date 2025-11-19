@@ -1,0 +1,72 @@
+[gd_scene load_steps=2 format=3 uid="uid://ddum0qkw4vig0"]
+
+[ext_resource type="Script" path="res://Scenes/SettingsWindow.gd" id="1_gaj2e"]
+
+[node name="SettingsWindow" type="Window"]
+position = Vector2i(0, 36)
+size = Vector2i(400, 220)
+script = ExtResource("1_gaj2e")
+
+[node name="MarginContainer" type="MarginContainer" parent="."]
+offset_right = 40.0
+offset_bottom = 40.0
+
+[node name="VBoxContainer" type="VBoxContainer" parent="MarginContainer"]
+layout_mode = 2
+
+[node name="HBoxContainer" type="HBoxContainer" parent="MarginContainer/VBoxContainer"]
+layout_mode = 2
+
+[node name="Label" type="Label" parent="MarginContainer/VBoxContainer/HBoxContainer"]
+layout_mode = 2
+text = "Grid Cell Size"
+
+[node name="Spin_CellSize" type="SpinBox" parent="MarginContainer/VBoxContainer/HBoxContainer"]
+unique_name_in_owner = true
+layout_mode = 2
+
+[node name="HBoxContainer2" type="HBoxContainer" parent="MarginContainer/VBoxContainer"]
+layout_mode = 2
+
+[node name="Label" type="Label" parent="MarginContainer/VBoxContainer/HBoxContainer2"]
+layout_mode = 2
+text = "Preview FPS"
+
+[node name="Spin_PreviewFPS" type="SpinBox" parent="MarginContainer/VBoxContainer/HBoxContainer2"]
+unique_name_in_owner = true
+layout_mode = 2
+
+[node name="HBoxContainerRepo" type="HBoxContainer" parent="MarginContainer/VBoxContainer"]
+layout_mode = 2
+
+[node name="Label" type="Label" parent="MarginContainer/VBoxContainer/HBoxContainerRepo"]
+layout_mode = 2
+text = "Game Repo Path"
+
+[node name="LineEdit_RepoPath" type="LineEdit" parent="MarginContainer/VBoxContainer/HBoxContainerRepo"]
+unique_name_in_owner = true
+layout_mode = 2
+
+[node name="Btn_BrowseRepo" type="Button" parent="MarginContainer/VBoxContainer/HBoxContainerRepo"]
+unique_name_in_owner = true
+layout_mode = 2
+text = "Browse..."
+
+[node name="HBoxContainer3" type="HBoxContainer" parent="MarginContainer/VBoxContainer"]
+layout_mode = 2
+
+[node name="Btn_SettingsCancel" type="Button" parent="MarginContainer/VBoxContainer/HBoxContainer3"]
+unique_name_in_owner = true
+layout_mode = 2
+text = "Cancel"
+
+[node name="Btn_SettingsApply" type="Button" parent="MarginContainer/VBoxContainer/HBoxContainer3"]
+unique_name_in_owner = true
+layout_mode = 2
+text = "Apply"
+
+[node name="Spacer" type="Control" parent="MarginContainer/VBoxContainer/HBoxContainer3"]
+layout_mode = 2
+
+[node name="FD_RepoDir" type="FileDialog" parent="."]
+size = Vector2i(392, 159)

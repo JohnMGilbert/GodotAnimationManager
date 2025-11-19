@@ -1,21 +1,18 @@
 # scenes/MainMenu.gd
 extends Control
 
-@onready var title_label: Label      = $CenterContainer/Panel/MarginContainer/VBoxContainer/Label
-@onready var recent_list: ItemList   = $CenterContainer/Panel/MarginContainer/VBoxContainer/RecentList
-@onready var new_button: Button      = $CenterContainer/Panel/MarginContainer/VBoxContainer/HBoxContainer/NewProject
-@onready var open_button: Button     = $CenterContainer/Panel/MarginContainer/VBoxContainer/HBoxContainer/OpenProject
-@onready var remove_button: Button   = $CenterContainer/Panel/MarginContainer/VBoxContainer/HBoxContainer2/Remove
-@onready var quit_button: Button     = $CenterContainer/Panel/MarginContainer/VBoxContainer/HBoxContainer2/Quit
-@onready var new_dialog: FileDialog  = $CenterContainer/Panel/MarginContainer/VBoxContainer/NewDialog
-@onready var open_dialog: FileDialog = $CenterContainer/Panel/MarginContainer/VBoxContainer/OpenDialog
-@onready var notice: AcceptDialog    = $CenterContainer/Panel/MarginContainer/VBoxContainer/NoticeDialog
+@onready var title_label: Label      = %Title
+@onready var recent_list: ItemList   = %RecentList
+@onready var new_button: Button      = %NewProject
+@onready var open_button: Button     = %OpenProject
+@onready var remove_button: Button   = %Remove
+@onready var quit_button: Button     = %Quit
+@onready var new_dialog: FileDialog  = %NewDialog
+@onready var open_dialog: FileDialog = %OpenDialog
+@onready var notice: AcceptDialog    = %NoticeDialog
 
 func _ready() -> void:
-	
-	
-	
-	title_label.text = "Animation Asset Manager"
+	title_label.text = "Animation Manager"
 	_populate_recents()
 
 	# Configure dialogs
@@ -28,6 +25,12 @@ func _ready() -> void:
 	open_dialog.file_mode = FileDialog.FILE_MODE_OPEN_FILE
 	open_dialog.filters = PackedStringArray(["*.aam ; Animation Manager Project"])
 
+	# >>> Use last stored project dir if we have one
+	var last_dir := AppState.get_last_project_dir()
+	if last_dir != "":
+		new_dialog.current_dir = last_dir
+		open_dialog.current_dir = last_dir
+
 	# Connect UI
 	new_button.pressed.connect(_on_new_pressed)
 	open_button.pressed.connect(_on_open_pressed)
@@ -37,8 +40,15 @@ func _ready() -> void:
 	new_dialog.file_selected.connect(_on_new_file_selected)
 	open_dialog.file_selected.connect(_on_open_file_selected)
 
-	recent_list.item_activated.connect(_on_recent_activated) # double-click / Enter
+	recent_list.item_activated.connect(_on_recent_activated)
 	recent_list.item_selected.connect(_on_recent_selected)
+
+func debug_print_cwd():
+	var dir := DirAccess.open(".")
+	if dir:
+		print("CWD:", dir.get_current_dir())
+	else:
+		print("Could not open CWD")
 
 func _populate_recents() -> void:
 	recent_list.clear()
@@ -73,13 +83,20 @@ func _on_new_file_selected(path: String) -> void:
 	if err != OK:
 		_alert("Could not create project:\n%s" % path)
 		return
+
+	# Remember the directory for next launch
+	AppState.set_last_project_dir(path.get_base_dir())
+
 	_goto_project(path)
 
 func _on_open_file_selected(path: String) -> void:
 	if not AppState.validate_project_file(path):
 		_alert("Not a valid Animation Manager project:\n%s" % path)
 		return
+
 	AppState.add_recent(path)
+	AppState.set_last_project_dir(path.get_base_dir())
+
 	_goto_project(path)
 
 func _on_recent_selected(index: int) -> void:
@@ -92,6 +109,10 @@ func _on_recent_activated(index: int) -> void:
 		AppState.remove_recent(path)
 		_populate_recents()
 		return
+
+	# Also update last dir from this project
+	AppState.set_last_project_dir(path.get_base_dir())
+
 	_goto_project(path)
 
 func _goto_project(path: String) -> void:
@@ -107,7 +128,7 @@ func _goto_project(path: String) -> void:
 		$CenterContainer/Panel/MarginContainer/VBoxContainer/NoticeDialog.hide()
 
 	# Change to workspace
-	var scene_err := get_tree().change_scene_to_file("res://scenes/Workspace.tscn")
+	var scene_err := get_tree().change_scene_to_file("res://Scenes/workspace.tscn")
 	if scene_err != OK:
 		_alert("Failed to load Workspace.tscn\nError: %s" % error_string(scene_err))
 
