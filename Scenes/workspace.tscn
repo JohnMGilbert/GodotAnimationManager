@@ -72,6 +72,7 @@ layout_mode = 2
 script = ExtResource("2_fn6k4")
 
 [node name="BuilderOverlay" type="CanvasLayer" parent="MarginContainer/RootVBox/VS_Main_Assets/HS_Edit_Sidebar/BuilderPanel"]
+unique_name_in_owner = true
 script = ExtResource("4_txkii")
 
 [node name="ButtonBar" type="Panel" parent="MarginContainer/RootVBox/VS_Main_Assets/HS_Edit_Sidebar/BuilderPanel/BuilderOverlay"]
@@ -106,10 +107,10 @@ texture_normal = ExtResource("7_eqbie")
 texture_hover = ExtResource("6_wa8f8")
 stretch_mode = 0
 
-[node name="AniationSwitcherPopup" type="PopupMenu" parent="MarginContainer/RootVBox/VS_Main_Assets/HS_Edit_Sidebar/BuilderPanel/BuilderOverlay/ButtonBar/ChangeAnimation"]
+[node name="AnimationSwitcherPopup" type="PopupMenu" parent="MarginContainer/RootVBox/VS_Main_Assets/HS_Edit_Sidebar/BuilderPanel/BuilderOverlay/ButtonBar/ChangeAnimation"]
 unique_name_in_owner = true
 
-[node name="SaveButton" type="TextureButton" parent="MarginContainer/RootVBox/VS_Main_Assets/HS_Edit_Sidebar/BuilderPanel/BuilderOverlay/ButtonBar"]
+[node name="SaveAnimation" type="TextureButton" parent="MarginContainer/RootVBox/VS_Main_Assets/HS_Edit_Sidebar/BuilderPanel/BuilderOverlay/ButtonBar"]
 unique_name_in_owner = true
 layout_mode = 0
 offset_left = 5.0
@@ -120,6 +121,19 @@ scale = Vector2(0.055, 0.055)
 texture_normal = ExtResource("9_6md1q")
 texture_hover = ExtResource("9_odopr")
 stretch_mode = 0
+
+[node name="UnsavedAnimationDialogue" type="AcceptDialog" parent="MarginContainer/RootVBox/VS_Main_Assets/HS_Edit_Sidebar/BuilderPanel/BuilderOverlay/ButtonBar"]
+unique_name_in_owner = true
+title = "Save New Animation"
+size = Vector2i(200, 100)
+
+[node name="NewAnimName" type="LineEdit" parent="MarginContainer/RootVBox/VS_Main_Assets/HS_Edit_Sidebar/BuilderPanel/BuilderOverlay/ButtonBar/UnsavedAnimationDialogue"]
+unique_name_in_owner = true
+offset_left = 8.0
+offset_top = 8.0
+offset_right = 192.0
+offset_bottom = 51.0
+placeholder_text = "Animation Name"
 
 [node name="VS_Preview_Inspector" type="VSplitContainer" parent="MarginContainer/RootVBox/VS_Main_Assets/HS_Edit_Sidebar"]
 unique_name_in_owner = true

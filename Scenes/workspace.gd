@@ -68,16 +68,12 @@ var export_repo_path: String = ""   # Godot project / destination repo
 @export var sprite_icon_size: int = 96   # size of sprite thumbnails in the list
 @export var sprite_label_font_size: int = 14
 
+@onready var builder_overlay: BuilderOverlay = %BuilderOverlay
+
 
 func _ready() -> void:
 	# Let the root fill the window, but DO NOT touch child mins or splits
 	set_anchors_preset(Control.PRESET_FULL_RECT)
-
-	# REMOVE / COMMENT OUT:
-	# _force_expand_and_minimums()
-	# call_deferred("_apply_responsive_splits_deferred()")
-	# get_window().size_changed.connect(...)
-	# get_viewport().size_changed.connect(...)
 
 	tab_buttons = [tab_sprites_btn, tab_sound_btn]
 	_connect_asset_tabs()
@@ -104,7 +100,13 @@ func _ready() -> void:
 		settings_window.settings_applied.connect(_on_settings_applied)
 
 	if btn_export:
-		btn_export.pressed.connect(_on_export_pressed)	
+		btn_export.pressed.connect(_on_export_pressed)
+
+	# --- NEW: restore builder animations from ProjectModel, if present ---
+	if builder_overlay and ProjectModel.data is Dictionary:
+		var anims_dict: Dictionary = ProjectModel.data.get("builder_animations", {})
+		builder_overlay.load_all_animation_data({ "animations": anims_dict })
+
 
 func _on_os_files_dropped(files: PackedStringArray) -> void:
 	var imgs: Array[String] = []
@@ -122,141 +124,21 @@ func _on_os_files_dropped(files: PackedStringArray) -> void:
 
 	_refresh_sprite_list()
 
-#func _apply_responsive_splits_deferred() -> void:
-	## Wait one more frame to ensure sizes are final during resize drags on some platforms
-	#await get_tree().process_frame
-	#_apply_responsive_splits()
-
-#func _force_expand_and_minimums() -> void:
-	## Root fills window
-	#set_anchors_preset(Control.PRESET_FULL_RECT)
-#
-	## All main containers expand
-	#for p in [
-		#"RootVBox/VS_Main_Assets",
-		#"RootVBox/VS_Main_Assets/HS_Edit_Sidebar",
-		#"RootVBox/VS_Main_Assets/HS_Edit_Sidebar/VS_Preview_Inspector",
-		#"RootVBox/VS_Main_Assets/AssetsPanel/HSplitContainer"
-	#]:
-		#var n := get_node_or_null(p) as Control
-		#if n:
-			#n.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-			#n.size_flags_vertical   = Control.SIZE_EXPAND_FILL
-#
-	## Panels expand + fallback mins to avoid zeros
-	#_set_min(builder_panel,   FALLBACK_MIN_BUILDER)
-	#_set_min(preview_panel,   FALLBACK_MIN_PREVIEW)
-	#_set_min(inspector_panel, FALLBACK_MIN_INSPECTOR)
-	#_set_min(assets_tabs,     FALLBACK_MIN_ASSETS)
-	## sidebar width hint
-	#if assets_tabbar:
-		#if assets_tabbar.custom_minimum_size.x < ASSETS_TABBAR_MIN:
-			#var cms := assets_tabbar.custom_minimum_size
-			#cms.x = ASSETS_TABBAR_MIN
-			#assets_tabbar.custom_minimum_size = cms
-
-#func _set_min(ctrl: Control, fallback: Vector2i) -> void:
-	#if ctrl == null:
-		#return
-	#var min := ctrl.get_combined_minimum_size()
-	#var cms := ctrl.custom_minimum_size
-	#if min.x <= 0 and cms.x <= 0:
-		#cms.x = fallback.x
-	#if min.y <= 0 and cms.y <= 0:
-		#cms.y = fallback.y
-	#ctrl.custom_minimum_size = cms
-	#ctrl.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	#ctrl.size_flags_vertical   = Control.SIZE_EXPAND_FILL
-
-#func _apply_responsive_splits() -> void:
-	## Sanity: SplitContainers must have exactly two children
-	#_assert_two_children(vs_main_assets)
-	#_assert_two_children(hs_edit_sidebar)
-	#_assert_two_children(vs_preview_inspector)
-	#_assert_two_children(assets_tabs_split)
-#
-	## Guard zero sizes (can happen during initial layout)
-	#if vs_main_assets.size.y <= 0 or hs_edit_sidebar.size.x <= 0 or vs_preview_inspector.size.y <= 0:
-		#return
-#
-	## Top vs bottom
-	#_fit_vsplit(
-		#vs_main_assets,
-		#MAIN_VS_FRACTION_TOP,
-		#_min_h(vs_main_assets, true),
-		#_min_h(vs_main_assets, false)
-	#)
-#
-	## Builder vs right stack
-	#_fit_hsplit(
-		#hs_edit_sidebar,
-		#HS_FRACTION_LEFT,
-		#_min_w(hs_edit_sidebar, true),
-		#_min_w(hs_edit_sidebar, false)
-	#)
-#
-	## Preview vs inspector
-	#_fit_vsplit(
-		#vs_preview_inspector,
-		#RIGHT_VS_FRACTION_TOP,
-		#_min_h(vs_preview_inspector, true),
-		#_min_h(vs_preview_inspector, false)
-	#)
-#
-	## Assets: left vertical tab bar vs tab content
-	#if assets_tabs_split.size.x > 0:
-		#var total_w: float = assets_tabs_split.size.x
-		#var left_min: float = max(ASSETS_TABBAR_MIN, _min_w(assets_tabs_split, true))
-		#var right_min: float = _min_w(assets_tabs_split, false)
-		## ~18% or min; also ensure right side gets its minimum
-		#var desired_left: int = max(int(total_w * 0.18), int(left_min))
-		#var max_left: int = int(total_w) - int(right_min)
-		#assets_tabs_split.split_offset = clamp(desired_left, int(left_min), max_left)
 
 # --- Helpers (assume exactly two children) ---
 func _child_ctrl(split: SplitContainer, idx: int) -> Control:
 	var c := split.get_child(idx)
 	return c as Control
 
-#func _min_w(split: SplitContainer, left_or_top: bool) -> float:
-	#var idx: int = 0 if left_or_top else 1
-	#var target: Control = _child_ctrl(split, idx)
-	#if target == null:
-		#return 0.0
-	#return max(1.0, target.get_combined_minimum_size().x)
-#
-#func _min_h(split: SplitContainer, left_or_top: bool) -> float:
-	#var idx: int = 0 if left_or_top else 1
-	#var target: Control = _child_ctrl(split, idx)
-	#if target == null:
-		#return 0.0
-	#return max(1.0, target.get_combined_minimum_size().y)
-#
-#func _fit_hsplit(split: HSplitContainer, fraction_left: float, min_left: float, min_right: float) -> void:
-	#var total: float = max(1.0, split.size.x)
-	#var desired: int = int(total * clamp(fraction_left, 0.0, 1.0))
-	#var min_off: int = int(min_left)
-	#var max_off: int = int(total - min_right)
-	#split.split_offset = clamp(desired, min_off, max_off)
-#
-#func _fit_vsplit(split: VSplitContainer, fraction_top: float, min_top: float, min_bottom: float) -> void:
-	#var total: float = max(1.0, split.size.y)
-	#var desired: int = int(total * clamp(fraction_top, 0.0, 1.0))
-	#var min_off: int = int(min_top)
-	#var max_off: int = int(total - min_bottom)
-	#split.split_offset = clamp(desired, min_off, max_off)
-
-#func _assert_two_children(split: SplitContainer) -> void:
-	#if split == null: return
-	#if split.get_child_count() != 2:
-		#push_warning("%s should have exactly 2 children, has %d" % [split.name, split.get_child_count()])
 
 func _on_builder_settings_pressed() -> void:
 	print("Pressed settings button")
 	if settings_window:
 		if builder_view:
+			builder_view.cell_size = builder_view.cell_size  # keep current; window will override
 			settings_window.set_current_values(builder_view.cell_size, preview_fps, export_repo_path)
 		settings_window.popup_centered()
+
 
 func _on_settings_applied(grid_cell_size: int, preview_fps_new: float, repo_path: String) -> void:
 	# Save repo path (even if empty)
@@ -272,7 +154,7 @@ func _on_settings_applied(grid_cell_size: int, preview_fps_new: float, repo_path
 	preview_fps = preview_fps_new
 	_on_builder_sequences_changed(builder_view.get_row_sequences())
 
-	# Optional: persist in ProjectModel (see next section)
+	# Optional: persist in ProjectModel
 	if repo_path != "":
 		ProjectModel.set_export_repo(repo_path)
 
@@ -284,6 +166,7 @@ func _connect_asset_tabs() -> void:
 		b.button_pressed = false
 		b.pressed.connect(func(idx := i) -> void:
 			_select_asset_tab(idx))
+
 
 func _select_asset_tab(index: int) -> void:
 	var max_index: int = assets_tabs.get_tab_count() - 1
@@ -301,8 +184,8 @@ func _select_asset_tab(index: int) -> void:
 				tab_panel.remove_theme_color_override("panel")
 
 	assets_tabs.current_tab = index
-	
-	
+
+
 func _wire_sprite_import_ui() -> void:
 	if btn_import_sprites:
 		btn_import_sprites.pressed.connect(func() -> void:
@@ -320,11 +203,13 @@ func _wire_sprite_import_ui() -> void:
 	if fd_import_sprites:
 		fd_import_sprites.files_selected.connect(_on_sprite_files_selected)
 
+
 func _on_sprite_files_selected(files: PackedStringArray) -> void:
 	var ok := ProjectModel.import_sprites(files)
 	if ok != OK:
 		_notify("Failed to import some sprites (code %d)." % ok)
 	_refresh_sprite_list()
+
 
 func _on_files_dropped(files: PackedStringArray) -> void:
 	var imgs: Array[String] = []
@@ -339,6 +224,7 @@ func _on_files_dropped(files: PackedStringArray) -> void:
 		_notify("Failed to import some sprites (code %d)." % ok)
 	_refresh_sprite_list()
 
+
 func _setup_sprite_list() -> void:
 	if list_sprites == null:
 		return
@@ -351,7 +237,8 @@ func _setup_sprite_list() -> void:
 
 
 func _refresh_sprite_list() -> void:
-	if list_sprites == null: return
+	if list_sprites == null:
+		return
 	list_sprites.clear()
 
 	if ProjectModel.project_dir == "":
@@ -371,13 +258,15 @@ func _refresh_sprite_list() -> void:
 		var tex := _thumb_from_path(abs, sprite_icon_size)
 		var label := rel.get_file()
 		var idx := list_sprites.add_item(label)
-		list_sprites.set_item_metadata(idx, rel)   # <-- this line is essential
+		list_sprites.set_item_metadata(idx, rel)   # store rel path as metadata
 		if tex != null:
 			list_sprites.set_item_icon(idx, tex)
-			
+
+
 func _sprite_abs_path(rel: String) -> String:
 	# rel e.g. "assets/sprites/hero_idle.png"
 	return ProjectModel.project_dir.path_join(rel)
+
 
 func _thumb_from_path(abs: String, box: int) -> Texture2D:
 	var img := Image.new()
@@ -396,6 +285,7 @@ func _thumb_from_path(abs: String, box: int) -> Texture2D:
 		img.resize(nw, nh, Image.INTERPOLATE_LANCZOS)
 
 	return ImageTexture.create_from_image(img)
+
 
 func _notify(msg: String) -> void:
 	# lightweight notification; wire to an AcceptDialog if you already have one
@@ -418,7 +308,7 @@ func _on_builder_sequences_changed(sequences: Array) -> void:
 	var frames := SpriteFrames.new()
 	var anim_name := "preview"
 	frames.add_animation(anim_name)
-	frames.set_animation_speed(anim_name, preview_fps)  # or 8.0
+	frames.set_animation_speed(anim_name, preview_fps)
 	frames.set_animation_loop(anim_name, true)
 
 	for rel in first_seq:
@@ -429,9 +319,8 @@ func _on_builder_sequences_changed(sequences: Array) -> void:
 	preview_sprite.sprite_frames = frames
 	preview_sprite.animation = anim_name
 	preview_sprite.play()
-	# IMPORTANT: do NOT call ProjectModel.set_sequences_from_builder(sequences) here
-	
-	
+
+
 func _texture_from_sprite_rel(rel: String) -> Texture2D:
 	var abs: String = ProjectModel.project_dir.path_join(rel)
 	var img := Image.new()
@@ -439,7 +328,8 @@ func _texture_from_sprite_rel(rel: String) -> Texture2D:
 	if err != OK:
 		return null
 	return ImageTexture.create_from_image(img)
-	
+
+
 func _on_export_pressed() -> void:
 	# --- 1) Ensure repo path is set ---
 	var repo := export_repo_path
@@ -470,9 +360,6 @@ func _on_export_pressed() -> void:
 			lbl_export_status.text = msg2
 		return
 
-	# BuilderView.gd must have:
-	# func build_animation_data() -> Dictionary:
-	#     return {"sequences": get_row_sequences()}
 	var anim_data = builder_view.build_animation_data()
 	anim_data["name"] = anim_name
 
@@ -500,3 +387,20 @@ func _on_export_pressed() -> void:
 		_notify(msg_ok)
 		if lbl_export_status:
 			lbl_export_status.text = msg_ok
+
+
+func _build_project_data() -> Dictionary:
+	var data := {}
+
+	# --- existing project fields go here ---
+	# e.g. data["some_setting"] = ...
+
+	# --- include builder animations ---
+	if builder_overlay:
+		var anim_bundle: Dictionary = builder_overlay.build_all_animation_data()
+		# anim_bundle looks like { "animations": { name: anim_data_dict, ... } }
+		data["builder_animations"] = anim_bundle.get("animations", {})
+	else:
+		data["builder_animations"] = {}
+
+	return data

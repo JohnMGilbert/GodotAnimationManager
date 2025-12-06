@@ -1,118 +1,399 @@
-# ui/BuilderOverlay.gd
 extends CanvasLayer
+class_name BuilderOverlay
 
-@onready var _animation_menu_button: TextureButton = %ChangeAnimation
-@onready var _animation_menu: PopupMenu = %AniationSwitcherPopup
-@onready var _save_button: TextureButton = %SaveButton
-@onready var _timeline: BuilderGrid = %BuilderView
+signal current_animation_dirty_changed(is_dirty: bool)
 
-var _current_animation_name: String = ""
+# --- Node refs ---
+@onready var builder_grid: BuilderGrid = %BuilderView
+@onready var btn_change_anim: BaseButton = %ChangeAnimation
+@onready var popup_anim_switch: PopupMenu = %AnimationSwitcherPopup
+@onready var btn_save_anim: BaseButton = %SaveAnimation
+@onready var dlg_save_anim: AcceptDialog = %UnsavedAnimationDialogue
+@onready var edit_anim_name: LineEdit = %NewAnimName
+
+# Per-animation metadata keys
+const KEY_DATA := "data"          # Dictionary from BuilderGrid.build_animation_data()
+const KEY_DIRTY := "dirty"
+const KEY_SAVED_ONCE := "saved_once"
+
+# Special id for "New Animation..." entry in the popup
+const NEW_ANIMATION_ID := 99999
+
+var animations: Dictionary = {}          # name: String -> { data, dirty, saved_once }
+var animation_order: Array[String] = []  # ordered list of animation names
+var current_animation_idx: int = -1
 
 
 func _ready() -> void:
-	# Connect to ProjectModel signals
-	ProjectModel.project_loaded.connect(_on_project_loaded)
-	ProjectModel.animation_list_changed.connect(_refresh_animation_list)
-	ProjectModel.animation_changed.connect(_on_animation_changed)
+	if not builder_grid:
+		push_warning("BuilderOverlay: BuilderView (BuilderGrid) not found. Check %BuilderView reference.")
 
-	# Connect UI signals
-	_animation_menu_button.pressed.connect(_on_animation_menu_button_pressed)
-	_animation_menu.index_pressed.connect(_on_animation_selected)
-	_save_button.pressed.connect(_on_save_pressed)
+	if btn_change_anim:
+		btn_change_anim.pressed.connect(_on_change_animation_pressed)
 
-	# Connect timeline → ProjectModel
-	_timeline.sequences_changed.connect(_on_sequences_changed)
+	if popup_anim_switch:
+		popup_anim_switch.id_pressed.connect(_on_animation_switcher_id_pressed)
 
-	# Initial load
-	_refresh_animation_list()
-	var current = ProjectModel.data.get("current_animation", "")
-	if current != "":
-		_load_animation_into_ui(current)
+	if btn_save_anim:
+		btn_save_anim.pressed.connect(_on_save_animation_pressed)
 
+	if dlg_save_anim:
+		dlg_save_anim.confirmed.connect(_on_save_dialog_confirmed)
 
-# -------------------------------------------------------
-# PROJECT MODEL → UI
-# -------------------------------------------------------
+	if builder_grid:
+		builder_grid.sequences_changed.connect(_on_grid_sequences_changed)
 
-func _on_project_loaded() -> void:
-	_refresh_animation_list()
-	var current = ProjectModel.data.get("current_animation", "")
-	if current != "":
-		_load_animation_into_ui(current)
+	_ensure_default_animation()
+	_update_save_icon_state()
+	_rebuild_animation_switcher_menu()
 
 
-func _on_animation_changed(animation_name: String) -> void:
-	if animation_name == "":
-		_current_animation_name = ""
-		_timeline.load_from_animation_data({})
+# -------------------------------------------------------------------
+# Helpers for per-animation dictionary
+# -------------------------------------------------------------------
+func _ensure_anim_entry(name: String) -> Dictionary:
+	var d: Dictionary = animations.get(name, {})
+
+	if not d.has(KEY_DATA):
+		d[KEY_DATA] = {
+			"cells": [],
+			"sequences": [],
+		}
+	if not d.has(KEY_DIRTY):
+		d[KEY_DIRTY] = false
+	if not d.has(KEY_SAVED_ONCE):
+		d[KEY_SAVED_ONCE] = false
+
+	animations[name] = d
+	return d
+
+
+func _get_current_anim_name() -> String:
+	if current_animation_idx < 0 or current_animation_idx >= animation_order.size():
+		return ""
+	return animation_order[current_animation_idx]
+
+
+func _is_current_animation_dirty() -> bool:
+	var name := _get_current_anim_name()
+	if name == "":
+		return false
+	var data: Dictionary = animations.get(name, {})
+	return bool(data.get(KEY_DIRTY, false))
+
+
+func _update_save_icon_state() -> void:
+	if not btn_save_anim:
 		return
 
-	_current_animation_name = animation_name
-	_load_animation_into_ui(animation_name)
+	if _is_current_animation_dirty():
+		btn_save_anim.modulate = Color(1.0, 0.9, 0.9)  # unsaved
+	else:
+		btn_save_anim.modulate = Color(1.0, 1.0, 1.0)  # clean
 
 
-func _refresh_animation_list() -> void:
-	_animation_menu.clear()
+func _get_unique_animation_name(base_name: String, ignore_name: String = "") -> String:
+	var name := base_name.strip_edges()
+	if name == "":
+		name = "Animation"
 
-	var names := ProjectModel.get_animation_names()
-	for i in range(names.size()):
-		_animation_menu.add_item(names[i], i)
-
-	if names.size() > 0:
-		var current = ProjectModel.data.get("current_animation", names[0])
-		_load_animation_into_ui(current)
+	var suffix := 1
+	while animations.has(name) and name != ignore_name:
+		name = "%s_%d" % [base_name, suffix]
+		suffix += 1
+	return name
 
 
-# -------------------------------------------------------
-# TIMELINE (GRID) → PROJECT MODEL
-# -------------------------------------------------------
-
-func _on_sequences_changed(seqs: Array) -> void:
-	# If nothing is selected yet, don't try to save
-	if _current_animation_name == "":
+# Save current animation's layout into memory (no dialogs)
+func _save_current_state_to_memory() -> void:
+	var name := _get_current_anim_name()
+	if name == "" or not builder_grid:
 		return
 
-	ProjectModel.set_sequences_from_builder(seqs)
+	var data := _ensure_anim_entry(name)
+	data[KEY_DATA] = builder_grid.build_animation_data()
+	animations[name] = data
 
 
-# -------------------------------------------------------
-# UI BUTTON HANDLERS
-# -------------------------------------------------------
+# -------------------------------------------------------------------
+# Initialization / default animation
+# -------------------------------------------------------------------
+func _ensure_default_animation() -> void:
+	if animation_order.is_empty():
+		var name := "Animation_1"
+		var empty_data := {
+			"cells": [],
+			"sequences": [],
+		}
+		var d: Dictionary = {
+			KEY_DATA: empty_data,
+			KEY_DIRTY: false,
+			KEY_SAVED_ONCE: false,
+		}
+		animations[name] = d
+		animation_order.append(name)
+		current_animation_idx = 0
 
-func _on_animation_menu_button_pressed() -> void:
-	# Open popup at the button’s position
-	_animation_menu.popup()
+		if builder_grid:
+			builder_grid.load_from_animation_data(empty_data)
 
 
-func _on_animation_selected(index: int) -> void:
-	var names := ProjectModel.get_animation_names()
-	if index >= 0 and index < names.size():
-		var name := names[index]
-		ProjectModel.data["current_animation"] = name
-		_load_animation_into_ui(name)
-
-
-func _on_save_pressed() -> void:
-	if _current_animation_name == "":
-		push_warning("BuilderOverlay: No animation selected to save.")
+# -------------------------------------------------------------------
+# Grid change → mark current anim dirty & store full data
+# -------------------------------------------------------------------
+func _on_grid_sequences_changed(_seqs: Array) -> void:
+	var name := _get_current_anim_name()
+	if name == "":
 		return
 
-	# Collect updated timeline data
-	var anim_data = _timeline.build_animation_data()
+	var data := _ensure_anim_entry(name)
 
-	# Save to project model
-	ProjectModel.set_animation(_current_animation_name, anim_data)
-	var err := ProjectModel.save()
+	# Always store the full layout+sequences on any change
+	if builder_grid:
+		data[KEY_DATA] = builder_grid.build_animation_data()
 
-	if err != OK:
-		push_error("BuilderOverlay: Failed to save project (err %d)." % err)
+	var was_dirty: bool = data[KEY_DIRTY]
+	data[KEY_DIRTY] = true
+	animations[name] = data
+
+	if not was_dirty:
+		current_animation_dirty_changed.emit(true)
+	_update_save_icon_state()
 
 
-# -------------------------------------------------------
-# INTERNAL HELPERS
-# -------------------------------------------------------
+# -------------------------------------------------------------------
+# Save Animation behavior
+# -------------------------------------------------------------------
+func _on_save_animation_pressed() -> void:
+	var name := _get_current_anim_name()
+	if name == "":
+		return
 
-func _load_animation_into_ui(name: String) -> void:
-	_current_animation_name = name
-	var anim_data := ProjectModel.get_animation(name)
-	_timeline.load_from_animation_data(anim_data)
+	var data := _ensure_anim_entry(name)
+
+	# First ever save for this animation: ask for a name
+	if not data[KEY_SAVED_ONCE]:
+		if dlg_save_anim and edit_anim_name:
+			edit_anim_name.text = name
+			dlg_save_anim.popup_centered()
+		return
+
+	# Already saved once: just overwrite in place
+	_perform_save_for_animation(name)
+
+
+func _on_save_dialog_confirmed() -> void:
+	var old_name := _get_current_anim_name()
+	if old_name == "":
+		return
+	if not edit_anim_name:
+		return
+
+	var base_name := edit_anim_name.text
+	var final_name := _get_unique_animation_name(base_name, old_name)
+
+	if final_name != old_name:
+		_rename_animation_internal(old_name, final_name)
+
+	_perform_save_for_animation(final_name)
+
+
+func _perform_save_for_animation(name: String) -> void:
+	var data := _ensure_anim_entry(name)
+
+	if builder_grid:
+		data[KEY_DATA] = builder_grid.build_animation_data()
+
+	data[KEY_SAVED_ONCE] = true
+	data[KEY_DIRTY] = false
+	animations[name] = data
+
+	current_animation_dirty_changed.emit(false)
+	_update_save_icon_state()
+	_rebuild_animation_switcher_menu()
+
+
+# -------------------------------------------------------------------
+# Popup animation switcher
+# -------------------------------------------------------------------
+func _on_change_animation_pressed() -> void:
+	if not popup_anim_switch:
+		return
+	_rebuild_animation_switcher_menu()
+	popup_anim_switch.popup()
+
+
+func _rebuild_animation_switcher_menu() -> void:
+	if not popup_anim_switch:
+		return
+
+	popup_anim_switch.clear()
+
+	# Existing animations
+	for i in range(animation_order.size()):
+		var name := animation_order[i]
+		var label := name
+		if i == current_animation_idx:
+			label = "• " + label
+		popup_anim_switch.add_item(label, i)
+
+	# Separator + "New Animation..." entry
+	popup_anim_switch.add_separator()
+	popup_anim_switch.add_item("New Animation...", NEW_ANIMATION_ID)
+
+
+func _on_animation_switcher_id_pressed(id: int) -> void:
+	print("\n[DEBUG] AnimationSwitcher pressed. id =", id)
+
+	if id == NEW_ANIMATION_ID:
+		print("[DEBUG] New Animation option selected.")
+		
+		# Save current animation state
+		_save_current_state_to_memory()
+		print("[DEBUG] Current animation saved to memory.")
+
+		# Create new animation
+		var base := "Animation_%d" % (animation_order.size() + 1)
+		var final_name := _get_unique_animation_name(base)
+		print("[DEBUG] Creating new animation:", final_name)
+
+		_create_and_switch_to_new_animation(final_name)
+	else:
+		print("[DEBUG] Switching to animation index:", id)
+		_switch_to_animation_index(id)
+
+# -------------------------------------------------------------------
+# Switching animations
+# -------------------------------------------------------------------
+func _switch_to_animation_index(idx: int) -> void:
+	if idx < 0 or idx >= animation_order.size():
+		return
+	if not builder_grid:
+		return
+
+	# Save current state before switching
+	_save_current_state_to_memory()
+
+	current_animation_idx = idx
+	var name := animation_order[idx]
+	var data := _ensure_anim_entry(name)
+
+	var anim_data: Dictionary = data[KEY_DATA]
+	builder_grid.load_from_animation_data(anim_data)
+
+	current_animation_dirty_changed.emit(bool(data[KEY_DIRTY]))
+	_update_save_icon_state()
+
+
+# -------------------------------------------------------------------
+# Creating / renaming animations
+# -------------------------------------------------------------------
+func _create_and_switch_to_new_animation(name: String) -> void:
+	print("[DEBUG] ENTER _create_and_switch_to_new_animation with name:", name)
+
+	var empty_data := {
+		"cells": [],
+		"sequences": [],
+	}
+
+	var d: Dictionary = {
+		KEY_DATA: empty_data,
+		KEY_DIRTY: false,
+		KEY_SAVED_ONCE: false,
+	}
+	animations[name] = d
+	animation_order.append(name)
+
+	current_animation_idx = animation_order.size() - 1
+	print("[DEBUG] Switched current_animation_idx to:", current_animation_idx)
+
+	if builder_grid:
+		print("[DEBUG] Calling builder_grid.load_from_animation_data(empty_data). BuilderGrid node =", builder_grid)
+		builder_grid.load_from_animation_data(empty_data)
+	else:
+		print("[DEBUG] ERROR: builder_grid is NULL!")
+		
+
+func create_new_animation(name: String) -> void:
+	# Public helper if you want to create from somewhere else
+	if animations.has(name):
+		push_warning("Animation '%s' already exists." % name)
+		return
+	_create_and_switch_to_new_animation(name)
+
+
+func rename_current_animation(new_name: String) -> void:
+	var old_name := _get_current_anim_name()
+	if old_name == "":
+		return
+
+	var final_name := _get_unique_animation_name(new_name, old_name)
+	if final_name == old_name:
+		return
+
+	_rename_animation_internal(old_name, final_name)
+	_rebuild_animation_switcher_menu()
+	_update_save_icon_state()
+
+
+func _rename_animation_internal(old_name: String, new_name: String) -> void:
+	if not animations.has(old_name):
+		return
+
+	var data := _ensure_anim_entry(old_name)
+	animations.erase(old_name)
+	animations[new_name] = data
+
+	var idx := animation_order.find(old_name)
+	if idx >= 0:
+		animation_order[idx] = new_name
+
+	if current_animation_idx == idx:
+		current_animation_idx = idx
+
+
+# -------------------------------------------------------------------
+# Project save/load
+# -------------------------------------------------------------------
+func build_all_animation_data() -> Dictionary:
+	var cur_name := _get_current_anim_name()
+	if cur_name != "" and builder_grid:
+		var cur_data := _ensure_anim_entry(cur_name)
+		cur_data[KEY_DATA] = builder_grid.build_animation_data()
+		animations[cur_name] = cur_data
+
+	var stored := {}
+	for name in animations.keys():
+		var data := _ensure_anim_entry(name)
+		stored[name] = data[KEY_DATA]
+
+	return { "animations": stored }
+
+
+func load_all_animation_data(project_data: Dictionary) -> void:
+	animations.clear()
+	animation_order.clear()
+	current_animation_idx = -1
+
+	if project_data.has("animations"):
+		var src := project_data["animations"] as Dictionary
+		for name in src.keys():
+			var anim_data: Dictionary = src[name]
+			animations[name] = {
+				KEY_DATA: anim_data,
+				KEY_DIRTY: false,
+				KEY_SAVED_ONCE: true,
+			}
+		var new_order: Array[String] = []
+		for k in animations.keys():
+			new_order.append(String(k))
+		animation_order = new_order
+		animation_order.sort()
+
+	if animation_order.is_empty():
+		_ensure_default_animation()
+	else:
+		_switch_to_animation_index(0)
+
+	_rebuild_animation_switcher_menu()
+	_update_save_icon_state()
