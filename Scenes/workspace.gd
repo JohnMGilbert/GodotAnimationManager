@@ -93,6 +93,7 @@ const SpritesheetUtils = preload("res://SpritesheetUtils.gd")
 # Sprite tag filter + tag editing
 @onready var filter_sprites: OptionButton = %Filter_Sprites
 @onready var btn_add_tags: Button         = %Btn_AddTags
+@onready var opt_existing_tags: OptionButton = %Option_ExistingTags
 
 @onready var win_add_tag: Window          = %Win_AddTag
 @onready var edit_tag_name: LineEdit      = %LineEdit_TagName
@@ -100,7 +101,7 @@ const SpritesheetUtils = preload("res://SpritesheetUtils.gd")
 @onready var btn_tag_submit: Button       = %Btn_TagSubmit
 @onready var btn_tag_cancel: Button       = %Btn_TagCancel
 var current_sprite_tag_filter: String = ""      # "" = no filter / All
-var _pending_tag_asset_id: String = ""         # which sprite we’re tagging
+var _pending_tag_asset_ids: PackedStringArray = PackedStringArray()
 
 func _ready() -> void:
 	# Let the root fill the window, but DO NOT touch child mins or splits
@@ -181,6 +182,8 @@ func _ready() -> void:
 		btn_eraser.button_pressed = false
 		btn_eraser.pressed.connect(_on_eraser_pressed)
 		
+	if opt_existing_tags:
+		opt_existing_tags.item_selected.connect(_on_ExistingTag_item_selected)
 	# Load editor state (animations + settings) from the editor-state file
 	_load_editor_state()
 	
@@ -354,12 +357,12 @@ func _prompt_spritesheet_import(path: String) -> void:
 	dlg_sheet.popup_for_sheet(path, img.get_width(), img.get_height())
 
 
-func _on_spritesheet_decided(sheet_path: String, split: bool, cols: int, rows: int) -> void:
+func _on_spritesheet_decided(sheet_path: String, split: bool, cols: int, rows: int, tag_all: String) -> void:
 	if sheet_path == "":
 		return
 
 	if split:
-		var err := ProjectModel.import_sprites_from_sheet(sheet_path, cols, rows)
+		var err := ProjectModel.import_sprites_from_sheet(sheet_path, cols, rows, tag_all)
 		if err != OK:
 			_notify("Spritesheet import failed (code %d)" % err)
 	else:
@@ -409,17 +412,43 @@ func _normalize_tag_input(raw: String) -> String:
 			filtered.append(p)
 	return " ".join(filtered)
 
-func _get_selected_sprite_asset_id() -> String:
+func _refresh_existing_tags_option_button() -> void:
+	if opt_existing_tags == null:
+		return
+
+	opt_existing_tags.clear()
+	opt_existing_tags.add_item("Use existing tag...")  # index 0
+
+	var tags := ProjectModel.get_all_tags()
+	for t in tags:
+		opt_existing_tags.add_item(t)
+
+	opt_existing_tags.select(0)
+	
+func _on_ExistingTag_item_selected(index: int) -> void:
+	if opt_existing_tags == null:
+		return
+
+	if index <= 0:
+		return  # "Use existing tag..." placeholder
+
+	var tag_text := opt_existing_tags.get_item_text(index)
+	edit_tag_name.text = tag_text
+	_update_tag_name_feedback(tag_text)
+
+
+func _get_selected_sprite_asset_ids() -> PackedStringArray:
+	var ids := PackedStringArray()
 	if list_sprites == null:
-		return ""
-	var sel := list_sprites.get_selected_items()
-	if sel.is_empty():
-		return ""
-	var idx := sel[0]
-	var meta = list_sprites.get_item_metadata(idx)
-	if meta is String:
-		return meta
-	return ""
+		return ids
+
+	var selected := list_sprites.get_selected_items()
+	for idx in selected:
+		var meta = list_sprites.get_item_metadata(idx)
+		var asset_id := String(meta)
+		if asset_id != "":
+			ids.append(asset_id)
+	return ids
 	
 func _refresh_sprite_tag_filter_options() -> void:
 	if filter_sprites == null:
@@ -546,15 +575,22 @@ func _refresh_sprite_list() -> void:
 			drag_indicator_lable.hide()
 
 func _on_Btn_AddTags_pressed() -> void:
-	var asset_id := _get_selected_sprite_asset_id()
-	if asset_id == "":
-		_notify("Select a sprite first to add a tag.")
+	var asset_ids := _get_selected_sprite_asset_ids()
+	if asset_ids.is_empty():
+		_notify("Select one or more sprites first to add a tag.")
 		return
 
-	_pending_tag_asset_id = asset_id
+	_pending_tag_asset_ids = asset_ids
 	edit_tag_name.text = ""
 	_update_tag_name_feedback("")
-	win_add_tag.title = "Add Tag"
+	_refresh_existing_tags_option_button()
+
+	# Optional: update window title to show count
+	if _pending_tag_asset_ids.size() == 1:
+		win_add_tag.title = "Add Tag"
+	else:
+		win_add_tag.title = "Add Tag to %d sprites" % _pending_tag_asset_ids.size()
+
 	win_add_tag.popup_centered()
 	edit_tag_name.grab_focus()
 	
@@ -583,7 +619,7 @@ func _update_tag_name_feedback(raw: String) -> void:
 		edit_tag_name.remove_theme_color_override("font_color")
 		
 func _on_Btn_TagSubmit_pressed() -> void:
-	if _pending_tag_asset_id == "":
+	if _pending_tag_asset_ids.is_empty():
 		win_add_tag.hide()
 		return
 
@@ -592,10 +628,11 @@ func _on_Btn_TagSubmit_pressed() -> void:
 		win_add_tag.hide()
 		return
 
-	# Add tag to the selected asset
-	ProjectModel.add_asset_tags(_pending_tag_asset_id, PackedStringArray([norm]))
+	var tag_arr := PackedStringArray([norm])
 
-	# Refresh UI: filter options + sprite list
+	for asset_id in _pending_tag_asset_ids:
+		ProjectModel.add_asset_tags(asset_id, tag_arr)
+
 	_refresh_sprite_tag_filter_options()
 	_refresh_sprite_list()
 

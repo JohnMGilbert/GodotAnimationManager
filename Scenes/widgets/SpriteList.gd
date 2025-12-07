@@ -3,6 +3,7 @@ class_name SpriteList
 
 func _ready() -> void:
 	mouse_filter = Control.MOUSE_FILTER_STOP  # ensure we receive input
+	select_mode = ItemList.SELECT_MULTI
 
 func _get_drag_data(at_position: Vector2) -> Variant:
 	print("get_drag_data called at:", at_position)

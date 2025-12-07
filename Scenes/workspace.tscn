@@ -688,7 +688,7 @@ filters = PackedStringArray("*.png", "*.jpeg", "*.jpg")
 unique_name_in_owner = true
 title = "Add Tag"
 position = Vector2i(0, 36)
-size = Vector2i(140, 100)
+size = Vector2i(160, 150)
 visible = false
 
 [node name="MarginContainer" type="MarginContainer" parent="Win_AddTag"]
@@ -704,6 +704,10 @@ layout_mode = 2
 text = "Tag Name"
 
 [node name="LineEdit_TagName" type="LineEdit" parent="Win_AddTag/MarginContainer/VBoxContainer"]
+unique_name_in_owner = true
+layout_mode = 2
+
+[node name="Option_ExistingTags" type="OptionButton" parent="Win_AddTag/MarginContainer/VBoxContainer"]
 unique_name_in_owner = true
 layout_mode = 2
 
@@ -790,3 +794,14 @@ text = "Cancel"
 unique_name_in_owner = true
 layout_mode = 2
 text = "Ok"
+
+[node name="HBoxContainer4" type="HBoxContainer" parent="SpritesheetDialog/MarginContainer/VBoxContainer"]
+layout_mode = 2
+
+[node name="Check_TagAll" type="CheckBox" parent="SpritesheetDialog/MarginContainer/VBoxContainer/HBoxContainer4"]
+unique_name_in_owner = true
+layout_mode = 2
+text = "Tag all frames?"
+
+[node name="Line_TagAll" type="LineEdit" parent="SpritesheetDialog/MarginContainer/VBoxContainer/HBoxContainer4"]
+layout_mode = 2

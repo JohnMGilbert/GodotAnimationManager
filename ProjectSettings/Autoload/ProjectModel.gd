@@ -269,19 +269,22 @@ func import_sprites(paths: Array[String]) -> Error:
 	return save()
 
 
-func import_sprites_from_sheet(sheet_path: String, cols: int, rows: int) -> Error:
+func import_sprites_from_sheet(
+	sheet_path: String,
+	cols: int,
+	rows: int,
+	tag_for_all: String = ""
+) -> Error:
 	if project_dir == "":
 		return ERR_INVALID_DATA
 
 	var dst_dir_abs: String = project_dir.path_join(SPRITES_DIR)
 	if not DirAccess.dir_exists_absolute(dst_dir_abs):
-		var mk := DirAccess.make_dir_recursive_absolute(dst_dir_abs)
+		var mk: int = DirAccess.make_dir_recursive_absolute(dst_dir_abs)
 		if mk != OK:
 			return mk
 
 	var sheet_name := sheet_path.get_file().get_basename()
-
-	# Actually slice the sheet
 	var frame_files: Array[String] = SpritesheetUtils.split_sheet_to_files(
 		sheet_path,
 		dst_dir_abs,
@@ -294,10 +297,16 @@ func import_sprites_from_sheet(sheet_path: String, cols: int, rows: int) -> Erro
 		return ERR_CANT_OPEN
 
 	var sprites: Array[String] = get_sprites()
+	var normalized_tag := _normalize_single_tag(tag_for_all) if tag_for_all != "" else ""
+
 	for fname in frame_files:
-		var rel := SPRITES_DIR.path_join(fname)  # e.g. "assets/sprites/sword_00.png"
+		var rel := SPRITES_DIR.path_join(fname)  # e.g. "assets/sprites/foo_00.png"
 		if not sprites.has(rel):
 			sprites.append(rel)
+
+		# If a tag was requested, apply it to each frame
+		if normalized_tag != "":
+			add_asset_tags(rel, PackedStringArray([normalized_tag]))
 
 	data["assets"]["sprites"] = sprites
 	return save()
