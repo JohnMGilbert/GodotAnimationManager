@@ -86,6 +86,21 @@ var _audio_cache: Dictionary = {}      # rel -> AudioStream
 @onready var btn_preview_loop: TextureButton = %Btn_PreviewLoop
 var preview_is_playing: bool = true
 var preview_loop_enabled: bool = true
+const SpritesheetUtils = preload("res://SpritesheetUtils.gd")
+
+@onready var dlg_sheet: SpritesheetDialog = %SpritesheetDialog
+
+# Sprite tag filter + tag editing
+@onready var filter_sprites: OptionButton = %Filter_Sprites
+@onready var btn_add_tags: Button         = %Btn_AddTags
+
+@onready var win_add_tag: Window          = %Win_AddTag
+@onready var edit_tag_name: LineEdit      = %LineEdit_TagName
+@onready var lbl_tag_exists: Label        = %Label_TagExists
+@onready var btn_tag_submit: Button       = %Btn_TagSubmit
+@onready var btn_tag_cancel: Button       = %Btn_TagCancel
+var current_sprite_tag_filter: String = ""      # "" = no filter / All
+var _pending_tag_asset_id: String = ""         # which sprite we’re tagging
 
 func _ready() -> void:
 	# Let the root fill the window, but DO NOT touch child mins or splits
@@ -103,6 +118,33 @@ func _ready() -> void:
 
 	_refresh_sprite_list()
 	_refresh_sound_list()
+
+	_setup_sprite_list()
+	_setup_sound_list()
+
+	_refresh_sprite_list()
+	_refresh_sound_list()
+
+	if filter_sprites:
+		filter_sprites.item_selected.connect(_on_Filter_Sprites_item_selected)
+		_refresh_sprite_tag_filter_options()
+
+	if btn_add_tags:
+		btn_add_tags.pressed.connect(_on_Btn_AddTags_pressed)
+
+	if btn_tag_cancel:
+		btn_tag_cancel.pressed.connect(func() -> void:
+			win_add_tag.hide()
+		)
+
+	if btn_tag_submit:
+		btn_tag_submit.pressed.connect(_on_Btn_TagSubmit_pressed)
+
+	if edit_tag_name:
+		edit_tag_name.text_changed.connect(_on_TagName_text_changed)
+	
+	if dlg_sheet:
+		dlg_sheet.decided.connect(_on_spritesheet_decided)
 
 	var win := get_window()
 	if win:
@@ -198,31 +240,36 @@ func _debug_test_sound_once() -> void:
 
 
 func _on_os_files_dropped(files: PackedStringArray) -> void:
-	var imgs: Array[String] = []
 	var sounds: Array[String] = []
 
 	for f in files:
 		var ext := f.get_extension().to_lower()
 		match ext:
 			"png", "jpg", "jpeg", "webp":
-				imgs.append(f)
+				# Detect if this looks like a spritesheet
+				if SpritesheetUtils.looks_like_spritesheet(f):
+					# Ask the user if/how to split it
+					_prompt_spritesheet_import(f)
+				else:
+					# Normal single-image import
+					var err_img := ProjectModel.import_sprites([f])
+					if err_img != OK:
+						_notify("Failed to import sprite %s (code %d)." % [f, err_img])
+
 			"wav", "ogg", "mp3", "flac":
 				sounds.append(f)
+
 			_:
 				pass
 
-	if not imgs.is_empty():
-		var err_img := ProjectModel.import_sprites(imgs)
-		if err_img != OK:
-			_notify("Failed to import some sprites from OS drop (code %d)." % err_img)
-		_refresh_sprite_list()
-
+	# Import audio as before
 	if not sounds.is_empty():
-		# NOTE: implement ProjectModel.import_audio(files) similar to import_sprites
-		var err_snd = ProjectModel.import_audio(sounds)
+		var err_snd := ProjectModel.import_audio(sounds)
 		if err_snd != OK:
 			_notify("Failed to import some audio files from OS drop (code %d)." % err_snd)
-		_refresh_sound_list()
+
+	_refresh_sprite_list()
+	_refresh_sound_list()
 
 
 # --- Helpers (assume exactly two children) ---
@@ -294,6 +341,33 @@ func _on_settings_applied(grid_cell_size: int, preview_fps_new: float, repo_path
 
 	save_editor_state()
 
+func _prompt_spritesheet_import(path: String) -> void:
+	var img := Image.new()
+	if img.load(path) != OK:
+		# fallback: plain import
+		var err := ProjectModel.import_sprites([path])
+		if err != OK:
+			_notify("Failed to import sprite %s (code %d)" % [path, err])
+		_refresh_sprite_list()
+		return
+
+	dlg_sheet.popup_for_sheet(path, img.get_width(), img.get_height())
+
+
+func _on_spritesheet_decided(sheet_path: String, split: bool, cols: int, rows: int) -> void:
+	if sheet_path == "":
+		return
+
+	if split:
+		var err := ProjectModel.import_sprites_from_sheet(sheet_path, cols, rows)
+		if err != OK:
+			_notify("Spritesheet import failed (code %d)" % err)
+	else:
+		var err2 := ProjectModel.import_sprites([sheet_path])
+		if err2 != OK:
+			_notify("Image import failed (code %d)" % err2)
+
+	_refresh_sprite_list()
 
 func _connect_asset_tabs() -> void:
 	for i in tab_buttons.size():
@@ -322,7 +396,70 @@ func _select_asset_tab(index: int) -> void:
 	assets_tabs.current_tab = index
 	print("Index for asset tab is: ", index)
 
+# TAGS
+func _normalize_tag_input(raw: String) -> String:
+	var t := raw.strip_edges().to_lower()
+	if t == "":
+		return ""
+	# collapse multiple spaces
+	var parts := t.split(" ", true, 0)
+	var filtered: Array = []
+	for p in parts:
+		if p.strip_edges() != "":
+			filtered.append(p)
+	return " ".join(filtered)
 
+func _get_selected_sprite_asset_id() -> String:
+	if list_sprites == null:
+		return ""
+	var sel := list_sprites.get_selected_items()
+	if sel.is_empty():
+		return ""
+	var idx := sel[0]
+	var meta = list_sprites.get_item_metadata(idx)
+	if meta is String:
+		return meta
+	return ""
+	
+func _refresh_sprite_tag_filter_options() -> void:
+	if filter_sprites == null:
+		return
+
+	var prev := current_sprite_tag_filter
+
+	filter_sprites.clear()
+	filter_sprites.add_item("All sprites")  # index 0
+
+	var tags := ProjectModel.get_all_tags()
+	for t in tags:
+		filter_sprites.add_item(t)
+
+	# try to preserve selection if possible
+	var selected_index := 0
+	if prev != "":
+		for i in range(1, filter_sprites.item_count):
+			if filter_sprites.get_item_text(i) == prev:
+				selected_index = i
+				break
+
+	filter_sprites.select(selected_index)
+	if selected_index == 0:
+		current_sprite_tag_filter = ""
+	else:
+		current_sprite_tag_filter = filter_sprites.get_item_text(selected_index)
+	
+func _on_Filter_Sprites_item_selected(index: int) -> void:
+	if filter_sprites == null:
+		return
+
+	if index == 0:
+		current_sprite_tag_filter = ""
+	else:
+		current_sprite_tag_filter = filter_sprites.get_item_text(index)
+
+	_refresh_sprite_list()
+	
+	
 # -------------------------------------------------------------------
 # SPRITE IMPORT / LIST
 # -------------------------------------------------------------------
@@ -346,9 +483,16 @@ func _wire_sprite_import_ui() -> void:
 
 
 func _on_sprite_files_selected(files: PackedStringArray) -> void:
-	var ok := ProjectModel.import_sprites(files)
-	if ok != OK:
-		_notify("Failed to import some sprites (code %d)." % ok)
+	for f in files:
+		if SpritesheetUtils.looks_like_spritesheet(f):
+			# Show the spritesheet dialog for this file
+			_prompt_spritesheet_import(f)
+		else:
+			# Regular image import
+			var ok := ProjectModel.import_sprites([f])
+			if ok != OK:
+				_notify("Failed to import sprite %s (code %d)." % [f, ok])
+
 	_refresh_sprite_list()
 
 
@@ -365,31 +509,97 @@ func _setup_sprite_list() -> void:
 func _refresh_sprite_list() -> void:
 	if list_sprites == null:
 		return
+
 	list_sprites.clear()
 
 	if ProjectModel.project_dir == "":
 		push_warning("No project open; cannot list sprites.")
-		return
-
-	var rel_paths: Array[String] = ProjectModel.get_sprites()
-	if rel_paths.is_empty():
 		if drag_indicator_lable:
 			drag_indicator_lable.show()
 		return
-	else:
-		if drag_indicator_lable:
-			drag_indicator_lable.hide()
+
+	var rel_paths: Array[String] = ProjectModel.get_sprites()
+	var shown := 0
 
 	for rel in rel_paths:
+		var asset_id := rel   # relative path is the tag key
+
+		# Filter by tag if one is selected
+		if current_sprite_tag_filter != "":
+			var tags := ProjectModel.get_asset_tags(asset_id)
+			if not tags.has(current_sprite_tag_filter):
+				continue
+
 		var abs := ProjectModel.project_dir.path_join(rel)
 		var tex := _thumb_from_path(abs, sprite_icon_size)
 		var label := rel.get_file()
 		var idx := list_sprites.add_item(label)
-		list_sprites.set_item_metadata(idx, rel)
+		list_sprites.set_item_metadata(idx, asset_id)
 		if tex != null:
 			list_sprites.set_item_icon(idx, tex)
+		shown += 1
 
+	if drag_indicator_lable:
+		if shown == 0:
+			drag_indicator_lable.show()
+		else:
+			drag_indicator_lable.hide()
 
+func _on_Btn_AddTags_pressed() -> void:
+	var asset_id := _get_selected_sprite_asset_id()
+	if asset_id == "":
+		_notify("Select a sprite first to add a tag.")
+		return
+
+	_pending_tag_asset_id = asset_id
+	edit_tag_name.text = ""
+	_update_tag_name_feedback("")
+	win_add_tag.title = "Add Tag"
+	win_add_tag.popup_centered()
+	edit_tag_name.grab_focus()
+	
+func _on_TagName_text_changed(new_text: String) -> void:
+	_update_tag_name_feedback(new_text)
+
+func _update_tag_name_feedback(raw: String) -> void:
+	if lbl_tag_exists == null or edit_tag_name == null:
+		return
+
+	var norm := _normalize_tag_input(raw)
+	if norm == "":
+		lbl_tag_exists.hide()
+		edit_tag_name.remove_theme_color_override("font_color")
+		return
+
+	var all_tags := ProjectModel.get_all_tags()
+	var exists := all_tags.has(norm)
+
+	if exists:
+		lbl_tag_exists.text = "Tag already exists"
+		lbl_tag_exists.show()
+		edit_tag_name.add_theme_color_override("font_color", Color.RED)
+	else:
+		lbl_tag_exists.hide()
+		edit_tag_name.remove_theme_color_override("font_color")
+		
+func _on_Btn_TagSubmit_pressed() -> void:
+	if _pending_tag_asset_id == "":
+		win_add_tag.hide()
+		return
+
+	var norm := _normalize_tag_input(edit_tag_name.text)
+	if norm == "":
+		win_add_tag.hide()
+		return
+
+	# Add tag to the selected asset
+	ProjectModel.add_asset_tags(_pending_tag_asset_id, PackedStringArray([norm]))
+
+	# Refresh UI: filter options + sprite list
+	_refresh_sprite_tag_filter_options()
+	_refresh_sprite_list()
+
+	win_add_tag.hide()
 # -------------------------------------------------------------------
 # SOUND IMPORT / LIST  (parallel to sprites)
 # -------------------------------------------------------------------

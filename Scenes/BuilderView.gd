@@ -135,26 +135,51 @@ func _gui_input(event: InputEvent) -> void:
 		var mb := event as InputEventMouseButton
 		var cell: Vector2i = _to_cell(mb.position)
 
-		# --- LEFT CLICK ---
-		if mb.button_index == MOUSE_BUTTON_LEFT and mb.pressed:
-			# Erase if eraser mode is on OR Shift is held
-			var erase_click := erase_mode or Input.is_key_pressed(KEY_SHIFT)
-			if erase_click:
-				_erase_cell(cell)
+		# --- LEFT BUTTON ---
+		if mb.button_index == MOUSE_BUTTON_LEFT:
+			if mb.pressed:
+				# Erase if eraser mode is on OR Shift is held
+				var erase_click := erase_mode or Input.is_key_pressed(KEY_SHIFT)
+				if erase_click:
+					_erase_cell(cell)
+					return
+
+				# Otherwise, start dragging whatever is in this cell
+				_start_drag(cell)
 				return
+			else:
+				# Button released – if we were dragging, finish the move
+				if _dragging:
+					_finish_drag(cell)
+					return
 
-			# Otherwise this is where you'd start your drag/move logic
-			# (leave whatever you already have here)
-			# e.g.:
-			# if placed.has(cell):
-			#     _start_drag(cell)
-			# return
-
-		# --- RIGHT CLICK: always erase entire cell (sprite + sounds) ---
+		# --- RIGHT BUTTON: always erase entire cell (sprite + sounds) ---
 		if mb.button_index == MOUSE_BUTTON_RIGHT and mb.pressed:
 			_erase_cell(cell)
 			return
 
+	elif event is InputEventMouseMotion:
+		var mm := event as InputEventMouseMotion
+		if _dragging:
+			var cell := _to_cell(mm.position)
+			if cell != _drag_current_cell:
+				_drag_current_cell = cell
+				_hover_cell = cell
+				queue_redraw()
+
+func _start_drag(cell: Vector2i) -> void:
+	# Only start dragging if there is something in this cell:
+	# either a sprite, or one or more sounds.
+	if not placed.has(cell) and not placed_sounds.has(cell):
+		return
+
+	_dragging = true
+	_drag_origin_cell = cell
+	_drag_current_cell = cell
+	_drag_rel = placed.get(cell, "")  # may be "" if only sounds
+	_hover_cell = cell
+
+	queue_redraw()
 
 func _finish_drag(target_cell: Vector2i) -> void:
 	if not _dragging:
@@ -162,12 +187,31 @@ func _finish_drag(target_cell: Vector2i) -> void:
 
 	_dragging = false
 
+	# --- Move sprite (if any) ---
 	if placed.has(_drag_origin_cell):
 		placed.erase(_drag_origin_cell)
 
 	if _drag_rel != "":
 		placed[target_cell] = _drag_rel
 
+	# --- Move any sounds attached to the origin cell ---
+	if placed_sounds.has(_drag_origin_cell):
+		var moved_sounds: Array = placed_sounds[_drag_origin_cell]
+		placed_sounds.erase(_drag_origin_cell)
+
+		var dest_sounds: Array = []
+		if placed_sounds.has(target_cell):
+			dest_sounds = placed_sounds[target_cell]
+
+		for rel in moved_sounds:
+			var rel_str := String(rel)
+			if not dest_sounds.has(rel_str):
+				dest_sounds.append(rel_str)
+
+		if not dest_sounds.is_empty():
+			placed_sounds[target_cell] = dest_sounds
+
+	# Reset drag state
 	_drag_origin_cell = Vector2i(-1, -1)
 	_drag_current_cell = Vector2i(-1, -1)
 	_drag_rel = ""

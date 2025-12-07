@@ -1,4 +1,4 @@
-[gd_scene load_steps=30 format=3 uid="uid://bqa0mw31xhwuj"]
+[gd_scene load_steps=31 format=3 uid="uid://bqa0mw31xhwuj"]
 
 [ext_resource type="Script" path="res://Scenes/workspace.gd" id="1_myusm"]
 [ext_resource type="Texture2D" uid="uid://c8y0qcbbgem6u" path="res://Assets/settings.png" id="2_5myuk"]
@@ -24,6 +24,7 @@
 [ext_resource type="Script" path="res://Scenes/widgets/SoundList.gd" id="17_4rsy7"]
 [ext_resource type="PackedScene" uid="uid://ddum0qkw4vig0" path="res://settings_window.tscn" id="17_sswpc"]
 [ext_resource type="Texture2D" uid="uid://c3i60hovrdah6" path="res://Assets/speaker-filled-audio-tool.png" id="18_srjvv"]
+[ext_resource type="Script" path="res://Scenes/SpritesheetDialog.gd" id="25_4ihhd"]
 
 [sub_resource type="StyleBoxFlat" id="StyleBoxFlat_f0813"]
 bg_color = Color(0.730913, 0.730913, 0.730913, 1)
@@ -346,13 +347,23 @@ text = "Metadata"
 
 [node name="GridContainer4" type="GridContainer" parent="MarginContainer/RootVBox/VS_Main_Assets/HS_Edit_Sidebar/VS_Preview_Inspector/InspectorPanel/InspectorTabs/Properties/MarginContainer/VBoxContainer"]
 layout_mode = 2
+columns = 2
 
 [node name="Label" type="Label" parent="MarginContainer/RootVBox/VS_Main_Assets/HS_Edit_Sidebar/VS_Preview_Inspector/InspectorPanel/InspectorTabs/Properties/MarginContainer/VBoxContainer/GridContainer4"]
 layout_mode = 2
 text = "Tags                     "
 
-[node name="HBoxContainer" type="HBoxContainer" parent="MarginContainer/RootVBox/VS_Main_Assets/HS_Edit_Sidebar/VS_Preview_Inspector/InspectorPanel/InspectorTabs/Properties/MarginContainer/VBoxContainer/GridContainer4"]
+[node name="TagLineEditTemp" type="LineEdit" parent="MarginContainer/RootVBox/VS_Main_Assets/HS_Edit_Sidebar/VS_Preview_Inspector/InspectorPanel/InspectorTabs/Properties/MarginContainer/VBoxContainer/GridContainer4"]
 layout_mode = 2
+
+[node name="Label2" type="Label" parent="MarginContainer/RootVBox/VS_Main_Assets/HS_Edit_Sidebar/VS_Preview_Inspector/InspectorPanel/InspectorTabs/Properties/MarginContainer/VBoxContainer/GridContainer4"]
+layout_mode = 2
+text = "Description"
+
+[node name="TextEdit" type="TextEdit" parent="MarginContainer/RootVBox/VS_Main_Assets/HS_Edit_Sidebar/VS_Preview_Inspector/InspectorPanel/InspectorTabs/Properties/MarginContainer/VBoxContainer/GridContainer4"]
+custom_minimum_size = Vector2(120, 100)
+layout_mode = 2
+theme_override_font_sizes/font_size = 10
 
 [node name="Export" type="ScrollContainer" parent="MarginContainer/RootVBox/VS_Main_Assets/HS_Edit_Sidebar/VS_Preview_Inspector/InspectorPanel/InspectorTabs"]
 visible = false
@@ -560,6 +571,7 @@ layout_mode = 2
 text = "Tags:"
 
 [node name="Filter_Sprites" type="OptionButton" parent="MarginContainer/RootVBox/VS_Main_Assets/AssetsPanel/AssetTabSplit/AssetsTab/MarginContainer/TabPage_Sprites/Toolbar_Sprites/HBoxContainer2"]
+unique_name_in_owner = true
 layout_mode = 2
 size_flags_horizontal = 3
 
@@ -572,10 +584,11 @@ text = "+"
 unique_name_in_owner = true
 layout_mode = 2
 size_flags_horizontal = 3
+theme_override_font_sizes/font_size = 6
 allow_reselect = true
 max_columns = 0
 same_column_width = true
-fixed_icon_size = Vector2i(10, 10)
+fixed_icon_size = Vector2i(5, 5)
 script = ExtResource("5_gcset")
 
 [node name="DragIndicatorLabel" type="Label" parent="MarginContainer/RootVBox/VS_Main_Assets/AssetsPanel/AssetTabSplit/AssetsTab/MarginContainer/TabPage_Sprites/List_Sprites"]
@@ -623,10 +636,12 @@ layout_mode = 2
 text = "Tags:"
 
 [node name="Filter_Sound" type="OptionButton" parent="MarginContainer/RootVBox/VS_Main_Assets/AssetsPanel/AssetTabSplit/AssetsTab/MarginContainer2/TabPage_Sound/Toolbar_Sound/HBoxContainer2"]
+unique_name_in_owner = true
 layout_mode = 2
 size_flags_horizontal = 3
 
 [node name="Btn_AddTagsSnd" type="Button" parent="MarginContainer/RootVBox/VS_Main_Assets/AssetsPanel/AssetTabSplit/AssetsTab/MarginContainer2/TabPage_Sound/Toolbar_Sound/HBoxContainer2"]
+unique_name_in_owner = true
 layout_mode = 2
 text = "+"
 
@@ -668,3 +683,110 @@ file_mode = 1
 filters = PackedStringArray("*.png", "*.jpeg", "*.jpg")
 
 [node name="FD_Import_Sound" type="FileDialog" parent="."]
+
+[node name="Win_AddTag" type="Window" parent="."]
+unique_name_in_owner = true
+title = "Add Tag"
+position = Vector2i(0, 36)
+size = Vector2i(140, 100)
+visible = false
+
+[node name="MarginContainer" type="MarginContainer" parent="Win_AddTag"]
+offset_right = 40.0
+offset_bottom = 40.0
+theme_override_constants/margin_left = 5
+
+[node name="VBoxContainer" type="VBoxContainer" parent="Win_AddTag/MarginContainer"]
+layout_mode = 2
+
+[node name="Label" type="Label" parent="Win_AddTag/MarginContainer/VBoxContainer"]
+layout_mode = 2
+text = "Tag Name"
+
+[node name="LineEdit_TagName" type="LineEdit" parent="Win_AddTag/MarginContainer/VBoxContainer"]
+unique_name_in_owner = true
+layout_mode = 2
+
+[node name="Label_TagExists" type="Label" parent="Win_AddTag/MarginContainer/VBoxContainer"]
+unique_name_in_owner = true
+visible = false
+modulate = Color(0.729412, 0.211765, 0.254902, 1)
+layout_mode = 2
+text = "Tag already exists."
+
+[node name="HBoxContainer" type="HBoxContainer" parent="Win_AddTag/MarginContainer/VBoxContainer"]
+layout_mode = 2
+
+[node name="Btn_TagCancel" type="Button" parent="Win_AddTag/MarginContainer/VBoxContainer/HBoxContainer"]
+unique_name_in_owner = true
+layout_mode = 2
+text = "Cancel"
+
+[node name="Btn_TagSubmit" type="Button" parent="Win_AddTag/MarginContainer/VBoxContainer/HBoxContainer"]
+unique_name_in_owner = true
+layout_mode = 2
+text = "Add Tag"
+
+[node name="SpritesheetDialog" type="Window" parent="."]
+unique_name_in_owner = true
+title = "Import Sprites"
+size = Vector2i(400, 300)
+visible = false
+min_size = Vector2i(400, 300)
+script = ExtResource("25_4ihhd")
+
+[node name="MarginContainer" type="MarginContainer" parent="SpritesheetDialog"]
+offset_right = 40.0
+offset_bottom = 40.0
+
+[node name="VBoxContainer" type="VBoxContainer" parent="SpritesheetDialog/MarginContainer"]
+layout_mode = 2
+
+[node name="Label_Info" type="Label" parent="SpritesheetDialog/MarginContainer/VBoxContainer"]
+unique_name_in_owner = true
+layout_mode = 2
+
+[node name="HBoxContainer3" type="HBoxContainer" parent="SpritesheetDialog/MarginContainer/VBoxContainer"]
+layout_mode = 2
+
+[node name="Label" type="Label" parent="SpritesheetDialog/MarginContainer/VBoxContainer/HBoxContainer3"]
+layout_mode = 2
+text = "Columns:"
+
+[node name="Spin_Cols" type="SpinBox" parent="SpritesheetDialog/MarginContainer/VBoxContainer/HBoxContainer3"]
+unique_name_in_owner = true
+layout_mode = 2
+min_value = 1.0
+value = 1.0
+
+[node name="HBoxContainer" type="HBoxContainer" parent="SpritesheetDialog/MarginContainer/VBoxContainer"]
+layout_mode = 2
+
+[node name="Label" type="Label" parent="SpritesheetDialog/MarginContainer/VBoxContainer/HBoxContainer"]
+unique_name_in_owner = true
+layout_mode = 2
+text = "Rows:"
+
+[node name="Spin_Rows" type="SpinBox" parent="SpritesheetDialog/MarginContainer/VBoxContainer/HBoxContainer"]
+unique_name_in_owner = true
+layout_mode = 2
+min_value = 1.0
+value = 1.0
+
+[node name="Check_Split" type="CheckBox" parent="SpritesheetDialog/MarginContainer/VBoxContainer"]
+unique_name_in_owner = true
+layout_mode = 2
+text = "Split this image into frames"
+
+[node name="HBoxContainer2" type="HBoxContainer" parent="SpritesheetDialog/MarginContainer/VBoxContainer"]
+layout_mode = 2
+
+[node name="Btn_Cancel" type="Button" parent="SpritesheetDialog/MarginContainer/VBoxContainer/HBoxContainer2"]
+unique_name_in_owner = true
+layout_mode = 2
+text = "Cancel"
+
+[node name="Btn_OK" type="Button" parent="SpritesheetDialog/MarginContainer/VBoxContainer/HBoxContainer2"]
+unique_name_in_owner = true
+layout_mode = 2
+text = "Ok"

@@ -7,6 +7,7 @@ var project_dir: String = ""  # current project dir (user://projects/MyProject)
 
 const SPRITES_DIR := "assets/sprites"
 const AUDIO_SUBDIR := "assets/audio"
+const SpritesheetUtils = preload("res://SpritesheetUtils.gd")
 var project_path: String = ""                 # absolute path to .aam
 
 var export_repo_path: String = ""  # absolute path to linked Godot project (optional)
@@ -21,7 +22,12 @@ signal animation_changed(animation_name: String)
 
 var data: Dictionary = {
 	"animations": {},
-	"current_animation": ""
+	"current_animation": "",
+	"assets": {
+		"sprites": []
+	},
+	"export": {},
+	"asset_tags": {}   # NEW: asset_id -> Array[String] of tags
 }
 
 
@@ -100,7 +106,8 @@ func create_project(name: String) -> int:
 		"assets": {
 			"sprites": []
 		},
-		"export": {}
+		"export": {},
+		"asset_tags": {}    # NEW
 	}
 
 	var save_err := save()
@@ -149,6 +156,10 @@ func open(path: String) -> Error:
 		data["animations"] = {}
 	if not data.has("current_animation") or not (data["current_animation"] is String):
 		data["current_animation"] = ""
+	
+	# Normalize asset_tags block
+	if not data.has("asset_tags") or not (data["asset_tags"] is Dictionary):
+		data["asset_tags"] = {}
 
 	emit_signal("project_loaded")
 	emit_signal("animation_list_changed")
@@ -258,6 +269,39 @@ func import_sprites(paths: Array[String]) -> Error:
 	return save()
 
 
+func import_sprites_from_sheet(sheet_path: String, cols: int, rows: int) -> Error:
+	if project_dir == "":
+		return ERR_INVALID_DATA
+
+	var dst_dir_abs: String = project_dir.path_join(SPRITES_DIR)
+	if not DirAccess.dir_exists_absolute(dst_dir_abs):
+		var mk := DirAccess.make_dir_recursive_absolute(dst_dir_abs)
+		if mk != OK:
+			return mk
+
+	var sheet_name := sheet_path.get_file().get_basename()
+
+	# Actually slice the sheet
+	var frame_files: Array[String] = SpritesheetUtils.split_sheet_to_files(
+		sheet_path,
+		dst_dir_abs,
+		cols,
+		rows,
+		sheet_name
+	)
+
+	if frame_files.is_empty():
+		return ERR_CANT_OPEN
+
+	var sprites: Array[String] = get_sprites()
+	for fname in frame_files:
+		var rel := SPRITES_DIR.path_join(fname)  # e.g. "assets/sprites/sword_00.png"
+		if not sprites.has(rel):
+			sprites.append(rel)
+
+	data["assets"]["sprites"] = sprites
+	return save()
+
 func import_audio(files: PackedStringArray) -> int:
 	if project_dir == "":
 		return ERR_CANT_OPEN
@@ -347,6 +391,135 @@ func set_export_repo(path: String) -> void:
 	export_dict["repo_path"] = path
 	data["export"] = export_dict
 	save()
+	
+# ----------------------------------------------------
+# Asset tag system (project-wide)
+# ----------------------------------------------------
+
+func _get_asset_tags_dict() -> Dictionary:
+	# Ensure the sub-dictionary exists
+	if not data.has("asset_tags") or not (data["asset_tags"] is Dictionary):
+		data["asset_tags"] = {}
+	return data["asset_tags"]
+
+
+func get_asset_tags(asset_id: String) -> PackedStringArray:
+	var tags_dict := _get_asset_tags_dict()
+	if not tags_dict.has(asset_id):
+		return PackedStringArray()
+
+	var raw = tags_dict[asset_id]
+	var out: Array = []
+
+	if raw is Array or raw is PackedStringArray:
+		for v in raw:
+			if v is String:
+				var t := _normalize_single_tag(v)
+				if t != "" and not out.has(t):
+					out.append(t)
+	elif raw is String:
+		var t := _normalize_single_tag(raw)
+		if t != "" and not out.has(t):
+			out.append(t)
+
+	return PackedStringArray(out)
+
+
+func set_asset_tags(asset_id: String, tags: PackedStringArray) -> void:
+	var tags_dict := _get_asset_tags_dict()
+	var cleaned := _normalize_tags(tags)
+
+	if cleaned.is_empty():
+		tags_dict.erase(asset_id)
+	else:
+		tags_dict[asset_id] = cleaned
+
+	data["asset_tags"] = tags_dict
+	save()  # IMPORTANT: persist tags immediately
+
+
+func add_asset_tags(asset_id: String, tags_to_add: PackedStringArray) -> void:
+	var existing := get_asset_tags(asset_id)
+	var merged: Array = existing.duplicate()
+
+	for t in tags_to_add:
+		var norm := _normalize_single_tag(t)
+		if norm != "" and not merged.has(norm):
+			merged.append(norm)
+
+	set_asset_tags(asset_id, PackedStringArray(merged))
+
+
+func remove_asset_tags(asset_id: String, tags_to_remove: PackedStringArray) -> void:
+	var existing := get_asset_tags(asset_id)
+	if existing.is_empty():
+		return
+
+	var arr: Array = existing.duplicate()
+	for t in tags_to_remove:
+		var norm := _normalize_single_tag(t)
+		arr.erase(norm)
+
+	set_asset_tags(asset_id, PackedStringArray(arr))
+
+
+func get_all_tags() -> PackedStringArray:
+	var tags_dict := _get_asset_tags_dict()
+	var seen: Dictionary = {}  # acts as a set
+
+	for asset_id in tags_dict.keys():
+		var ts: PackedStringArray = get_asset_tags(asset_id)
+		for t in ts:
+			seen[t] = true
+
+	var out: Array = []
+	for k in seen.keys():
+		out.append(String(k))
+
+	out.sort()
+	return PackedStringArray(out)
+
+
+func get_assets_with_tag(tag: String) -> Array:
+	var tags_dict := _get_asset_tags_dict()
+	var normalized := _normalize_single_tag(tag)
+	if normalized == "":
+		return []
+
+	var results: Array = []
+	for asset_id in tags_dict.keys():
+		var ts: PackedStringArray = get_asset_tags(asset_id)
+		if ts.has(normalized):
+			results.append(asset_id)
+	return results
+
+
+func _normalize_tags(tags: PackedStringArray) -> PackedStringArray:
+	var out: Array = []
+	for raw in tags:
+		var t := _normalize_single_tag(raw)
+		if t != "" and not out.has(t):
+			out.append(t)
+	return PackedStringArray(out)
+
+
+func _normalize_single_tag(raw: String) -> String:
+	var t := raw.strip_edges()
+	if t == "":
+		return ""
+
+	t = t.to_lower()
+
+	# Collapse all whitespace sequences into a single space
+	var parts := t.split(" ", true, 0)  # split by ANY number of spaces
+	var filtered: Array = []
+	for p in parts:
+		if p.strip_edges() != "":
+			filtered.append(p)
+
+	# Join with a single space
+	return " ".join(filtered)
+	
 	
 const ERR_NO_PROJECT        := 1001
 const ERR_NO_REPO           := 1002
