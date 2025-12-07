@@ -212,6 +212,16 @@ func _perform_save_for_animation(name: String) -> void:
 	_update_save_icon_state()
 	_rebuild_animation_switcher_menu()
 
+	#  NEW: ask Workspace to write .aam_editor.json
+	_request_editor_state_save()
+
+func _request_editor_state_save() -> void:
+	# Find the Workspace node and call its save_editor_state() if it exists
+	var ws := get_tree().root.find_child("Workspace", true, false)
+	if ws and ws.has_method("save_editor_state"):
+		ws.call("save_editor_state")
+	else:
+		print("[BuilderOverlay] Workspace with save_editor_state() not found")
 
 # -------------------------------------------------------------------
 # Popup animation switcher
@@ -397,3 +407,4 @@ func load_all_animation_data(project_data: Dictionary) -> void:
 
 	_rebuild_animation_switcher_menu()
 	_update_save_icon_state()
+

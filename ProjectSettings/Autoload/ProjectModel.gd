@@ -6,7 +6,7 @@ const PROJECTS_ROOT := "user://projects"  # where all animation projects live
 var project_dir: String = ""  # current project dir (user://projects/MyProject)
 
 const SPRITES_DIR := "assets/sprites"
-
+const AUDIO_SUBDIR := "assets/audio"
 var project_path: String = ""                 # absolute path to .aam
 
 var export_repo_path: String = ""  # absolute path to linked Godot project (optional)
@@ -178,6 +178,37 @@ func get_sprites() -> Array[String]:
 			out.append(v)
 	return out
 
+
+func get_audio() -> Array[String]:
+	# Robust: list sounds directly from the assets/audio folder.
+	var result: Array[String] = []
+
+	if project_dir == "":
+		return result
+
+	var audio_dir := project_dir.path_join(AUDIO_SUBDIR)
+	var dir := DirAccess.open(audio_dir)
+	if dir == null:
+		# No audio directory yet – that's fine.
+		return result
+
+	dir.list_dir_begin()
+	while true:
+		var name := dir.get_next()
+		if name == "":
+			break
+		if dir.current_is_dir():
+			continue
+
+		var ext := name.get_extension().to_lower()
+		if ext == "wav" or ext == "ogg" or ext == "mp3" or ext == "flac":
+			# Store as a project-relative path, e.g. "assets/audio/foo.wav"
+			result.append("%s/%s" % [AUDIO_SUBDIR, name])
+	dir.list_dir_end()
+
+	return result
+
+
 func import_sprites(paths: Array[String]) -> Error:
 	if project_dir == "":
 		return ERR_INVALID_DATA
@@ -225,6 +256,61 @@ func import_sprites(paths: Array[String]) -> Error:
 	# write back and save
 	data["assets"]["sprites"] = sprites
 	return save()
+
+
+func import_audio(files: PackedStringArray) -> int:
+	if project_dir == "":
+		return ERR_CANT_OPEN
+
+	if not (data is Dictionary):
+		data = {}
+
+	var assets = data.get("assets", {})
+	if typeof(assets) != TYPE_DICTIONARY:
+		assets = {}
+
+	var audio = assets.get("audio", [])
+	if typeof(audio) != TYPE_ARRAY:
+		audio = []
+
+	# 1) Game repo audio dir (external project_dir)
+	var game_audio_dir_abs := project_dir.path_join(AUDIO_SUBDIR)
+	DirAccess.make_dir_recursive_absolute(game_audio_dir_abs)
+
+	# 2) Animation manager project audio dir (this project's res://)
+	var editor_root_abs := ProjectSettings.globalize_path("res://")
+	var editor_audio_dir_abs := editor_root_abs.path_join(AUDIO_SUBDIR)
+	DirAccess.make_dir_recursive_absolute(editor_audio_dir_abs)
+
+	var last_err := OK
+
+	for src in files:
+		var src_path := String(src)
+		var fname := src_path.get_file()
+		var dst_rel := AUDIO_SUBDIR.path_join(fname)   # "assets/audio/foo.wav"
+
+		var game_dst_abs := project_dir.path_join(dst_rel)
+		var editor_dst_abs := editor_root_abs.path_join(dst_rel)
+
+		# Copy into game repo
+		var err := DirAccess.copy_absolute(src_path, game_dst_abs)
+		if err != OK:
+			last_err = err
+			continue
+
+		# Copy into animation manager project so res://assets/audio/... exists
+		err = DirAccess.copy_absolute(src_path, editor_dst_abs)
+		if err != OK:
+			last_err = err
+			# We still continue so at least game repo has it
+
+		if not audio.has(dst_rel):
+			audio.append(dst_rel)
+
+	assets["audio"] = audio
+	data["assets"] = assets
+
+	return last_err
 
 
 func set_sequences_from_builder(seq_rows: Array) -> void:

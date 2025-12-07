@@ -1,0 +1,9 @@
+[gd_scene load_steps=2 format=3 uid="uid://me173ahrlp7t"]
+
+[ext_resource type="AudioStream" uid="uid://bodg27mbcpns8" path="res://Assets/audio/smb_jump=small.mp3" id="1_lrmbh"]
+
+[node name="Node2D" type="Node2D"]
+
+[node name="AudioStreamPlayer" type="AudioStreamPlayer" parent="."]
+stream = ExtResource("1_lrmbh")
+autoplay = true

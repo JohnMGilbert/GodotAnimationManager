@@ -17,6 +17,9 @@ const FALLBACK_MIN_ASSETS    := Vector2i(400, 180)
 const TAB_BG_NORMAL  := Color("#3D3D3D")    # Dark grey
 const TAB_BG_ACTIVE  := Color("#666666")    # Blue-ish highlight
 
+# Editor-state file (lives alongside the .aam in the project dir)
+const EDITOR_STATE_FILE := ".aam_editor.json"
+
 # --- Node refs (adjust paths if your names differ) ---
 @onready var vs_main_assets: VSplitContainer       = %VS_Main_Assets
 @onready var hs_edit_sidebar: HSplitContainer      = %HS_Edit_Sidebar
@@ -27,7 +30,7 @@ const TAB_BG_ACTIVE  := Color("#666666")    # Blue-ish highlight
 @onready var preview_panel: Control   = %PreviewPanel
 @onready var inspector_panel: Control = %InspectorPanel
 @onready var assets_tabbar: Control   = %AssetsTabBar
-@onready var assets_tabs: Control     = %AssetsTab
+@onready var assets_tabs: TabContainer = %AssetsTab
 
 # --- Assets vertical tabs (Sprites / Sound) ---
 @onready var tab_sprites_btn: TextureButton   = %Tab_Sprites
@@ -35,17 +38,22 @@ const TAB_BG_ACTIVE  := Color("#666666")    # Blue-ish highlight
 @onready var tab_buttons: Array[TextureButton] = []
 
 # Sprites UI
-@onready var list_sprites: ItemList    = %List_Sprites
-@onready var btn_import_sprites: Button = %Btn_ImportSprites
+@onready var list_sprites: ItemList      = %List_Sprites
+@onready var btn_import_sprites: Button  = %Btn_ImportSprites
 @onready var fd_import_sprites: FileDialog = $FD_Import_Sprites
+@onready var drag_indicator_lable: Label = %DragIndicatorLabel
 
-@onready var builder_view: Node = %BuilderView
+# --- SOUND UI (mirrors sprite tab) ---
+@onready var list_sound: ItemList        = %List_Sound
+@onready var btn_import_sound: Button    = %Btn_ImportSound
+@onready var fd_import_sound: FileDialog = $FD_Import_Sound
+
+@onready var builder_view: Node = %BuilderView          # Should be a BuilderGrid
 @onready var preview_sprite: AnimatedSprite2D = %PreviewSprite
 
 @onready var btn_builder_settings: TextureButton = %Btn_BuilderSettings
 @onready var settings_window: Window = %SettingsWindow
 
-#@onready var le_repo_path: LineEdit = %LineEdit_RepoPath # Change this one
 @onready var le_anim_name: LineEdit = %LineEdit_AnimName
 
 @onready var rb_json: CheckBox = %CheckBox
@@ -55,12 +63,9 @@ const TAB_BG_ACTIVE  := Color("#666666")    # Blue-ish highlight
 @onready var cb_trim: CheckBox = %CheckBox_Trim
 @onready var cb_rename: CheckBox = %CheckBox_Rename
 @onready var cb_overwrite: CheckBox = %CheckBox_Overwrite
-#@onready var cb_open: CheckBox = $RootVBox/.../ExportTab/Section_Options/CheckBox_OpenFolder
 
 @onready var btn_export: Button = %Btn_Export
 @onready var lbl_export_status: Label = %Label_Export_Status
-
-@onready var drag_indicator_lable: Label = %DragIndicatorLabel
 
 var preview_fps: float = 8.0
 var export_repo_path: String = ""   # Godot project / destination repo
@@ -68,8 +73,19 @@ var export_repo_path: String = ""   # Godot project / destination repo
 @export var sprite_icon_size: int = 96   # size of sprite thumbnails in the list
 @export var sprite_label_font_size: int = 14
 
+@onready var btn_eraser: TextureButton = %EraseBtn
+var eraser_active: bool = false
+
 @onready var builder_overlay: BuilderOverlay = %BuilderOverlay
 
+# AUDIO STUFF
+@onready var preview_audio: AudioStreamPlayer = %PreviewAudio
+var _frame_sounds: Array = []          # index = frame index, value = Array[String] rel paths
+var _audio_cache: Dictionary = {}      # rel -> AudioStream
+@onready var btn_preview_playpause: TextureButton = %Btn_PreviewPlayPause
+@onready var btn_preview_loop: TextureButton = %Btn_PreviewLoop
+var preview_is_playing: bool = true
+var preview_loop_enabled: bool = true
 
 func _ready() -> void:
 	# Let the root fill the window, but DO NOT touch child mins or splits
@@ -80,14 +96,17 @@ func _ready() -> void:
 	_select_asset_tab(0)
 
 	_wire_sprite_import_ui()
+	_wire_sound_import_ui()
+
+	_setup_sprite_list()
+	_setup_sound_list()
+
 	_refresh_sprite_list()
+	_refresh_sound_list()
 
 	var win := get_window()
 	if win:
 		win.files_dropped.connect(_on_os_files_dropped)
-
-	_setup_sprite_list()
-	_refresh_sprite_list()
 
 	if builder_view:
 		builder_view.sequences_changed.connect(_on_builder_sequences_changed)
@@ -101,28 +120,109 @@ func _ready() -> void:
 
 	if btn_export:
 		btn_export.pressed.connect(_on_export_pressed)
+		
+	if preview_sprite:
+		preview_sprite.frame_changed.connect(_on_preview_frame_changed)
 
-	# --- NEW: restore builder animations from ProjectModel, if present ---
-	if builder_overlay and ProjectModel.data is Dictionary:
-		var anims_dict: Dictionary = ProjectModel.data.get("builder_animations", {})
-		builder_overlay.load_all_animation_data({ "animations": anims_dict })
+	if btn_preview_playpause:
+		btn_preview_playpause.toggle_mode = true
+		btn_preview_playpause.button_pressed = true  # start in “playing” state
+		btn_preview_playpause.pressed.connect(_on_preview_playpause_pressed)
+
+	if btn_preview_loop:
+		btn_preview_loop.toggle_mode = true
+		btn_preview_loop.button_pressed = true  # start with looping enabled
+		btn_preview_loop.pressed.connect(_on_preview_loop_pressed)
+	
+	if btn_eraser:
+		btn_eraser.toggle_mode = true
+		btn_eraser.button_pressed = false
+		btn_eraser.pressed.connect(_on_eraser_pressed)
+		
+	# Load editor state (animations + settings) from the editor-state file
+	_load_editor_state()
+	
+		## FORCE-ENABLE MASTER BUS FOR DEBUG
+	#var master_idx := AudioServer.get_bus_index("Master")
+	#if master_idx >= 0:
+		#AudioServer.set_bus_mute(master_idx, false)
+		#AudioServer.set_bus_volume_db(master_idx, 0.0)
+		#print("[AUDIO DEBUG] Master bus forced to 0 dB and unmuted.")
+
+
+func _debug_test_sound_once() -> void:
+	print("================= AUDIO TEST START =================")
+
+	if preview_audio == null:
+		print("[AUDIO DEBUG] preview_audio is null; cannot run test.")
+		return
+
+	print("[AUDIO DEBUG] preview_audio =", preview_audio)
+	print("[AUDIO DEBUG] preview_audio path =", preview_audio.get_path())
+	print("[AUDIO DEBUG] preview_audio.bus =", preview_audio.bus)
+	print("[AUDIO DEBUG] preview_audio.volume_db (before) =", preview_audio.volume_db)
+
+	var rel := "assets/audio/smb_jump-small.mp3"  # adjust if your rel is different
+	var res_path := "res://%s" % rel
+	print("[AUDIO DEBUG] Test sound path:", res_path)
+
+	var exists := ResourceLoader.exists(res_path)
+	print("[AUDIO DEBUG] ResourceLoader.exists(res_path) =", exists)
+
+	if not exists:
+		print("[AUDIO DEBUG] Resource does NOT exist at that path in THIS project.")
+		return
+
+	var res := ResourceLoader.load(res_path)
+	print("[AUDIO DEBUG] ResourceLoader.load(...) returned:", res)
+
+	if res == null:
+		print("[AUDIO DEBUG] Loaded resource is NULL, aborting.")
+		return
+
+	if not (res is AudioStream):
+		print("[AUDIO DEBUG] Loaded resource is NOT AudioStream. Type =", res.get_class())
+		return
+
+	var stream := res as AudioStream
+	preview_audio.stream = stream
+	print("[AUDIO DEBUG] After assignment preview_audio.stream =", preview_audio.stream)
+
+	# Make sure it's loud enough
+	preview_audio.volume_db = 0.0
+
+	print("[AUDIO DEBUG] About to play...")
+	preview_audio.play()
+	print("[AUDIO DEBUG] preview_audio.playing =", preview_audio.playing)
+	print("================= AUDIO TEST END =================")
 
 
 func _on_os_files_dropped(files: PackedStringArray) -> void:
 	var imgs: Array[String] = []
+	var sounds: Array[String] = []
+
 	for f in files:
 		var ext := f.get_extension().to_lower()
-		if ext == "png" or ext == "jpg" or ext == "jpeg" or ext == "webp":
-			imgs.append(f)
-	if imgs.is_empty():
-		print("Dropped files, but none were images:", files)
-		return
+		match ext:
+			"png", "jpg", "jpeg", "webp":
+				imgs.append(f)
+			"wav", "ogg", "mp3", "flac":
+				sounds.append(f)
+			_:
+				pass
 
-	var err := ProjectModel.import_sprites(imgs)
-	if err != OK:
-		_notify("Failed to import some sprites from OS drop (code %d)." % err)
+	if not imgs.is_empty():
+		var err_img := ProjectModel.import_sprites(imgs)
+		if err_img != OK:
+			_notify("Failed to import some sprites from OS drop (code %d)." % err_img)
+		_refresh_sprite_list()
 
-	_refresh_sprite_list()
+	if not sounds.is_empty():
+		# NOTE: implement ProjectModel.import_audio(files) similar to import_sprites
+		var err_snd = ProjectModel.import_audio(sounds)
+		if err_snd != OK:
+			_notify("Failed to import some audio files from OS drop (code %d)." % err_snd)
+		_refresh_sound_list()
 
 
 # --- Helpers (assume exactly two children) ---
@@ -135,9 +235,44 @@ func _on_builder_settings_pressed() -> void:
 	print("Pressed settings button")
 	if settings_window:
 		if builder_view:
-			builder_view.cell_size = builder_view.cell_size  # keep current; window will override
 			settings_window.set_current_values(builder_view.cell_size, preview_fps, export_repo_path)
 		settings_window.popup_centered()
+
+func _on_eraser_pressed() -> void:
+	eraser_active = btn_eraser.button_pressed
+
+	var grid := builder_view as BuilderGrid
+	if grid:
+		grid.set_erase_mode(eraser_active)
+
+func _on_preview_playpause_pressed() -> void:
+	preview_is_playing = btn_preview_playpause.button_pressed
+
+	if preview_sprite == null:
+		return
+
+	if preview_is_playing:
+		preview_sprite.play()
+	else:
+		preview_sprite.stop()
+		# Optional: also stop any playing audio
+		if preview_audio:
+			preview_audio.stop()
+
+
+func _on_preview_loop_pressed() -> void:
+	preview_loop_enabled = btn_preview_loop.button_pressed
+
+	if preview_sprite == null:
+		return
+
+	var frames := preview_sprite.sprite_frames
+	if frames == null:
+		return
+
+	var anim_name := "preview"
+	if frames.has_animation(anim_name):
+		frames.set_animation_loop(anim_name, preview_loop_enabled)
 
 
 func _on_settings_applied(grid_cell_size: int, preview_fps_new: float, repo_path: String) -> void:
@@ -148,15 +283,16 @@ func _on_settings_applied(grid_cell_size: int, preview_fps_new: float, repo_path
 		builder_view.cell_size = grid_cell_size
 		builder_view._update_grid_dims()
 		builder_view.queue_redraw()
-		# No _emit_sequences() here
 
 	# Apply to preview
 	preview_fps = preview_fps_new
 	_on_builder_sequences_changed(builder_view.get_row_sequences())
 
-	# Optional: persist in ProjectModel
+	# Persist export repo in ProjectModel
 	if repo_path != "":
 		ProjectModel.set_export_repo(repo_path)
+
+	save_editor_state()
 
 
 func _connect_asset_tabs() -> void:
@@ -184,7 +320,12 @@ func _select_asset_tab(index: int) -> void:
 				tab_panel.remove_theme_color_override("panel")
 
 	assets_tabs.current_tab = index
+	print("Index for asset tab is: ", index)
 
+
+# -------------------------------------------------------------------
+# SPRITE IMPORT / LIST
+# -------------------------------------------------------------------
 
 func _wire_sprite_import_ui() -> void:
 	if btn_import_sprites:
@@ -211,28 +352,13 @@ func _on_sprite_files_selected(files: PackedStringArray) -> void:
 	_refresh_sprite_list()
 
 
-func _on_files_dropped(files: PackedStringArray) -> void:
-	var imgs: Array[String] = []
-	for f in files:
-		var ext := f.get_extension().to_lower()
-		if ext == "png" or ext == "jpg" or ext == "jpeg" or ext == "webp":
-			imgs.append(f)
-	if imgs.is_empty():
-		return
-	var ok := ProjectModel.import_sprites(imgs)
-	if ok != OK:
-		_notify("Failed to import some sprites (code %d)." % ok)
-	_refresh_sprite_list()
-
-
 func _setup_sprite_list() -> void:
 	if list_sprites == null:
 		return
-	# Nice grid of thumbnails:
-	list_sprites.icon_mode = ItemList.ICON_MODE_TOP       # icon above text
+	list_sprites.icon_mode = ItemList.ICON_MODE_TOP
 	list_sprites.same_column_width = true
 	list_sprites.fixed_icon_size = Vector2i(sprite_icon_size, sprite_icon_size)
-	list_sprites.max_columns = 0                           # auto columns
+	list_sprites.max_columns = 0
 	list_sprites.allow_reselect = true
 
 
@@ -247,34 +373,189 @@ func _refresh_sprite_list() -> void:
 
 	var rel_paths: Array[String] = ProjectModel.get_sprites()
 	if rel_paths.is_empty():
-		drag_indicator_lable.show()
-		#list_sprites.add_item("(no sprites yet)")
+		if drag_indicator_lable:
+			drag_indicator_lable.show()
 		return
 	else:
-		drag_indicator_lable.hide()
+		if drag_indicator_lable:
+			drag_indicator_lable.hide()
 
 	for rel in rel_paths:
 		var abs := ProjectModel.project_dir.path_join(rel)
 		var tex := _thumb_from_path(abs, sprite_icon_size)
 		var label := rel.get_file()
 		var idx := list_sprites.add_item(label)
-		list_sprites.set_item_metadata(idx, rel)   # store rel path as metadata
+		list_sprites.set_item_metadata(idx, rel)
 		if tex != null:
 			list_sprites.set_item_icon(idx, tex)
 
 
+# -------------------------------------------------------------------
+# SOUND IMPORT / LIST  (parallel to sprites)
+# -------------------------------------------------------------------
+
+func _wire_sound_import_ui() -> void:
+	if btn_import_sound:
+		btn_import_sound.pressed.connect(func() -> void:
+			if fd_import_sound:
+				fd_import_sound.access = FileDialog.ACCESS_FILESYSTEM
+				fd_import_sound.file_mode = FileDialog.FILE_MODE_OPEN_FILES
+				fd_import_sound.filters = PackedStringArray([
+					"*.wav ; WAV Audio",
+					"*.ogg ; Ogg Vorbis",
+					"*.mp3 ; MP3 Audio",
+					"*.flac ; FLAC Audio"
+				])
+				fd_import_sound.popup_centered_ratio(0.75)
+		)
+
+	if fd_import_sound:
+		fd_import_sound.files_selected.connect(_on_sound_files_selected)
+
+func _rebuild_sound_timeline() -> void:
+	_frame_sounds.clear()
+
+	var grid := builder_view as BuilderGrid
+	if grid == null:
+		print("[SOUND] No BuilderGrid, cannot rebuild sound timeline.")
+		return
+
+	# X positions for the frames used in the preview
+	var xs: Array = grid.get_preview_frame_x_positions()
+	var by_x: Dictionary = grid.get_sounds_by_x()
+
+	print("[SOUND] Rebuild timeline: xs =", xs, "sounds_by_x =", by_x)
+
+	if xs.is_empty():
+		print("[SOUND] No preview frame X positions; no sounds will play.")
+		return
+
+	for i in xs.size():
+		var x = xs[i]
+		var sounds_for_x: Array = by_x.get(x, [])
+		var list: Array = []
+		for s in sounds_for_x:
+			list.append(String(s))
+		_frame_sounds.append(list)
+
+	print("[SOUND] _frame_sounds size =", _frame_sounds.size(), "contents =", _frame_sounds)
+
+func _on_sound_files_selected(files: PackedStringArray) -> void:
+	# NOTE: implement ProjectModel.import_audio(files) similar to import_sprites
+	var ok = ProjectModel.import_audio(files)
+	if ok != OK:
+		_notify("Failed to import some audio files (code %d)." % ok)
+	_refresh_sound_list()
+
+func _on_preview_frame_changed() -> void:
+	if preview_sprite == null:
+		return
+
+	var frame_index := preview_sprite.frame
+	print("[SOUND] Frame changed: index =", frame_index, "timeline size =", _frame_sounds.size())
+
+	if frame_index < 0 or frame_index >= _frame_sounds.size():
+		print("[SOUND] No sound entries for this frame.")
+		return
+
+	var sounds: Array = _frame_sounds[frame_index]
+	print("[SOUND] Sounds for frame", frame_index, "=", sounds)
+
+	for rel in sounds:
+		_play_preview_sound(String(rel))
+		
+		
+func _play_preview_sound(rel: String) -> void:
+	if preview_audio == null:
+		print("[SOUND] preview_audio is null; cannot play", rel)
+		return
+
+	var stream: AudioStream = null
+
+	# Cache hit
+	if _audio_cache.has(rel):
+		stream = _audio_cache[rel] as AudioStream
+		print("[SOUND] Using cached stream for", rel)
+	else:
+		# rel looks like "assets/audio/smb_jump-small.wav"
+		var res_path := "res://%s" % rel
+		print("[SOUND] Loading stream for rel =", rel, "res_path =", res_path)
+
+		if not ResourceLoader.exists(res_path):
+			print("[SOUND] ResourceLoader.exists == false for", res_path)
+			return
+
+		var res := ResourceLoader.load(res_path)
+		if res == null:
+			print("[SOUND] ResourceLoader.load returned null for", res_path)
+			return
+
+		if res is AudioStream:
+			stream = res as AudioStream
+			_audio_cache[rel] = stream
+			print("[SOUND] Loaded AudioStream for", res_path)
+		else:
+			print("[SOUND] Loaded resource is not AudioStream:", res)
+			return
+
+	if stream == null:
+		print("[SOUND] stream is null after loading for", rel)
+		return
+
+	preview_audio.stream = stream
+	preview_audio.play()
+	print("[SOUND] Playing", rel, "on bus =", preview_audio.bus, "volume_db =", preview_audio.volume_db)
+
+
+func _setup_sound_list() -> void:
+	if list_sound == null:
+		return
+	list_sound.icon_mode = ItemList.ICON_MODE_LEFT
+	list_sound.same_column_width = false
+	list_sound.allow_reselect = true
+	list_sound.select_mode = ItemList.SELECT_SINGLE
+
+
+func _refresh_sound_list() -> void:
+	if list_sound == null:
+		return
+	list_sound.clear()
+
+	if ProjectModel.project_dir == "":
+		push_warning("No project open; cannot list audio.")
+		return
+
+	# NOTE: implement ProjectModel.get_audio() -> Array[String]
+	var rel_paths: Array[String] = ProjectModel.get_audio()
+	if rel_paths.is_empty():
+		return
+
+	for rel in rel_paths:
+		var label := rel.get_file()
+		var idx := list_sound.add_item(label)
+		list_sound.set_item_metadata(idx, rel)
+		# Optional: you could set an icon here (e.g. a generic speaker icon)
+
+
+# -------------------------------------------------------------------
+# Shared helpers
+# -------------------------------------------------------------------
+
 func _sprite_abs_path(rel: String) -> String:
-	# rel e.g. "assets/sprites/hero_idle.png"
 	return ProjectModel.project_dir.path_join(rel)
 
 
 func _thumb_from_path(abs: String, box: int) -> Texture2D:
+	# Avoid engine error spam if file is missing
+	if not FileAccess.file_exists(abs):
+		push_warning("Sprite file missing, skipping thumb: %s" % abs)
+		return null
+
 	var img := Image.new()
 	var err: int = img.load(abs)
 	if err != OK:
 		return null
 
-	# Keep aspect; fit longest side into 'box'
 	var w: int = img.get_width()
 	var h: int = img.get_height()
 	var longest: float = float(max(w, h))
@@ -288,7 +569,6 @@ func _thumb_from_path(abs: String, box: int) -> Texture2D:
 
 
 func _notify(msg: String) -> void:
-	# lightweight notification; wire to an AcceptDialog if you already have one
 	print(msg)
 
 
@@ -309,7 +589,7 @@ func _on_builder_sequences_changed(sequences: Array) -> void:
 	var anim_name := "preview"
 	frames.add_animation(anim_name)
 	frames.set_animation_speed(anim_name, preview_fps)
-	frames.set_animation_loop(anim_name, true)
+	frames.set_animation_loop(anim_name, preview_loop_enabled)
 
 	for rel in first_seq:
 		var tex: Texture2D = _texture_from_sprite_rel(String(rel))
@@ -318,11 +598,21 @@ func _on_builder_sequences_changed(sequences: Array) -> void:
 
 	preview_sprite.sprite_frames = frames
 	preview_sprite.animation = anim_name
-	preview_sprite.play()
+
+	# Respect current play/pause state
+	if preview_is_playing:
+		preview_sprite.play()
+	else:
+		preview_sprite.stop()
+
+	# Rebuild sound timeline so audio still lines up
+	_rebuild_sound_timeline()
 
 
 func _texture_from_sprite_rel(rel: String) -> Texture2D:
 	var abs: String = ProjectModel.project_dir.path_join(rel)
+	if not FileAccess.file_exists(abs):
+		return null
 	var img := Image.new()
 	var err: int = img.load(abs)
 	if err != OK:
@@ -331,7 +621,6 @@ func _texture_from_sprite_rel(rel: String) -> Texture2D:
 
 
 func _on_export_pressed() -> void:
-	# --- 1) Ensure repo path is set ---
 	var repo := export_repo_path
 
 	if repo == "":
@@ -341,10 +630,8 @@ func _on_export_pressed() -> void:
 			lbl_export_status.text = msg
 		return
 
-	# Persist into ProjectModel
 	ProjectModel.set_export_repo(repo)
 
-	# --- 2) Determine animation name ---
 	var anim_name = ProjectModel.data.get("current_animation", "")
 	if anim_name == "":
 		if le_anim_name:
@@ -352,7 +639,6 @@ func _on_export_pressed() -> void:
 		if anim_name == "":
 			anim_name = "default"
 
-	# --- 3) Build animation data from the grid (BuilderView) ---
 	if builder_view == null:
 		var msg2 := "Export failed: BuilderView is missing."
 		_notify(msg2)
@@ -363,7 +649,6 @@ func _on_export_pressed() -> void:
 	var anim_data = builder_view.build_animation_data()
 	anim_data["name"] = anim_name
 
-	# If there are literally no frames, fail early with a clear message
 	var seqs: Array = anim_data.get("sequences", [])
 	if seqs.is_empty():
 		var msg3 := "Export failed: current grid has no sequences/frames to export."
@@ -372,10 +657,8 @@ func _on_export_pressed() -> void:
 			lbl_export_status.text = msg3
 		return
 
-	# --- 4) Update ProjectModel with this animation and mark it current ---
 	ProjectModel.set_animation(anim_name, anim_data)
 
-	# --- 5) Run the exporter ---
 	var err := ProjectModel.export_animation()
 	if err != OK:
 		var msg4 := "Export failed (code %d)." % err
@@ -388,19 +671,79 @@ func _on_export_pressed() -> void:
 		if lbl_export_status:
 			lbl_export_status.text = msg_ok
 
+	save_editor_state()
 
-func _build_project_data() -> Dictionary:
-	var data := {}
 
-	# --- existing project fields go here ---
-	# e.g. data["some_setting"] = ...
+# -------------------------------------------------------------------
+# Editor state persistence (separate from the .aam game file)
+# -------------------------------------------------------------------
 
-	# --- include builder animations ---
+func save_editor_state() -> void:
+	if ProjectModel.project_dir == "":
+		print("[EDITOR_STATE] Not saving, ProjectModel.project_dir is empty")
+		return
+
+	print("[EDITOR_STATE] Saving editor state for project_dir:", ProjectModel.project_dir)
+
+	var data: Dictionary = {}
+
+	data["preview_fps"] = preview_fps
+	data["export_repo_path"] = export_repo_path
+	if builder_view:
+		data["grid_cell_size"] = builder_view.cell_size
+
 	if builder_overlay:
-		var anim_bundle: Dictionary = builder_overlay.build_all_animation_data()
-		# anim_bundle looks like { "animations": { name: anim_data_dict, ... } }
-		data["builder_animations"] = anim_bundle.get("animations", {})
-	else:
-		data["builder_animations"] = {}
+		var bundle: Dictionary = builder_overlay.build_all_animation_data()
+		data["builder_animations"] = bundle.get("animations", {})
 
-	return data
+	var path := ProjectModel.project_dir.path_join(EDITOR_STATE_FILE)
+	print("[EDITOR_STATE] Writing to:", path)
+
+	var f := FileAccess.open(path, FileAccess.WRITE)
+	if f == null:
+		push_warning("Failed to open editor state file for writing: %s" % path)
+		return
+
+	f.store_string(JSON.stringify(data, "\t"))
+	f.flush()
+	f.close()
+
+
+func _load_editor_state() -> void:
+	if ProjectModel.project_dir == "":
+		return
+
+	var path := ProjectModel.project_dir.path_join(EDITOR_STATE_FILE)
+	if not FileAccess.file_exists(path):
+		return
+
+	var f := FileAccess.open(path, FileAccess.READ)
+	if f == null:
+		push_warning("Failed to open editor state file for reading: %s" % path)
+		return
+
+	var text := f.get_as_text()
+	f.close()
+
+	var parsed = JSON.parse_string(text)
+	if typeof(parsed) != TYPE_DICTIONARY:
+		push_warning("Editor state file is malformed at: %s" % path)
+		return
+
+	var data := parsed as Dictionary
+
+	preview_fps = float(data.get("preview_fps", preview_fps))
+	export_repo_path = String(data.get("export_repo_path", export_repo_path))
+
+	if builder_view:
+		var cell_size_val := int(data.get("grid_cell_size", builder_view.cell_size))
+		builder_view.cell_size = cell_size_val
+		builder_view._update_grid_dims()
+		builder_view.queue_redraw()
+
+	if builder_overlay and data.has("builder_animations"):
+		var anims_dict: Dictionary = data.get("builder_animations", {})
+		builder_overlay.load_all_animation_data({ "animations": anims_dict })
+
+	if builder_view:
+		_on_builder_sequences_changed(builder_view.get_row_sequences())
