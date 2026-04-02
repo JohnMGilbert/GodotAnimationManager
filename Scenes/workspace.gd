@@ -1,4 +1,5 @@
 extends Control
+const PreviewControllerScript = preload("res://Scenes/PreviewController.gd")
 
 # Target proportions
 const MAIN_VS_FRACTION_TOP := 0.70
@@ -80,13 +81,10 @@ var eraser_active: bool = false
 
 # AUDIO STUFF
 @onready var preview_audio: AudioStreamPlayer = %PreviewAudio
-var _frame_sounds: Array = []          # index = frame index, value = Array[String] rel paths
-var _audio_cache: Dictionary = {}      # rel -> AudioStream
 @onready var btn_preview_playpause: TextureButton = %Btn_PreviewPlayPause
 @onready var btn_preview_loop: TextureButton = %Btn_PreviewLoop
-var preview_is_playing: bool = true
-var preview_loop_enabled: bool = true
 const SpritesheetUtils = preload("res://SpritesheetUtils.gd")
+var preview_controller: PreviewController = null
 
 @onready var dlg_sheet: SpritesheetDialog = %SpritesheetDialog
 
@@ -106,6 +104,7 @@ var _pending_tag_asset_ids: PackedStringArray = PackedStringArray()
 func _ready() -> void:
 	# Let the root fill the window, but DO NOT touch child mins or splits
 	set_anchors_preset(Control.PRESET_FULL_RECT)
+	resized.connect(_on_workspace_resized)
 
 	tab_buttons = [tab_sprites_btn, tab_sound_btn]
 	_connect_asset_tabs()
@@ -152,6 +151,8 @@ func _ready() -> void:
 		win.files_dropped.connect(_on_os_files_dropped)
 
 	if builder_view:
+		preview_controller = PreviewControllerScript.new()
+		preview_controller.setup(preview_sprite, preview_audio, builder_view as BuilderGrid)
 		builder_view.sequences_changed.connect(_on_builder_sequences_changed)
 		_on_builder_sequences_changed(builder_view.get_row_sequences())
 
@@ -163,9 +164,6 @@ func _ready() -> void:
 
 	if btn_export:
 		btn_export.pressed.connect(_on_export_pressed)
-		
-	if preview_sprite:
-		preview_sprite.frame_changed.connect(_on_preview_frame_changed)
 
 	if btn_preview_playpause:
 		btn_preview_playpause.toggle_mode = true
@@ -186,6 +184,7 @@ func _ready() -> void:
 		opt_existing_tags.item_selected.connect(_on_ExistingTag_item_selected)
 	# Load editor state (animations + settings) from the editor-state file
 	_load_editor_state()
+	call_deferred("_apply_workspace_layout")
 	
 		## FORCE-ENABLE MASTER BUS FOR DEBUG
 	#var master_idx := AudioServer.get_bus_index("Master")
@@ -193,6 +192,32 @@ func _ready() -> void:
 		#AudioServer.set_bus_mute(master_idx, false)
 		#AudioServer.set_bus_volume_db(master_idx, 0.0)
 		#print("[AUDIO DEBUG] Master bus forced to 0 dB and unmuted.")
+
+
+func _on_workspace_resized() -> void:
+	call_deferred("_apply_workspace_layout")
+
+
+func _apply_workspace_layout() -> void:
+	_apply_split_fraction(vs_main_assets, MAIN_VS_FRACTION_TOP)
+	_apply_split_fraction(hs_edit_sidebar, HS_FRACTION_LEFT)
+	_apply_split_fraction(vs_preview_inspector, RIGHT_VS_FRACTION_TOP)
+
+	if assets_tabbar:
+		assets_tabbar.custom_minimum_size.x = ASSETS_TABBAR_MIN
+
+
+func _apply_split_fraction(split: SplitContainer, fraction: float) -> void:
+	if split == null:
+		return
+
+	var axis_size := split.size.x if split is HSplitContainer else split.size.y
+	if axis_size <= 0.0:
+		return
+
+	var clamped_fraction := clampf(fraction, 0.1, 0.9)
+	var target := int(round(axis_size * clamped_fraction))
+	split.split_offset = target - int(round(axis_size * 0.5))
 
 
 func _debug_test_sound_once() -> void:
@@ -296,33 +321,13 @@ func _on_eraser_pressed() -> void:
 		grid.set_erase_mode(eraser_active)
 
 func _on_preview_playpause_pressed() -> void:
-	preview_is_playing = btn_preview_playpause.button_pressed
-
-	if preview_sprite == null:
-		return
-
-	if preview_is_playing:
-		preview_sprite.play()
-	else:
-		preview_sprite.stop()
-		# Optional: also stop any playing audio
-		if preview_audio:
-			preview_audio.stop()
+	if preview_controller:
+		preview_controller.set_playing(btn_preview_playpause.button_pressed)
 
 
 func _on_preview_loop_pressed() -> void:
-	preview_loop_enabled = btn_preview_loop.button_pressed
-
-	if preview_sprite == null:
-		return
-
-	var frames := preview_sprite.sprite_frames
-	if frames == null:
-		return
-
-	var anim_name := "preview"
-	if frames.has_animation(anim_name):
-		frames.set_animation_loop(anim_name, preview_loop_enabled)
+	if preview_controller:
+		preview_controller.set_loop_enabled(btn_preview_loop.button_pressed)
 
 
 func _on_settings_applied(grid_cell_size: int, preview_fps_new: float, repo_path: String) -> void:
@@ -336,6 +341,8 @@ func _on_settings_applied(grid_cell_size: int, preview_fps_new: float, repo_path
 
 	# Apply to preview
 	preview_fps = preview_fps_new
+	if preview_controller:
+		preview_controller.set_preview_fps(preview_fps)
 	_on_builder_sequences_changed(builder_view.get_row_sequences())
 
 	# Persist export repo in ProjectModel
@@ -533,6 +540,7 @@ func _setup_sprite_list() -> void:
 	list_sprites.fixed_icon_size = Vector2i(sprite_icon_size, sprite_icon_size)
 	list_sprites.max_columns = 0
 	list_sprites.allow_reselect = true
+	list_sprites.add_theme_font_size_override("font_size", sprite_label_font_size)
 
 
 func _refresh_sprite_list() -> void:
@@ -659,100 +667,12 @@ func _wire_sound_import_ui() -> void:
 	if fd_import_sound:
 		fd_import_sound.files_selected.connect(_on_sound_files_selected)
 
-func _rebuild_sound_timeline() -> void:
-	_frame_sounds.clear()
-
-	var grid := builder_view as BuilderGrid
-	if grid == null:
-		print("[SOUND] No BuilderGrid, cannot rebuild sound timeline.")
-		return
-
-	# X positions for the frames used in the preview
-	var xs: Array = grid.get_preview_frame_x_positions()
-	var by_x: Dictionary = grid.get_sounds_by_x()
-
-	print("[SOUND] Rebuild timeline: xs =", xs, "sounds_by_x =", by_x)
-
-	if xs.is_empty():
-		print("[SOUND] No preview frame X positions; no sounds will play.")
-		return
-
-	for i in xs.size():
-		var x = xs[i]
-		var sounds_for_x: Array = by_x.get(x, [])
-		var list: Array = []
-		for s in sounds_for_x:
-			list.append(String(s))
-		_frame_sounds.append(list)
-
-	print("[SOUND] _frame_sounds size =", _frame_sounds.size(), "contents =", _frame_sounds)
-
 func _on_sound_files_selected(files: PackedStringArray) -> void:
 	# NOTE: implement ProjectModel.import_audio(files) similar to import_sprites
 	var ok = ProjectModel.import_audio(files)
 	if ok != OK:
 		_notify("Failed to import some audio files (code %d)." % ok)
 	_refresh_sound_list()
-
-func _on_preview_frame_changed() -> void:
-	if preview_sprite == null:
-		return
-
-	var frame_index := preview_sprite.frame
-	print("[SOUND] Frame changed: index =", frame_index, "timeline size =", _frame_sounds.size())
-
-	if frame_index < 0 or frame_index >= _frame_sounds.size():
-		print("[SOUND] No sound entries for this frame.")
-		return
-
-	var sounds: Array = _frame_sounds[frame_index]
-	print("[SOUND] Sounds for frame", frame_index, "=", sounds)
-
-	for rel in sounds:
-		_play_preview_sound(String(rel))
-		
-		
-func _play_preview_sound(rel: String) -> void:
-	if preview_audio == null:
-		print("[SOUND] preview_audio is null; cannot play", rel)
-		return
-
-	var stream: AudioStream = null
-
-	# Cache hit
-	if _audio_cache.has(rel):
-		stream = _audio_cache[rel] as AudioStream
-		print("[SOUND] Using cached stream for", rel)
-	else:
-		# rel looks like "assets/audio/smb_jump-small.wav"
-		var res_path := "res://%s" % rel
-		print("[SOUND] Loading stream for rel =", rel, "res_path =", res_path)
-
-		if not ResourceLoader.exists(res_path):
-			print("[SOUND] ResourceLoader.exists == false for", res_path)
-			return
-
-		var res := ResourceLoader.load(res_path)
-		if res == null:
-			print("[SOUND] ResourceLoader.load returned null for", res_path)
-			return
-
-		if res is AudioStream:
-			stream = res as AudioStream
-			_audio_cache[rel] = stream
-			print("[SOUND] Loaded AudioStream for", res_path)
-		else:
-			print("[SOUND] Loaded resource is not AudioStream:", res)
-			return
-
-	if stream == null:
-		print("[SOUND] stream is null after loading for", rel)
-		return
-
-	preview_audio.stream = stream
-	preview_audio.play()
-	print("[SOUND] Playing", rel, "on bus =", preview_audio.bus, "volume_db =", preview_audio.volume_db)
-
 
 func _setup_sound_list() -> void:
 	if list_sound == null:
@@ -761,6 +681,8 @@ func _setup_sound_list() -> void:
 	list_sound.same_column_width = false
 	list_sound.allow_reselect = true
 	list_sound.select_mode = ItemList.SELECT_SINGLE
+	list_sound.fixed_icon_size = Vector2i(20, 20)
+	list_sound.add_theme_font_size_override("font_size", 13)
 
 
 func _refresh_sound_list() -> void:
@@ -820,51 +742,8 @@ func _notify(msg: String) -> void:
 
 
 func _on_builder_sequences_changed(sequences: Array) -> void:
-	if preview_sprite == null:
-		return
-
-	if sequences.is_empty():
-		preview_sprite.sprite_frames = null
-		return
-
-	var first_seq: Array = sequences[0]  # use the first row/run as the preview
-	if first_seq.is_empty():
-		preview_sprite.sprite_frames = null
-		return
-
-	var frames := SpriteFrames.new()
-	var anim_name := "preview"
-	frames.add_animation(anim_name)
-	frames.set_animation_speed(anim_name, preview_fps)
-	frames.set_animation_loop(anim_name, preview_loop_enabled)
-
-	for rel in first_seq:
-		var tex: Texture2D = _texture_from_sprite_rel(String(rel))
-		if tex != null:
-			frames.add_frame(anim_name, tex)
-
-	preview_sprite.sprite_frames = frames
-	preview_sprite.animation = anim_name
-
-	# Respect current play/pause state
-	if preview_is_playing:
-		preview_sprite.play()
-	else:
-		preview_sprite.stop()
-
-	# Rebuild sound timeline so audio still lines up
-	_rebuild_sound_timeline()
-
-
-func _texture_from_sprite_rel(rel: String) -> Texture2D:
-	var abs: String = ProjectModel.project_dir.path_join(rel)
-	if not FileAccess.file_exists(abs):
-		return null
-	var img := Image.new()
-	var err: int = img.load(abs)
-	if err != OK:
-		return null
-	return ImageTexture.create_from_image(img)
+	if preview_controller:
+		preview_controller.apply_sequence_preview(sequences)
 
 
 func _on_export_pressed() -> void:
@@ -981,6 +860,10 @@ func _load_editor_state() -> void:
 
 	preview_fps = float(data.get("preview_fps", preview_fps))
 	export_repo_path = String(data.get("export_repo_path", export_repo_path))
+	if preview_controller:
+		preview_controller.set_preview_fps(preview_fps)
+		preview_controller.set_playing(btn_preview_playpause.button_pressed if btn_preview_playpause else true)
+		preview_controller.set_loop_enabled(btn_preview_loop.button_pressed if btn_preview_loop else true)
 
 	if builder_view:
 		var cell_size_val := int(data.get("grid_cell_size", builder_view.cell_size))

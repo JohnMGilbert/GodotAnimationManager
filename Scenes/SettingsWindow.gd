@@ -13,15 +13,9 @@ signal settings_applied(grid_cell_size: int, preview_fps: float, repo_path: Stri
 @onready var fd_repo_dir: FileDialog = $FD_RepoDir
 
 func _ready() -> void:
-	var root := get_tree().root
-	#content_scale_mode = Window.CONTENT_SCALE_MODE_CANVAS_ITEMS
-	#content_scale_aspect = Window.CONTENT_SCALE_ASPECT_KEEP
-	#content_scale_factor = root.content_scale_factor
-	
-	btn_cancel.pressed.connect(func() -> void:
-		hide()
-	)
+	btn_cancel.pressed.connect(_on_cancel_pressed)
 	btn_apply.pressed.connect(_on_apply_pressed)
+	close_requested.connect(_on_cancel_pressed)
 
 	# Browse for repo folder
 	btn_browse_repo.pressed.connect(func() -> void:
@@ -37,6 +31,9 @@ func _ready() -> void:
 	fd_repo_dir.dir_selected.connect(func(path: String) -> void:
 		line_repo_path.text = path
 	)
+
+func _on_cancel_pressed() -> void:
+	hide()
 
 func _on_apply_pressed() -> void:
 	var cell_size: int = int(spin_cell_size.value)

@@ -4,16 +4,22 @@
 bg_color = Color(0.878431, 0.878431, 0.878431, 1)
 
 [resource]
-Button/font_sizes/font_size = 8
+Button/font_sizes/font_size = 15
+CheckBox/font_sizes/font_size = 14
 HBoxContainer/constants/separation = 8
-Label/font_sizes/font_size = 10
-LineEdit/font_sizes/font_size = 10
+ItemList/font_sizes/font_size = 14
+Label/font_sizes/font_size = 15
+LineEdit/font_sizes/font_size = 15
 MarginContainer/constants/margin_bottom = 8
 MarginContainer/constants/margin_left = 8
 MarginContainer/constants/margin_right = 8
 MarginContainer/constants/margin_top = 8
+OptionButton/font_sizes/font_size = 14
 PanelContainer/styles/panel = SubResource("StyleBoxFlat_vd3yw")
-TabBar/font_sizes/font_size = 8
+PopupMenu/font_sizes/font_size = 14
+SpinBox/font_sizes/font_size = 14
+TabBar/font_sizes/font_size = 14
 TabContainer/constants/side_margin = 5
-TabContainer/font_sizes/font_size = 12
+TabContainer/font_sizes/font_size = 15
+TextEdit/font_sizes/font_size = 14
 VBoxContainer/constants/separation = 4

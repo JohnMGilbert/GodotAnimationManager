@@ -1,8 +1,9 @@
-[gd_scene load_steps=6 format=3 uid="uid://co8jp6sy2u541"]
+[gd_scene load_steps=7 format=3 uid="uid://co8jp6sy2u541"]
 
 [ext_resource type="Script" path="res://Scenes/MainMenu.gd" id="1_12pkj"]
 [ext_resource type="FontFile" uid="uid://lpycw074j1m6" path="res://Assets/Gixel.ttf" id="2_8c2vn"]
 [ext_resource type="Theme" uid="uid://b4ecs3e4crxki" path="res://Assets/mm_theme.tres" id="2_j0n5o"]
+[ext_resource type="Theme" uid="uid://b4eob2ew7phm" path="res://Assets/theme_1.tres" id="3_3ehsq"]
 
 [sub_resource type="StyleBoxFlat" id="StyleBoxFlat_32dy1"]
 bg_color = Color(0.239216, 0.239216, 0.239216, 1)
@@ -16,45 +17,51 @@ corner_radius_bottom_left = 30
 
 [node name="Control" type="Control"]
 layout_mode = 3
-anchors_preset = 0
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
 script = ExtResource("1_12pkj")
 
 [node name="Panel" type="Panel" parent="."]
-layout_mode = 2
-offset_left = -3.0
-offset_top = -2.0
-offset_right = 1217.0
-offset_bottom = 754.0
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
 theme_override_styles/panel = SubResource("StyleBoxFlat_32dy1")
 
 [node name="Panel" type="Panel" parent="Panel"]
-layout_mode = 0
-offset_left = 74.0
-offset_top = 73.0
-offset_right = 1079.0
-offset_bottom = 619.0
-theme_override_styles/panel = SubResource("StyleBoxFlat_ogilt")
-
-[node name="CenterContainer" type="CenterContainer" parent="Panel"]
 layout_mode = 1
 anchors_preset = 8
 anchor_left = 0.5
 anchor_top = 0.5
 anchor_right = 0.5
 anchor_bottom = 0.5
-offset_left = -519.0
-offset_top = -339.0
-offset_right = 623.0
-offset_bottom = 332.0
+offset_left = -503.0
+offset_top = -273.0
+offset_right = 503.0
+offset_bottom = 273.0
+grow_horizontal = 2
+grow_vertical = 2
+theme_override_styles/panel = SubResource("StyleBoxFlat_ogilt")
+
+[node name="CenterContainer" type="CenterContainer" parent="Panel"]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
 grow_horizontal = 2
 grow_vertical = 2
 
 [node name="MarginContainer" type="MarginContainer" parent="Panel/CenterContainer"]
 layout_mode = 2
-theme_override_constants/margin_left = 100
-theme_override_constants/margin_top = 16
-theme_override_constants/margin_right = 200
-theme_override_constants/margin_bottom = 200
+theme_override_constants/margin_left = 120
+theme_override_constants/margin_top = 48
+theme_override_constants/margin_right = 120
+theme_override_constants/margin_bottom = 120
 
 [node name="VBoxContainer" type="VBoxContainer" parent="Panel/CenterContainer/MarginContainer"]
 layout_mode = 2
@@ -74,20 +81,30 @@ text = "Animation Manager
 [node name="NewDialog" type="FileDialog" parent="Panel/CenterContainer/MarginContainer/VBoxContainer"]
 unique_name_in_owner = true
 size = Vector2i(392, 159)
+theme = ExtResource("3_3ehsq")
 
 [node name="OpenDialog" type="FileDialog" parent="Panel/CenterContainer/MarginContainer/VBoxContainer"]
 unique_name_in_owner = true
+theme = ExtResource("3_3ehsq")
 
 [node name="NoticeDialog" type="AcceptDialog" parent="Panel/CenterContainer/MarginContainer/VBoxContainer"]
 unique_name_in_owner = true
+theme = ExtResource("3_3ehsq")
 
 [node name="HBoxContainer2" type="HBoxContainer" parent="Panel"]
 layout_direction = 3
-layout_mode = 2
-offset_left = 609.0
-offset_top = 446.0
-offset_right = 724.0
-offset_bottom = 477.0
+layout_mode = 1
+anchors_preset = 8
+anchor_left = 0.5
+anchor_top = 0.5
+anchor_right = 0.5
+anchor_bottom = 0.5
+offset_left = -58.0
+offset_top = 173.0
+offset_right = 58.0
+offset_bottom = 204.0
+grow_horizontal = 2
+grow_vertical = 2
 
 [node name="Remove" type="Button" parent="Panel/HBoxContainer2"]
 unique_name_in_owner = true
@@ -102,11 +119,18 @@ text = "Quit"
 
 [node name="VBoxContainer" type="VBoxContainer" parent="Panel"]
 layout_direction = 1
-layout_mode = 2
-offset_left = 478.0
-offset_top = 328.0
-offset_right = 1102.0
-offset_bottom = 406.0
+layout_mode = 1
+anchors_preset = 8
+anchor_left = 0.5
+anchor_top = 0.5
+anchor_right = 0.5
+anchor_bottom = 0.5
+offset_left = -312.0
+offset_top = 55.0
+offset_right = 312.0
+offset_bottom = 133.0
+grow_horizontal = 2
+grow_vertical = 2
 theme = ExtResource("2_j0n5o")
 alignment = 2
 
