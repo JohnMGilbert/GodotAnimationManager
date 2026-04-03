@@ -32,6 +32,15 @@ The long-term design goal is for the authored output to be easy to drop into a r
 - Export formats should be practical and easy for gameplay code to load.
 - The editor should remain useful even if the receiving project has custom runtime needs.
 
+## Color Scheme
+
+Use this classic Game Boy-inspired palette for UI and branding decisions across the project:
+
+- `#c4bebb` -> `RGB(196, 190, 187)` : dominant color
+- `#272929` -> `RGB(39, 41, 41)` : primarily for borders
+- `#494786` -> `RGB(73, 71, 134)` : accent color
+- `#9a2257` -> `RGB(154, 34, 87)` : accent color
+
 ## What The Tool Currently Does
 
 - Creates and opens `.aam` project files.

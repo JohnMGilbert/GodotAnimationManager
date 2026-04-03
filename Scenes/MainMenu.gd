@@ -14,6 +14,8 @@ extends Control
 func _ready() -> void:
 	title_label.text = "Animation Manager"
 	_populate_recents()
+	call_deferred("_apply_main_menu_window_size")
+
 
 	# Configure dialogs
 	new_dialog.access = FileDialog.ACCESS_FILESYSTEM
@@ -42,6 +44,13 @@ func _ready() -> void:
 
 	recent_list.item_activated.connect(_on_recent_activated)
 	recent_list.item_selected.connect(_on_recent_selected)
+
+func _apply_main_menu_window_size() -> void:
+	var window := get_window()
+	if window == null:
+		return
+	window.mode = Window.MODE_WINDOWED
+	window.size = Vector2i(1600, 1000)
 
 func debug_print_cwd():
 	var dir := DirAccess.open(".")
