@@ -14,6 +14,8 @@ extends Control
 func _ready() -> void:
 	title_label.text = "Animation Manager"
 	_populate_recents()
+	call_deferred("_apply_main_menu_window_size")
+
 
 	# Configure dialogs
 	new_dialog.access = FileDialog.ACCESS_FILESYSTEM
@@ -42,6 +44,13 @@ func _ready() -> void:
 
 	recent_list.item_activated.connect(_on_recent_activated)
 	recent_list.item_selected.connect(_on_recent_selected)
+
+func _apply_main_menu_window_size() -> void:
+	var window := get_window()
+	if window == null:
+		return
+	window.mode = Window.MODE_WINDOWED
+	window.size = Vector2i(1600, 1000)
 
 func debug_print_cwd():
 	var dir := DirAccess.open(".")
@@ -126,8 +135,15 @@ func _goto_project(path: String) -> void:
 	# Close any open modal to avoid blocking the scene change
 	if is_instance_valid(%NoticeDialog) and %NoticeDialog.visible:
 		%NoticeDialog.hide()
+	if is_instance_valid(new_dialog) and new_dialog.visible:
+		new_dialog.hide()
+	if is_instance_valid(open_dialog) and open_dialog.visible:
+		open_dialog.hide()
 
-	# Change to workspace
+	call_deferred("_change_to_workspace_scene")
+
+
+func _change_to_workspace_scene() -> void:
 	var scene_err := get_tree().change_scene_to_file("res://Scenes/workspace.tscn")
 	if scene_err != OK:
 		_alert("Failed to load Workspace.tscn\nError: %s" % error_string(scene_err))

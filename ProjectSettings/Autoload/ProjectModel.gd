@@ -2,6 +2,7 @@
 extends Node
 
 const PROJECTS_ROOT := "user://projects"  # where all animation projects live
+const AnimationProjectSchema = preload("res://ProjectSettings/AnimationProjectSchema.gd")
 
 var project_dir: String = ""  # current project dir (user://projects/MyProject)
 
@@ -21,13 +22,17 @@ signal animation_list_changed
 signal animation_changed(animation_name: String)
 
 var data: Dictionary = {
+	"schema": AnimationProjectSchema.SCHEMA_VERSION,
+	"name": "",
+	"created_at": "",
 	"animations": {},
 	"current_animation": "",
 	"assets": {
-		"sprites": []
+		"sprites": [],
+		"audio": []
 	},
 	"export": {},
-	"asset_tags": {}   # NEW: asset_id -> Array[String] of tags
+	"asset_tags": {}
 }
 
 
@@ -100,15 +105,7 @@ func create_project(name: String) -> int:
 	project_path = project_dir.path_join("%s.aam" % safe_name)
 
 	# Initialize default project data
-	data = {
-		"animations": {},
-		"current_animation": "",
-		"assets": {
-			"sprites": []
-		},
-		"export": {},
-		"asset_tags": {}    # NEW
-	}
+	data = AnimationProjectSchema.create_empty_project(safe_name)
 
 	var save_err := save()
 	if save_err != OK:
@@ -133,33 +130,15 @@ func open(path: String) -> Error:
 	if not (parsed is Dictionary):
 		return ERR_PARSE_ERROR
 
-	data = parsed as Dictionary
-
-	# Normalize assets block
-	if not data.has("assets") or not (data["assets"] is Dictionary):
-		data["assets"] = {}
-	if not data["assets"].has("sprites"):
-		data["assets"]["sprites"] = []
+	data = AnimationProjectSchema.normalize_project_data(parsed)
 
 	# Normalize export block + export_repo_path
-	if not data.has("export") or not (data["export"] is Dictionary):
-		data["export"] = {}
 	var export_dict: Dictionary = data["export"]
 	var repo_val: Variant = export_dict.get("repo_path", "")
 	if repo_val is String:
 		export_repo_path = repo_val
 	else:
 		export_repo_path = ""
-
-	# Normalize animations structure
-	if not data.has("animations") or not (data["animations"] is Dictionary):
-		data["animations"] = {}
-	if not data.has("current_animation") or not (data["current_animation"] is String):
-		data["current_animation"] = ""
-	
-	# Normalize asset_tags block
-	if not data.has("asset_tags") or not (data["asset_tags"] is Dictionary):
-		data["asset_tags"] = {}
 
 	emit_signal("project_loaded")
 	emit_signal("animation_list_changed")
