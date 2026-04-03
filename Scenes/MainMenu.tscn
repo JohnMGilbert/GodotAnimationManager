@@ -1,15 +1,16 @@
-[gd_scene load_steps=5 format=3 uid="uid://co8jp6sy2u541"]
+[gd_scene load_steps=6 format=3 uid="uid://co8jp6sy2u541"]
 
 [ext_resource type="Script" path="res://Scenes/MainMenu.gd" id="1_12pkj"]
 [ext_resource type="Theme" uid="uid://b4ecs3e4crxki" path="res://Assets/mm_theme.tres" id="2_j0n5o"]
 [ext_resource type="Theme" uid="uid://b4eob2ew7phm" path="res://Assets/theme_1.tres" id="3_3ehsq"]
+[ext_resource type="FontFile" uid="uid://bjpm2qkneqm4m" path="res://Assets/Pretendo.ttf" id="3_e6y78"]
 
 [sub_resource type="StyleBoxFlat" id="StyleBoxFlat_ogilt"]
 bg_color = Color(0.548691, 0.518607, 0.503511, 1)
-border_width_left = 16
-border_width_top = 16
-border_width_right = 16
-border_width_bottom = 16
+border_width_left = 64
+border_width_top = 32
+border_width_right = 64
+border_width_bottom = 32
 border_color = Color(0.152941, 0.160784, 0.160784, 1)
 corner_radius_top_left = 30
 corner_radius_top_right = 30
@@ -69,9 +70,19 @@ theme_override_constants/margin_bottom = 80
 layout_mode = 2
 alignment = 1
 
-[node name="Title" type="Label" parent="RootMarginContainer/Panel/CenterContainer/MarginContainer/VBoxContainer"]
+[node name="HBoxContainer" type="HBoxContainer" parent="RootMarginContainer/Panel/CenterContainer/MarginContainer/VBoxContainer"]
+layout_mode = 2
+
+[node name="GodotLabel" type="Label" parent="RootMarginContainer/Panel/CenterContainer/MarginContainer/VBoxContainer/HBoxContainer"]
+layout_mode = 2
+theme_override_fonts/font = ExtResource("3_e6y78")
+theme_override_font_sizes/font_size = 60
+text = "Godot"
+
+[node name="Title" type="Label" parent="RootMarginContainer/Panel/CenterContainer/MarginContainer/VBoxContainer/HBoxContainer"]
 unique_name_in_owner = true
 layout_mode = 2
+theme_override_font_sizes/font_size = 65
 text = "Animation Manager
 "
 horizontal_alignment = 1

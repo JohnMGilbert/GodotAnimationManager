@@ -22,6 +22,8 @@ ProjectModel="*res://ProjectSettings/Autoload/ProjectModel.gd"
 
 [display]
 
+window/size/viewport_width=2304
+window/size/viewport_height=1296
 window/size/mode=2
 window/stretch/aspect="ignore"
 
