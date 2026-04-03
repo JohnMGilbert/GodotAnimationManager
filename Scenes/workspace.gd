@@ -19,13 +19,20 @@ const FALLBACK_MIN_ASSETS    := Vector2i(400, 180)
 
 const ASSET_TAB_BORDER_RAISED := Color(1, 1, 1, 0.34)
 const ASSET_TAB_BORDER_PRESSED := Color(0, 0, 0, 0.28)
-const ASSET_TAB_SHADOW_RAISED := Color(0, 0, 0, 0.42)
-const ASSET_TAB_SHADOW_PRESSED := Color(0, 0, 0, 0.18)
+const ASSET_TAB_SHADOW_RAISED := Color(0, 0, 0, 0.14)
+const ASSET_TAB_SHADOW_PRESSED := Color(0, 0, 0, 0.08)
+const ASSET_TAB_BASE_PLATE := Color(0.278431, 0.0431373, 0.145098, 1)
+const ASSET_TAB_BASE_PLATE_BORDER := Color(0, 0, 0, 0.32)
 const ASSET_TAB_ICON_RAISED := Color(0.152941, 0.160784, 0.160784, 1)
 const ASSET_TAB_ICON_PRESSED := Color(0.152941, 0.160784, 0.160784, 0.70)
 
 # Editor-state file (lives alongside the .aam in the project dir)
 const EDITOR_STATE_FILE := ".aam_editor.json"
+
+@export_range(32.0, 240.0, 1.0) var asset_tab_width: float = 58.0
+@export_range(32.0, 240.0, 1.0) var asset_tab_height: float = 64.0
+@export_range(4.0, 24.0, 1.0) var asset_tab_depth_released: float = 8.0
+@export_range(1.0, 24.0, 1.0) var asset_tab_depth_pressed: float = 4.0
 
 # --- Node refs (adjust paths if your names differ) ---
 @onready var vs_main_assets: VSplitContainer       = %VS_Main_Assets
@@ -40,14 +47,21 @@ const EDITOR_STATE_FILE := ".aam_editor.json"
 @onready var assets_tabs: TabContainer = %AssetsTab
 
 # --- Assets vertical tabs (Sprites / Sound) ---
+@onready var tab_sprites_shell: Control = %TabShell_Sprites
+@onready var tab_sound_shell: Control = %TabShell_Sound
+@onready var tab_sprites_shadow: Panel = %PanelShadow_Sprites
+@onready var tab_sound_shadow: Panel = %PanelShadow_Sound
 @onready var tab_sprites_panel: PanelContainer = %PanelContainer_SpritesTab
 @onready var tab_sound_panel: PanelContainer = %PanelContainer_SoundTab
 @onready var tab_sprites_btn: TextureButton   = %Tab_Sprites
 @onready var tab_sound_btn: TextureButton     = %Tab_Sound
 @onready var tab_buttons: Array[TextureButton] = []
+@onready var tab_shells: Array[Control] = []
+@onready var tab_shadows: Array[Panel] = []
 @onready var tab_panels: Array[PanelContainer] = []
 var _asset_tab_style_raised: StyleBoxFlat
 var _asset_tab_style_pressed: StyleBoxFlat
+var _asset_tab_shadow_style: StyleBoxFlat
 
 # Sprites UI
 @onready var list_sprites: ItemList      = %List_Sprites
@@ -125,8 +139,11 @@ func _ready() -> void:
 	_apply_ui_scale(AppState.get_ui_scale())
 
 	tab_buttons = [tab_sprites_btn, tab_sound_btn]
+	tab_shells = [tab_sprites_shell, tab_sound_shell]
+	tab_shadows = [tab_sprites_shadow, tab_sound_shadow]
 	tab_panels = [tab_sprites_panel, tab_sound_panel]
 	_build_asset_tab_styles()
+	_apply_asset_tab_depth()
 	_connect_asset_tabs()
 	_select_asset_tab(0)
 
@@ -459,14 +476,37 @@ func _connect_asset_tabs() -> void:
 			if event is InputEventMouseButton and event.button_index == MOUSE_BUTTON_LEFT and event.pressed:
 				_select_asset_tab(idx))
 
+	for i in tab_shells.size():
+		var shell: Control = tab_shells[i]
+		shell.mouse_default_cursor_shape = Control.CURSOR_POINTING_HAND
+		shell.gui_input.connect(func(event: InputEvent, idx := i) -> void:
+			if event is InputEventMouseButton and event.button_index == MOUSE_BUTTON_LEFT and event.pressed:
+				_select_asset_tab(idx))
+
 
 func _build_asset_tab_styles() -> void:
 	var base_style := tab_sprites_panel.get_theme_stylebox("panel") as StyleBoxFlat
 	if base_style == null:
 		base_style = StyleBoxFlat.new()
 
-	_asset_tab_style_raised = _make_asset_tab_style(base_style, true)
-	_asset_tab_style_pressed = _make_asset_tab_style(base_style, false)
+	_asset_tab_style_raised = _make_asset_tab_style(base_style, false)
+	_asset_tab_style_pressed = _make_asset_tab_style(base_style, true)
+	_asset_tab_shadow_style = _make_asset_tab_shadow_style(base_style)
+
+
+func _apply_asset_tab_depth() -> void:
+	var released_depth_y := asset_tab_depth_released
+	var released_depth_x = round(asset_tab_depth_released * 0.75)
+	var pressed_depth_y = min(asset_tab_depth_pressed, asset_tab_depth_released)
+	var pressed_depth_x = round(pressed_depth_y * 0.75)
+	var max_depth_y = max(released_depth_y, pressed_depth_y)
+	var max_depth_x = max(released_depth_x, pressed_depth_x)
+
+	for shell in tab_shells:
+		shell.custom_minimum_size = Vector2(
+			asset_tab_width + max_depth_x,
+			asset_tab_height + max_depth_y
+		)
 
 
 func _make_asset_tab_style(base_style: StyleBoxFlat, is_selected: bool) -> StyleBoxFlat:
@@ -483,8 +523,8 @@ func _make_asset_tab_style(base_style: StyleBoxFlat, is_selected: bool) -> Style
 		style.bg_color = base_style.bg_color.lightened(0.16)
 		style.border_color = ASSET_TAB_BORDER_RAISED
 		style.shadow_color = ASSET_TAB_SHADOW_RAISED
-		style.shadow_size = 8
-		style.shadow_offset = Vector2(3, 4)
+		style.shadow_size = 2
+		style.shadow_offset = Vector2(1, 1)
 		style.content_margin_left = 1
 		style.content_margin_top = 0
 		style.content_margin_right = 0
@@ -493,8 +533,8 @@ func _make_asset_tab_style(base_style: StyleBoxFlat, is_selected: bool) -> Style
 		style.bg_color = base_style.bg_color.darkened(0.18)
 		style.border_color = ASSET_TAB_BORDER_PRESSED
 		style.shadow_color = ASSET_TAB_SHADOW_PRESSED
-		style.shadow_size = 1
-		style.shadow_offset = Vector2(0, 1)
+		style.shadow_size = 0
+		style.shadow_offset = Vector2.ZERO
 		style.content_margin_left = 0
 		style.content_margin_top = 2
 		style.content_margin_right = 1
@@ -503,24 +543,67 @@ func _make_asset_tab_style(base_style: StyleBoxFlat, is_selected: bool) -> Style
 	return style
 
 
+func _make_asset_tab_shadow_style(base_style: StyleBoxFlat) -> StyleBoxFlat:
+	var style := base_style.duplicate() as StyleBoxFlat
+	if style == null:
+		style = StyleBoxFlat.new()
+
+	style.bg_color = ASSET_TAB_BASE_PLATE
+	style.border_width_left = 2
+	style.border_width_top = 2
+	style.border_width_right = 2
+	style.border_width_bottom = 2
+	style.border_color = ASSET_TAB_BASE_PLATE_BORDER
+	style.shadow_color = Color(0, 0, 0, 0)
+	style.shadow_size = 0
+	style.shadow_offset = Vector2.ZERO
+	return style
+
+
 func _select_asset_tab(index: int) -> void:
 	var max_index: int = assets_tabs.get_tab_count() - 1
 	index = clamp(index, 0, max_index)
+	var released_depth_y := asset_tab_depth_released
+	var released_depth_x = round(asset_tab_depth_released * 0.75)
+	var pressed_depth_y = min(asset_tab_depth_pressed, asset_tab_depth_released)
+	var pressed_depth_x = round(pressed_depth_y * 0.75)
+	var max_depth_y = max(released_depth_y, pressed_depth_y)
+	var max_depth_x = max(released_depth_x, pressed_depth_x)
 
 	for j in tab_buttons.size():
 		var btn := tab_buttons[j]
 		btn.button_pressed = (j == index)
-		btn.modulate = ASSET_TAB_ICON_RAISED if j == index else ASSET_TAB_ICON_PRESSED
+		btn.modulate = ASSET_TAB_ICON_PRESSED if j == index else ASSET_TAB_ICON_RAISED
 
 		var tab_panel := tab_panels[j] if j < tab_panels.size() else btn.get_parent() as PanelContainer
 		if tab_panel:
 			if j == index:
-				tab_panel.add_theme_stylebox_override("panel", _asset_tab_style_raised)
-			else:
+				_set_asset_tab_face_depth(tab_panel, max_depth_x, max_depth_y, pressed_depth_x, pressed_depth_y)
 				tab_panel.add_theme_stylebox_override("panel", _asset_tab_style_pressed)
+			else:
+				_set_asset_tab_face_depth(tab_panel, max_depth_x, max_depth_y, released_depth_x, released_depth_y)
+				tab_panel.add_theme_stylebox_override("panel", _asset_tab_style_raised)
+
+		if j < tab_shadows.size():
+			tab_shadows[j].add_theme_stylebox_override("panel", _asset_tab_shadow_style)
+			_set_asset_tab_shadow_depth(tab_shadows[j], released_depth_x, released_depth_y)
 
 	assets_tabs.current_tab = index
 	print("Index for asset tab is: ", index)
+
+
+func _set_asset_tab_shadow_depth(shadow: Panel, depth_x: float, depth_y: float) -> void:
+	shadow.offset_left = 0.0
+	shadow.offset_top = 0.0
+	shadow.offset_right = -depth_x
+	shadow.offset_bottom = -depth_y
+
+
+func _set_asset_tab_face_depth(tab_panel: PanelContainer, max_depth_x: float, max_depth_y: float, face_depth_x: float, face_depth_y: float) -> void:
+	tab_panel.offset_left = -face_depth_x
+	tab_panel.offset_top = -face_depth_y
+	tab_panel.offset_right = -(max_depth_x + face_depth_x)
+	tab_panel.offset_bottom = -(max_depth_y + face_depth_y)
 
 # TAGS
 func _normalize_tag_input(raw: String) -> String:

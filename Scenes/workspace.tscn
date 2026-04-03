@@ -70,6 +70,8 @@ grow_horizontal = 2
 grow_vertical = 2
 theme = ExtResource("2_o2a2a")
 script = ExtResource("1_myusm")
+asset_tab_width = 90.0
+asset_tab_height = 180.0
 sprite_icon_size = 48
 
 [node name="Background" type="ColorRect" parent="."]
@@ -296,8 +298,10 @@ size_flags_vertical = 3
 [node name="InspectorTabs" type="TabContainer" parent="MarginContainer/RootVBox/VS_Main_Assets/HS_Edit_Sidebar/VS_Preview_Inspector/InspectorPanel"]
 layout_mode = 2
 
-[node name="Properties" type="TabBar" parent="MarginContainer/RootVBox/VS_Main_Assets/HS_Edit_Sidebar/VS_Preview_Inspector/InspectorPanel/InspectorTabs"]
+[node name="Properties" type="Control" parent="MarginContainer/RootVBox/VS_Main_Assets/HS_Edit_Sidebar/VS_Preview_Inspector/InspectorPanel/InspectorTabs"]
 layout_mode = 2
+size_flags_horizontal = 3
+size_flags_vertical = 3
 
 [node name="Properties" type="ScrollContainer" parent="MarginContainer/RootVBox/VS_Main_Assets/HS_Edit_Sidebar/VS_Preview_Inspector/InspectorPanel/InspectorTabs/Properties"]
 layout_mode = 2
@@ -449,15 +453,19 @@ text = "Description"
 custom_minimum_size = Vector2(120, 100)
 layout_mode = 2
 
-[node name="Export" type="TabBar" parent="MarginContainer/RootVBox/VS_Main_Assets/HS_Edit_Sidebar/VS_Preview_Inspector/InspectorPanel/InspectorTabs"]
+[node name="Export" type="Control" parent="MarginContainer/RootVBox/VS_Main_Assets/HS_Edit_Sidebar/VS_Preview_Inspector/InspectorPanel/InspectorTabs"]
 visible = false
 layout_mode = 2
+size_flags_horizontal = 3
+size_flags_vertical = 3
 
 [node name="Export" type="ScrollContainer" parent="MarginContainer/RootVBox/VS_Main_Assets/HS_Edit_Sidebar/VS_Preview_Inspector/InspectorPanel/InspectorTabs/Export"]
-visible = false
 layout_mode = 2
-offset_right = 8.0
-offset_bottom = 8.0
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_top = 34.0
+offset_bottom = 2.0
+theme = ExtResource("2_o2a2a")
 
 [node name="MarginContainer" type="MarginContainer" parent="MarginContainer/RootVBox/VS_Main_Assets/HS_Edit_Sidebar/VS_Preview_Inspector/InspectorPanel/InspectorTabs/Export/Export"]
 layout_mode = 2
@@ -594,13 +602,49 @@ custom_minimum_size = Vector2(60, 2.08165e-12)
 layout_mode = 2
 theme_override_constants/separation = 40
 
-[node name="PanelContainer_SpritesTab" type="PanelContainer" parent="MarginContainer/RootVBox/VS_Main_Assets/AssetsPanel/AssetTabSplit/AssetsTabBar"]
-unique_name_in_owner = true
+[node name="SpacerTop" type="Control" parent="MarginContainer/RootVBox/VS_Main_Assets/AssetsPanel/AssetTabSplit/AssetsTabBar"]
 layout_mode = 2
 size_flags_vertical = 3
+
+[node name="Row_Sprites" type="HBoxContainer" parent="MarginContainer/RootVBox/VS_Main_Assets/AssetsPanel/AssetTabSplit/AssetsTabBar"]
+layout_mode = 2
+size_flags_horizontal = 3
+
+[node name="PadLeft_Sprites" type="Control" parent="MarginContainer/RootVBox/VS_Main_Assets/AssetsPanel/AssetTabSplit/AssetsTabBar/Row_Sprites"]
+custom_minimum_size = Vector2(10, 0)
+layout_mode = 2
+
+[node name="TabShell_Sprites" type="Control" parent="MarginContainer/RootVBox/VS_Main_Assets/AssetsPanel/AssetTabSplit/AssetsTabBar/Row_Sprites"]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(64, 72)
+layout_mode = 2
+mouse_filter = 1
+
+[node name="PanelShadow_Sprites" type="Panel" parent="MarginContainer/RootVBox/VS_Main_Assets/AssetsPanel/AssetTabSplit/AssetsTabBar/Row_Sprites/TabShell_Sprites"]
+unique_name_in_owner = true
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_left = 6.0
+offset_top = 8.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+
+[node name="PanelContainer_SpritesTab" type="PanelContainer" parent="MarginContainer/RootVBox/VS_Main_Assets/AssetsPanel/AssetTabSplit/AssetsTabBar/Row_Sprites/TabShell_Sprites"]
+unique_name_in_owner = true
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_right = -6.0
+offset_bottom = -8.0
+grow_horizontal = 2
+grow_vertical = 2
 theme_override_styles/panel = SubResource("StyleBoxFlat_nkv7g")
 
-[node name="Tab_Sprites" type="TextureButton" parent="MarginContainer/RootVBox/VS_Main_Assets/AssetsPanel/AssetTabSplit/AssetsTabBar/PanelContainer_SpritesTab"]
+[node name="Tab_Sprites" type="TextureButton" parent="MarginContainer/RootVBox/VS_Main_Assets/AssetsPanel/AssetTabSplit/AssetsTabBar/Row_Sprites/TabShell_Sprites/PanelContainer_SpritesTab"]
 unique_name_in_owner = true
 modulate = Color(0.152941, 0.160784, 0.160784, 1)
 custom_minimum_size = Vector2(40, 40)
@@ -613,13 +657,49 @@ texture_hover = ExtResource("6_fm0m5")
 ignore_texture_size = true
 stretch_mode = 0
 
-[node name="PanelContainer_SoundTab" type="PanelContainer" parent="MarginContainer/RootVBox/VS_Main_Assets/AssetsPanel/AssetTabSplit/AssetsTabBar"]
-unique_name_in_owner = true
+[node name="PadRight_Sprites" type="Control" parent="MarginContainer/RootVBox/VS_Main_Assets/AssetsPanel/AssetTabSplit/AssetsTabBar/Row_Sprites"]
 layout_mode = 2
-size_flags_vertical = 3
+size_flags_horizontal = 3
+
+[node name="Row_Sound" type="HBoxContainer" parent="MarginContainer/RootVBox/VS_Main_Assets/AssetsPanel/AssetTabSplit/AssetsTabBar"]
+layout_mode = 2
+size_flags_horizontal = 3
+
+[node name="PadLeft_Sound" type="Control" parent="MarginContainer/RootVBox/VS_Main_Assets/AssetsPanel/AssetTabSplit/AssetsTabBar/Row_Sound"]
+custom_minimum_size = Vector2(10, 0)
+layout_mode = 2
+
+[node name="TabShell_Sound" type="Control" parent="MarginContainer/RootVBox/VS_Main_Assets/AssetsPanel/AssetTabSplit/AssetsTabBar/Row_Sound"]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(64, 72)
+layout_mode = 2
+mouse_filter = 1
+
+[node name="PanelShadow_Sound" type="Panel" parent="MarginContainer/RootVBox/VS_Main_Assets/AssetsPanel/AssetTabSplit/AssetsTabBar/Row_Sound/TabShell_Sound"]
+unique_name_in_owner = true
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_left = 6.0
+offset_top = 8.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+
+[node name="PanelContainer_SoundTab" type="PanelContainer" parent="MarginContainer/RootVBox/VS_Main_Assets/AssetsPanel/AssetTabSplit/AssetsTabBar/Row_Sound/TabShell_Sound"]
+unique_name_in_owner = true
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_right = -6.0
+offset_bottom = -8.0
+grow_horizontal = 2
+grow_vertical = 2
 theme_override_styles/panel = SubResource("StyleBoxFlat_j2td0")
 
-[node name="Tab_Sound" type="TextureButton" parent="MarginContainer/RootVBox/VS_Main_Assets/AssetsPanel/AssetTabSplit/AssetsTabBar/PanelContainer_SoundTab"]
+[node name="Tab_Sound" type="TextureButton" parent="MarginContainer/RootVBox/VS_Main_Assets/AssetsPanel/AssetTabSplit/AssetsTabBar/Row_Sound/TabShell_Sound/PanelContainer_SoundTab"]
 unique_name_in_owner = true
 modulate = Color(0.152941, 0.160784, 0.160784, 1)
 custom_minimum_size = Vector2(40, 40)
@@ -631,6 +711,14 @@ texture_pressed = ExtResource("3_bgert")
 texture_hover = ExtResource("8_qwge4")
 ignore_texture_size = true
 stretch_mode = 0
+
+[node name="PadRight_Sound" type="Control" parent="MarginContainer/RootVBox/VS_Main_Assets/AssetsPanel/AssetTabSplit/AssetsTabBar/Row_Sound"]
+layout_mode = 2
+size_flags_horizontal = 3
+
+[node name="SpacerBottom" type="Control" parent="MarginContainer/RootVBox/VS_Main_Assets/AssetsPanel/AssetTabSplit/AssetsTabBar"]
+layout_mode = 2
+size_flags_vertical = 3
 
 [node name="AssetsTab" type="TabContainer" parent="MarginContainer/RootVBox/VS_Main_Assets/AssetsPanel/AssetTabSplit"]
 unique_name_in_owner = true
