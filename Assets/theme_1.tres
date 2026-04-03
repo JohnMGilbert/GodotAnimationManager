@@ -1,4 +1,4 @@
-[gd_resource type="Theme" load_steps=9 format=3 uid="uid://b4eob2ew7phm"]
+[gd_resource type="Theme" load_steps=15 format=3 uid="uid://b4eob2ew7phm"]
 
 [sub_resource type="StyleBoxFlat" id="StyleBoxFlat_button_hover"]
 bg_color = Color(0.34902, 0.341176, 0.611765, 1)
@@ -36,30 +36,6 @@ corner_radius_top_right = 6
 corner_radius_bottom_right = 6
 corner_radius_bottom_left = 6
 
-[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_input_focus"]
-bg_color = Color(0.815686, 0.792157, 0.780392, 1)
-border_width_left = 2
-border_width_top = 2
-border_width_right = 2
-border_width_bottom = 2
-border_color = Color(0.603922, 0.133333, 0.341176, 1)
-corner_radius_top_left = 5
-corner_radius_top_right = 5
-corner_radius_bottom_right = 5
-corner_radius_bottom_left = 5
-
-[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_input"]
-bg_color = Color(0.815686, 0.792157, 0.780392, 1)
-border_width_left = 2
-border_width_top = 2
-border_width_right = 2
-border_width_bottom = 2
-border_color = Color(0.152941, 0.160784, 0.160784, 1)
-corner_radius_top_left = 5
-corner_radius_top_right = 5
-corner_radius_bottom_right = 5
-corner_radius_bottom_left = 5
-
 [sub_resource type="StyleBoxFlat" id="StyleBoxFlat_panel"]
 bg_color = Color(0.768627, 0.745098, 0.733333, 1)
 border_width_left = 2
@@ -71,6 +47,30 @@ corner_radius_top_left = 8
 corner_radius_top_right = 8
 corner_radius_bottom_right = 8
 corner_radius_bottom_left = 8
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_input_focus"]
+bg_color = Color(0.768627, 0.745098, 0.733333, 1)
+border_width_left = 2
+border_width_top = 2
+border_width_right = 2
+border_width_bottom = 2
+border_color = Color(0.603922, 0.133333, 0.341176, 1)
+corner_radius_top_left = 5
+corner_radius_top_right = 5
+corner_radius_bottom_right = 5
+corner_radius_bottom_left = 5
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_input"]
+bg_color = Color(0.768627, 0.745098, 0.733333, 1)
+border_width_left = 2
+border_width_top = 2
+border_width_right = 2
+border_width_bottom = 2
+border_color = Color(0.152941, 0.160784, 0.160784, 1)
+corner_radius_top_left = 5
+corner_radius_top_right = 5
+corner_radius_bottom_right = 5
+corner_radius_bottom_left = 5
 
 [sub_resource type="StyleBoxFlat" id="StyleBoxFlat_popup"]
 bg_color = Color(0.768627, 0.745098, 0.733333, 1)
@@ -85,6 +85,10 @@ corner_radius_bottom_right = 6
 corner_radius_bottom_left = 6
 
 [sub_resource type="StyleBoxFlat" id="StyleBoxFlat_tab_selected"]
+content_margin_left = 12.0
+content_margin_top = 6.0
+content_margin_right = 12.0
+content_margin_bottom = 6.0
 bg_color = Color(0.286275, 0.278431, 0.52549, 1)
 border_width_left = 2
 border_width_top = 2
@@ -93,6 +97,36 @@ border_width_bottom = 2
 border_color = Color(0.152941, 0.160784, 0.160784, 1)
 corner_radius_top_left = 6
 corner_radius_top_right = 6
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_pdorm"]
+bg_color = Color(0.768627, 0.745098, 0.733333, 1)
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_2qbi6"]
+bg_color = Color(0.603922, 0.133333, 0.341176, 1)
+corner_radius_top_left = 20
+corner_radius_top_right = 20
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_7m401"]
+bg_color = Color(0.669937, 0.157496, 0.382295, 1)
+corner_radius_top_left = 20
+corner_radius_top_right = 20
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_ckrsj"]
+bg_color = Color(0.603922, 0.133333, 0.341176, 1)
+corner_radius_top_left = 20
+corner_radius_top_right = 20
+expand_margin_left = 7.0
+expand_margin_right = 7.0
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_o21du"]
+bg_color = Color(0.500217, 0.100393, 0.277959, 1)
+corner_radius_top_left = 20
+corner_radius_top_right = 20
+expand_margin_left = 10.0
+expand_margin_right = 10.0
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_q3ecl"]
+bg_color = Color(0.152941, 0.160784, 0.160784, 1)
 
 [resource]
 Button/colors/font_color = Color(0.768627, 0.745098, 0.733333, 1)
@@ -107,11 +141,13 @@ CheckBox/colors/font_color = Color(0.152941, 0.160784, 0.160784, 1)
 CheckBox/colors/font_focus_color = Color(0.152941, 0.160784, 0.160784, 1)
 CheckBox/colors/font_hover_color = Color(0.603922, 0.133333, 0.341176, 1)
 CheckBox/font_sizes/font_size = 17
-HBoxContainer/constants/separation = 12
+ColorRect/colors/color = Color(0.152941, 0.160784, 0.160784, 1)
+HBoxContainer/constants/separation = 10
 ItemList/colors/font_color = Color(0.152941, 0.160784, 0.160784, 1)
 ItemList/colors/font_selected_color = Color(0.768627, 0.745098, 0.733333, 1)
 ItemList/colors/guide_color = Color(0.286275, 0.278431, 0.52549, 0.35)
 ItemList/font_sizes/font_size = 17
+ItemList/styles/panel = SubResource("StyleBoxFlat_panel")
 Label/colors/font_color = Color(0.152941, 0.160784, 0.160784, 1)
 Label/font_sizes/font_size = 20
 LineEdit/colors/font_color = Color(0.152941, 0.160784, 0.160784, 1)
@@ -140,13 +176,22 @@ SpinBox/styles/focus = SubResource("StyleBoxFlat_input_focus")
 SpinBox/styles/normal = SubResource("StyleBoxFlat_input")
 TabBar/colors/font_selected_color = Color(0.768627, 0.745098, 0.733333, 1)
 TabBar/colors/font_unselected_color = Color(0.152941, 0.160784, 0.160784, 1)
+TabBar/constants/h_separation = 4
 TabBar/font_sizes/font_size = 17
 TabBar/styles/tab_selected = SubResource("StyleBoxFlat_tab_selected")
-TabContainer/constants/side_margin = 8
+TabContainer/constants/side_margin = 10
 TabContainer/font_sizes/font_size = 18
+TabContainer/styles/panel = SubResource("StyleBoxFlat_pdorm")
+TabContainer/styles/tab_focus = SubResource("StyleBoxFlat_2qbi6")
+TabContainer/styles/tab_hovered = SubResource("StyleBoxFlat_7m401")
+TabContainer/styles/tab_selected = SubResource("StyleBoxFlat_ckrsj")
+TabContainer/styles/tab_unselected = SubResource("StyleBoxFlat_o21du")
+TabContainer/styles/tabbar_background = SubResource("StyleBoxFlat_q3ecl")
 TextEdit/colors/font_color = Color(0.152941, 0.160784, 0.160784, 1)
 TextEdit/colors/font_placeholder_color = Color(0.152941, 0.160784, 0.160784, 0.55)
 TextEdit/font_sizes/font_size = 17
 TextEdit/styles/focus = SubResource("StyleBoxFlat_input_focus")
 TextEdit/styles/normal = SubResource("StyleBoxFlat_input")
-VBoxContainer/constants/separation = 8
+VBoxContainer/constants/separation = 10
+Window/colors/title_color = Color(0.152941, 0.160784, 0.160784, 1)
+Window/styles/panel = SubResource("StyleBoxFlat_panel")
