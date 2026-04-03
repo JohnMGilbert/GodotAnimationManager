@@ -50,6 +50,7 @@ const EDITOR_STATE_FILE := ".aam_editor.json"
 @onready var list_sound: ItemList        = %List_Sound
 @onready var btn_import_sound: Button    = %Btn_ImportSound
 @onready var fd_import_sound: FileDialog = $FD_Import_Sound
+@onready var drag_indicator_sound_label: Label = %DragIndicatorLabel_Sound
 
 @onready var builder_view: Node = %BuilderView          # Should be a BuilderGrid
 @onready var preview_view: Control = %PreviewView
@@ -745,11 +746,15 @@ func _refresh_sound_list() -> void:
 
 	if ProjectModel.project_dir == "":
 		push_warning("No project open; cannot list audio.")
+		if drag_indicator_sound_label:
+			drag_indicator_sound_label.show()
 		return
 
 	# NOTE: implement ProjectModel.get_audio() -> Array[String]
 	var rel_paths: Array[String] = ProjectModel.get_audio()
 	if rel_paths.is_empty():
+		if drag_indicator_sound_label:
+			drag_indicator_sound_label.show()
 		return
 
 	for rel in rel_paths:
@@ -757,6 +762,9 @@ func _refresh_sound_list() -> void:
 		var idx := list_sound.add_item(label)
 		list_sound.set_item_metadata(idx, rel)
 		# Optional: you could set an icon here (e.g. a generic speaker icon)
+
+	if drag_indicator_sound_label:
+		drag_indicator_sound_label.hide()
 
 
 # -------------------------------------------------------------------

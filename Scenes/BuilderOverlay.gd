@@ -290,9 +290,26 @@ func _request_editor_state_save() -> void:
 # Popup animation switcher
 # -------------------------------------------------------------------
 func _on_change_animation_pressed() -> void:
-	if not popup_anim_switch:
+	if not popup_anim_switch or not btn_change_anim:
 		return
 	_rebuild_animation_switcher_menu()
+
+	var button_rect := btn_change_anim.get_global_rect()
+	var popup_position := Vector2i(
+		int(round(button_rect.end.x)),
+		int(round(button_rect.position.y))
+	)
+
+	var window := get_window()
+	if window != null:
+		popup_anim_switch.reset_size()
+		var popup_size := popup_anim_switch.size
+		var max_x := window.position.x + window.size.x - popup_size.x
+		var max_y := window.position.y + window.size.y - popup_size.y
+		popup_position.x = clampi(popup_position.x, window.position.x, max_x)
+		popup_position.y = clampi(popup_position.y, window.position.y, max_y)
+
+	popup_anim_switch.position = popup_position
 	popup_anim_switch.popup()
 
 

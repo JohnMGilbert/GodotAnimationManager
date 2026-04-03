@@ -20,10 +20,10 @@
 [ext_resource type="Texture2D" uid="uid://dkt6djy4gyl2k" path="res://Assets/eraser_grey.png" id="13_c6k6f"]
 [ext_resource type="Texture2D" uid="uid://qojdbttfjoej" path="res://Assets/play-button-arrowhead.png" id="13_u7f72"]
 [ext_resource type="Texture2D" uid="uid://dywb3iexbxabv" path="res://Assets/pause.png" id="15_cbuxf"]
-[ext_resource type="FontFile" uid="uid://lpycw074j1m6" path="res://Assets/Gixel.ttf" id="16_sue0p"]
 [ext_resource type="Script" path="res://Scenes/widgets/SoundList.gd" id="17_4rsy7"]
 [ext_resource type="PackedScene" uid="uid://ddum0qkw4vig0" path="res://settings_window.tscn" id="17_sswpc"]
 [ext_resource type="Texture2D" uid="uid://c3i60hovrdah6" path="res://Assets/speaker-filled-audio-tool.png" id="18_srjvv"]
+[ext_resource type="FontFile" uid="uid://cr84p7hiulgxe" path="res://Assets/game_boy_1989.ttf" id="22_oqp5p"]
 [ext_resource type="Script" path="res://Scenes/SpritesheetDialog.gd" id="25_4ihhd"]
 
 [sub_resource type="StyleBoxFlat" id="StyleBoxFlat_f0813"]
@@ -676,13 +676,14 @@ script = ExtResource("5_gcset")
 
 [node name="DragIndicatorLabel" type="Label" parent="MarginContainer/RootVBox/VS_Main_Assets/AssetsPanel/AssetTabSplit/AssetsTab/MarginContainer/TabPage_Sprites/List_Sprites"]
 unique_name_in_owner = true
-layout_mode = 0
-offset_left = 419.0
-offset_top = 291.0
-offset_right = 768.0
-offset_bottom = 346.0
-theme_override_colors/font_color = Color(1, 1, 1, 0.215686)
-theme_override_fonts/font = ExtResource("16_sue0p")
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+theme_override_colors/font_color = Color(0.286275, 0.278431, 0.52549, 0.376471)
+theme_override_fonts/font = ExtResource("22_oqp5p")
 theme_override_font_sizes/font_size = 40
 text = "Drag Sprites Here"
 horizontal_alignment = 1
@@ -740,14 +741,16 @@ fixed_icon_size = Vector2i(20, 20)
 script = ExtResource("17_4rsy7")
 audio_icon = ExtResource("18_srjvv")
 
-[node name="DragIndicatorLabel" type="Label" parent="MarginContainer/RootVBox/VS_Main_Assets/AssetsPanel/AssetTabSplit/AssetsTab/MarginContainer2/TabPage_Sound/List_Sound"]
-layout_mode = 0
-offset_left = 220.0
-offset_top = 44.0
-offset_right = 569.0
-offset_bottom = 99.0
-theme_override_colors/font_color = Color(1, 1, 1, 0.215686)
-theme_override_fonts/font = ExtResource("16_sue0p")
+[node name="DragIndicatorLabel_Sound" type="Label" parent="MarginContainer/RootVBox/VS_Main_Assets/AssetsPanel/AssetTabSplit/AssetsTab/MarginContainer2/TabPage_Sound/List_Sound"]
+unique_name_in_owner = true
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+theme_override_colors/font_color = Color(0.286275, 0.278431, 0.52549, 0.376471)
+theme_override_fonts/font = ExtResource("22_oqp5p")
 theme_override_font_sizes/font_size = 40
 text = "Drag Sounds Here"
 horizontal_alignment = 1
