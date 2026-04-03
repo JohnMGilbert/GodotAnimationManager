@@ -95,6 +95,12 @@ Asset folders:
 - [`Assets/`](Assets/): Editor UI assets and sample content used by this tool.
 - Project-authored content is stored relative to each `.aam` project, typically under `assets/sprites` and `assets/audio`.
 
+UI/theme structure:
+
+- [`Assets/theme_1.tres`](Assets/theme_1.tres): shared workspace/popup theme for most editor UI.
+- [`Assets/mm_theme.tres`](Assets/mm_theme.tres): main-menu-specific theme and button styling.
+- [`ProjectSettings/UiTokens.gd`](ProjectSettings/UiTokens.gd): shared palette and spacing tokens for GDScript when values are needed in code.
+
 ## Current Architecture Notes
 
 Right now, the workspace is functional but not yet strongly modular.
@@ -137,6 +143,16 @@ When evaluating new export behavior, ask:
 - Main scene: `res://Scenes/MainMenu.tscn`.
 - Autoload singletons: `AppState` and `ProjectModel`.
 - `.godot/` and `.DS_Store` are ignored in git.
+
+## UI Architecture Notes
+
+The UI system should now follow these rules:
+
+- Prefer putting shared visual decisions in [`Assets/theme_1.tres`](Assets/theme_1.tres) or [`Assets/mm_theme.tres`](Assets/mm_theme.tres) instead of scene-local overrides.
+- Use scene-level `theme_override_*` values only for intentional exceptions, not as the default way to size text or style controls.
+- For popup windows, use the pattern `Window -> MarginContainer -> themed content container`.
+- For script-side color or spacing values, use [`ProjectSettings/UiTokens.gd`](ProjectSettings/UiTokens.gd) instead of scattering raw color literals through multiple files.
+- Keep layout containers responsible for positioning, and keep controller scripts focused on behavior rather than pixel coordinates whenever possible.
 
 ## Near-Term Refactor Direction
 

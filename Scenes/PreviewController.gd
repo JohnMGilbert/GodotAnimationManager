@@ -5,19 +5,25 @@ var preview_fps: float = 8.0
 var is_playing: bool = true
 var loop_enabled: bool = true
 
+var _preview_view: Control = null
 var _preview_sprite: AnimatedSprite2D = null
 var _preview_audio: AudioStreamPlayer = null
 var _builder_grid: BuilderGrid = null
 var _frame_sounds: Array = []
 var _audio_cache: Dictionary = {}
 
-func setup(preview_sprite: AnimatedSprite2D, preview_audio: AudioStreamPlayer, builder_grid: BuilderGrid) -> void:
+func setup(preview_view: Control, preview_sprite: AnimatedSprite2D, preview_audio: AudioStreamPlayer, builder_grid: BuilderGrid) -> void:
+	_preview_view = preview_view
 	_preview_sprite = preview_sprite
 	_preview_audio = preview_audio
 	_builder_grid = builder_grid
 
+	if _preview_view:
+		_preview_view.resized.connect(_position_preview_sprite)
+
 	if _preview_sprite:
 		_preview_sprite.frame_changed.connect(_on_preview_frame_changed)
+		_position_preview_sprite()
 
 
 func apply_sequence_preview(sequences: Array) -> void:
@@ -48,6 +54,7 @@ func apply_sequence_preview(sequences: Array) -> void:
 
 	_preview_sprite.sprite_frames = frames
 	_preview_sprite.animation = anim_name
+	_position_preview_sprite()
 
 	if is_playing:
 		_preview_sprite.play()
@@ -103,6 +110,13 @@ func set_preview_fps(value: float) -> void:
 
 func clear_audio_cache() -> void:
 	_audio_cache.clear()
+
+
+func _position_preview_sprite() -> void:
+	if _preview_view == null or _preview_sprite == null:
+		return
+
+	_preview_sprite.position = _preview_view.size * 0.5
 
 
 func _rebuild_sound_timeline() -> void:

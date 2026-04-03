@@ -135,8 +135,15 @@ func _goto_project(path: String) -> void:
 	# Close any open modal to avoid blocking the scene change
 	if is_instance_valid(%NoticeDialog) and %NoticeDialog.visible:
 		%NoticeDialog.hide()
+	if is_instance_valid(new_dialog) and new_dialog.visible:
+		new_dialog.hide()
+	if is_instance_valid(open_dialog) and open_dialog.visible:
+		open_dialog.hide()
 
-	# Change to workspace
+	call_deferred("_change_to_workspace_scene")
+
+
+func _change_to_workspace_scene() -> void:
 	var scene_err := get_tree().change_scene_to_file("res://Scenes/workspace.tscn")
 	if scene_err != OK:
 		_alert("Failed to load Workspace.tscn\nError: %s" % error_string(scene_err))

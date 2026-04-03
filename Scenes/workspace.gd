@@ -50,6 +50,7 @@ const EDITOR_STATE_FILE := ".aam_editor.json"
 @onready var fd_import_sound: FileDialog = $FD_Import_Sound
 
 @onready var builder_view: Node = %BuilderView          # Should be a BuilderGrid
+@onready var preview_view: Control = %PreviewView
 @onready var preview_sprite: AnimatedSprite2D = %PreviewSprite
 
 @onready var btn_builder_settings: TextureButton = %Btn_BuilderSettings
@@ -105,6 +106,7 @@ func _ready() -> void:
 	# Let the root fill the window, but DO NOT touch child mins or splits
 	set_anchors_preset(Control.PRESET_FULL_RECT)
 	resized.connect(_on_workspace_resized)
+	call_deferred("_apply_workspace_window_mode")
 
 	tab_buttons = [tab_sprites_btn, tab_sound_btn]
 	_connect_asset_tabs()
@@ -137,6 +139,11 @@ func _ready() -> void:
 			win_add_tag.hide()
 		)
 
+	if win_add_tag:
+		win_add_tag.close_requested.connect(func() -> void:
+			win_add_tag.hide()
+		)
+
 	if btn_tag_submit:
 		btn_tag_submit.pressed.connect(_on_Btn_TagSubmit_pressed)
 
@@ -152,7 +159,7 @@ func _ready() -> void:
 
 	if builder_view:
 		preview_controller = PreviewControllerScript.new()
-		preview_controller.setup(preview_sprite, preview_audio, builder_view as BuilderGrid)
+		preview_controller.setup(preview_view, preview_sprite, preview_audio, builder_view as BuilderGrid)
 		builder_view.sequences_changed.connect(_on_builder_sequences_changed)
 		_on_builder_sequences_changed(builder_view.get_row_sequences())
 
@@ -196,6 +203,13 @@ func _ready() -> void:
 
 func _on_workspace_resized() -> void:
 	call_deferred("_apply_workspace_layout")
+
+
+func _apply_workspace_window_mode() -> void:
+	var window := get_window()
+	if window == null:
+		return
+	window.mode = Window.MODE_MAXIMIZED
 
 
 func _apply_workspace_layout() -> void:

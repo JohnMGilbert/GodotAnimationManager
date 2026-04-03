@@ -59,6 +59,7 @@ anchor_bottom = 1.0
 
 [node name="MarginContainer" type="MarginContainer" parent="RootMarginContainer/Panel/CenterContainer"]
 layout_mode = 2
+theme = ExtResource("2_j0n5o")
 theme_override_constants/margin_left = 120
 theme_override_constants/margin_top = 75
 theme_override_constants/margin_right = 120
@@ -71,7 +72,6 @@ alignment = 1
 [node name="Title" type="Label" parent="RootMarginContainer/Panel/CenterContainer/MarginContainer/VBoxContainer"]
 unique_name_in_owner = true
 layout_mode = 2
-theme = ExtResource("2_j0n5o")
 text = "Animation Manager
 "
 horizontal_alignment = 1
@@ -122,13 +122,11 @@ text = "Remove Selected"
 unique_name_in_owner = true
 custom_minimum_size = Vector2(140, 0)
 layout_mode = 2
-theme_override_colors/font_color = Color(0.768627, 0.745098, 0.733333, 1)
 text = "Quit"
 
 [node name="Label2" type="Label" parent="RootMarginContainer/Panel/CenterContainer/MarginContainer/VBoxContainer"]
 visible = false
 layout_mode = 2
-theme_override_font_sizes/font_size = 20
 text = "Recent Projects"
 horizontal_alignment = 1
 
@@ -138,4 +136,3 @@ visible = false
 custom_minimum_size = Vector2(420, 180)
 layout_mode = 2
 size_flags_vertical = 3
-theme = ExtResource("2_j0n5o")
