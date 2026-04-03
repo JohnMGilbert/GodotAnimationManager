@@ -436,6 +436,7 @@ func _on_preview_playpause_pressed() -> void:
 func _on_preview_loop_pressed() -> void:
 	if preview_controller:
 		preview_controller.set_loop_enabled(btn_preview_loop.button_pressed)
+	ProjectModel.set_export_playback(preview_fps, btn_preview_loop.button_pressed if btn_preview_loop else true)
 
 
 func _on_settings_applied(grid_cell_size: int, preview_fps_new: float, repo_path: String, ui_scale: float) -> void:
@@ -452,6 +453,7 @@ func _on_settings_applied(grid_cell_size: int, preview_fps_new: float, repo_path
 	if preview_controller:
 		preview_controller.set_preview_fps(preview_fps)
 	_on_builder_sequences_changed(builder_view.get_row_sequences())
+	ProjectModel.set_export_playback(preview_fps, btn_preview_loop.button_pressed if btn_preview_loop else true)
 
 	# Persist export repo in ProjectModel
 	if repo_path != "":
@@ -1046,6 +1048,7 @@ func _on_export_pressed() -> void:
 		return
 
 	ProjectModel.set_animation(anim_name, anim_data)
+	ProjectModel.set_export_playback(preview_fps, btn_preview_loop.button_pressed if btn_preview_loop else true)
 
 	var err := ProjectModel.export_animation()
 	if err != OK:
@@ -1076,6 +1079,7 @@ func save_editor_state() -> void:
 	var data: Dictionary = {}
 
 	data["preview_fps"] = preview_fps
+	data["preview_loop_enabled"] = btn_preview_loop.button_pressed if btn_preview_loop else true
 	data["export_repo_path"] = export_repo_path
 	if builder_view:
 		data["grid_cell_size"] = builder_view.cell_size
@@ -1122,10 +1126,14 @@ func _load_editor_state() -> void:
 
 	preview_fps = float(data.get("preview_fps", preview_fps))
 	export_repo_path = String(data.get("export_repo_path", export_repo_path))
+	var preview_loop_enabled := bool(data.get("preview_loop_enabled", true))
+	if btn_preview_loop:
+		btn_preview_loop.button_pressed = preview_loop_enabled
 	if preview_controller:
 		preview_controller.set_preview_fps(preview_fps)
 		preview_controller.set_playing(btn_preview_playpause.button_pressed if btn_preview_playpause else true)
-		preview_controller.set_loop_enabled(btn_preview_loop.button_pressed if btn_preview_loop else true)
+		preview_controller.set_loop_enabled(preview_loop_enabled)
+	ProjectModel.set_export_playback(preview_fps, preview_loop_enabled)
 
 	if builder_view:
 		var cell_size_val := int(data.get("grid_cell_size", builder_view.cell_size))

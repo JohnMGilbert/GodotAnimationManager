@@ -35,6 +35,8 @@ var data: Dictionary = {
 	"asset_tags": {}
 }
 
+const EXPORT_SCHEMA_VERSION := "gam_export.v1"
+
 
 func get_animation_names() -> PackedStringArray:
 	var anims = data.get("animations", {})
@@ -373,12 +375,43 @@ func set_export_repo(path: String) -> void:
 	export_repo_path = path
 	if data.is_empty():
 		return
-	if not data.has("export") or not (data["export"] is Dictionary):
-		data["export"] = {}
-	var export_dict: Dictionary = data["export"]
+	var export_dict := _get_export_dict()
 	export_dict["repo_path"] = path
 	data["export"] = export_dict
 	save()
+
+
+func set_export_playback(fps: float, loop_enabled: bool) -> void:
+	if data.is_empty():
+		return
+	var export_dict := _get_export_dict()
+	export_dict["playback"] = {
+		"fps": fps,
+		"loop": loop_enabled,
+	}
+	data["export"] = export_dict
+	save()
+
+
+func get_export_playback() -> Dictionary:
+	var export_dict := _get_export_dict()
+	var playback_raw: Variant = export_dict.get("playback", {})
+	if playback_raw is Dictionary:
+		var playback_dict := playback_raw as Dictionary
+		return {
+			"fps": float(playback_dict.get("fps", 8.0)),
+			"loop": bool(playback_dict.get("loop", true)),
+		}
+	return {
+		"fps": 8.0,
+		"loop": true,
+	}
+
+
+func _get_export_dict() -> Dictionary:
+	if not data.has("export") or not (data["export"] is Dictionary):
+		data["export"] = {}
+	return data["export"]
 	
 # ----------------------------------------------------
 # Asset tag system (project-wide)
@@ -544,6 +577,13 @@ func export_animation() -> int:
 		push_error("ProjectModel.export_animation: sequences array is empty for '%s'." % current_name)
 		return ERR_NO_SEQUENCES
 
+	var frame_entries := _build_export_frame_entries(anim)
+	if frame_entries.is_empty():
+		push_error("ProjectModel.export_animation: no usable frame entries for '%s'." % current_name)
+		return ERR_NO_SEQUENCES
+
+	var export_playback := get_export_playback()
+
 	# 2) Decide export layout under the game repo
 	var repo_root := export_repo_path.rstrip("/")  # absolute dir
 
@@ -552,6 +592,8 @@ func export_animation() -> int:
 
 	var frames_rel_dir := "art/sprites/%s" % anim_name
 	var frames_abs_dir := repo_root.path_join(frames_rel_dir)
+	var audio_rel_dir := "art/audio/%s" % anim_name
+	var audio_abs_dir := repo_root.path_join(audio_rel_dir)
 
 	var manifest_rel_path := "art/animations/%s.json" % anim_name
 	var manifest_abs_path := repo_root.path_join(manifest_rel_path)
@@ -562,46 +604,68 @@ func export_animation() -> int:
 		push_error("export_animation: failed to create frames dir: %s (err %d)" % [frames_abs_dir, err])
 		return ERR_COPY_FAILED
 
+	err = DirAccess.make_dir_recursive_absolute(audio_abs_dir)
+	if err != OK:
+		push_error("export_animation: failed to create audio dir: %s (err %d)" % [audio_abs_dir, err])
+		return ERR_COPY_FAILED
+
 	err = DirAccess.make_dir_recursive_absolute(manifest_abs_path.get_base_dir())
 	if err != OK:
 		push_error("export_animation: failed to create manifest dir: %s (err %d)" % [manifest_abs_path.get_base_dir(), err])
 		return ERR_MANIFEST_FAILED
 
-	# 4) Copy all referenced sprite files into frames_abs_dir
-	var copied: Dictionary = {}  # src_abs -> dst_filename
-	var sequences_filenames: Array = []  # Array[Array[String]] of filenames only
+	# 4) Copy referenced sprite + audio assets and build manifest frame entries
+	var copied_sprites: Dictionary = {}  # src_abs -> dst_filename
+	var copied_audio: Dictionary = {}  # src_abs -> dst_filename
+	var manifest_frames: Array = []
 
-	for seq in sequences:
-		if not (seq is Array):
-			continue
-		var seq_names: Array = []
-		for rel in seq:
-			var rel_str := String(rel)
-			var src_abs := project_dir.path_join(rel_str)
-			var file_name := rel_str.get_file()
-			var dst_abs := frames_abs_dir.path_join(file_name)
+	for i in range(frame_entries.size()):
+		var entry: Dictionary = frame_entries[i]
+		var sprite_rel := String(entry.get("rel", ""))
+		var sprite_src_abs := project_dir.path_join(sprite_rel)
+		var sprite_dst_name := _copy_export_asset(sprite_src_abs, frames_abs_dir, copied_sprites)
+		if sprite_dst_name == "":
+			push_error("export_animation: failed to export sprite asset %s" % sprite_src_abs)
+			return ERR_COPY_FAILED
 
-			if not copied.has(src_abs):
-				var copy_err := DirAccess.copy_absolute(src_abs, dst_abs)
-				if copy_err != OK:
-					push_error("export_animation: failed to copy %s -> %s (err %d)" % [src_abs, dst_abs, copy_err])
-					return ERR_COPY_FAILED
-				copied[src_abs] = file_name
+		var exported_sounds: Array = []
+		var sounds: Array = entry.get("sounds", [])
+		for sound_rel in sounds:
+			var sound_rel_str := String(sound_rel)
+			var sound_src_abs := project_dir.path_join(sound_rel_str)
+			var sound_dst_name := _copy_export_asset(sound_src_abs, audio_abs_dir, copied_audio)
+			if sound_dst_name == "":
+				push_error("export_animation: failed to export audio asset %s" % sound_src_abs)
+				return ERR_COPY_FAILED
+			exported_sounds.append(sound_dst_name)
 
-			seq_names.append(file_name)
+		manifest_frames.append({
+			"index": i,
+			"image": sprite_dst_name,
+			"source_rel": sprite_rel,
+			"x": int(entry.get("x", 0)),
+			"y": int(entry.get("y", 0)),
+			"sounds": exported_sounds,
+		})
 
-		if not seq_names.is_empty():
-			sequences_filenames.append(seq_names)
-
-	if sequences_filenames.is_empty():
-		push_error("export_animation: no usable frames after processing sequences for '%s'." % current_name)
+	if manifest_frames.is_empty():
+		push_error("export_animation: no usable manifest frames for '%s'." % current_name)
 		return ERR_NO_SEQUENCES
 
-	# 5) Write a simple JSON manifest
+	# 5) Write manifest
 	var manifest: Dictionary = {
-		"name": anim_name,
-		"frames_dir": frames_rel_dir,
-		"sequences": sequences_filenames
+		"schema": EXPORT_SCHEMA_VERSION,
+		"animation_name": anim_name,
+		"source_project": {
+			"name": String(data.get("name", "")),
+			"schema": String(data.get("schema", AnimationProjectSchema.SCHEMA_VERSION)),
+		},
+		"playback": export_playback,
+		"assets": {
+			"sprites_dir": frames_rel_dir,
+			"audio_dir": audio_rel_dir,
+		},
+		"frames": manifest_frames,
 	}
 
 	var file := FileAccess.open(manifest_abs_path, FileAccess.WRITE)
@@ -616,3 +680,110 @@ func export_animation() -> int:
 	print("Exported animation '%s' manifest to: %s" % [anim_name, manifest_abs_path])
 	print("Frames directory: ", frames_abs_dir)
 	return OK
+
+
+func _build_export_frame_entries(anim: Dictionary) -> Array:
+	var cells_raw: Variant = anim.get("cells", [])
+	var sound_cells_raw: Variant = anim.get("sound_cells", [])
+
+	var top_by_x: Dictionary = {}
+	if cells_raw is Array:
+		for cell_entry in cells_raw:
+			if not (cell_entry is Dictionary):
+				continue
+			var cell_dict := cell_entry as Dictionary
+			var rel := String(cell_dict.get("rel", ""))
+			if rel == "":
+				continue
+			var x := int(cell_dict.get("x", 0))
+			var y := int(cell_dict.get("y", 0))
+
+			if not top_by_x.has(x):
+				top_by_x[x] = {
+					"x": x,
+					"y": y,
+					"rel": rel,
+				}
+				continue
+
+			var existing: Dictionary = top_by_x[x]
+			if y < int(existing.get("y", 0)):
+				top_by_x[x] = {
+					"x": x,
+					"y": y,
+					"rel": rel,
+				}
+
+	var sounds_by_x: Dictionary = {}
+	if sound_cells_raw is Array:
+		for sound_entry in sound_cells_raw:
+			if not (sound_entry is Dictionary):
+				continue
+			var sound_dict := sound_entry as Dictionary
+			var sound_rel := String(sound_dict.get("rel", ""))
+			if sound_rel == "":
+				continue
+			var sound_x := int(sound_dict.get("x", 0))
+			var sound_list: Array = sounds_by_x.get(sound_x, [])
+			if not sound_list.has(sound_rel):
+				sound_list.append(sound_rel)
+			sounds_by_x[sound_x] = sound_list
+
+	var xs: Array = top_by_x.keys()
+	xs.sort()
+
+	var frames: Array = []
+	for x_value in xs:
+		var frame_entry: Dictionary = top_by_x[x_value]
+		frames.append({
+			"x": int(frame_entry.get("x", 0)),
+			"y": int(frame_entry.get("y", 0)),
+			"rel": String(frame_entry.get("rel", "")),
+			"sounds": sounds_by_x.get(int(x_value), []).duplicate(),
+		})
+
+	return frames
+
+
+func _copy_export_asset(src_abs: String, dst_dir_abs: String, copied_map: Dictionary) -> String:
+	if src_abs == "":
+		return ""
+	if not FileAccess.file_exists(src_abs):
+		return ""
+	if copied_map.has(src_abs):
+		return String(copied_map[src_abs])
+
+	var original_name := src_abs.get_file()
+	var resolved_name := _resolve_export_filename(dst_dir_abs, original_name, copied_map)
+	if resolved_name == "":
+		return ""
+
+	var dst_abs := dst_dir_abs.path_join(resolved_name)
+	var copy_err := DirAccess.copy_absolute(src_abs, dst_abs)
+	if copy_err != OK:
+		return ""
+
+	copied_map[src_abs] = resolved_name
+	return resolved_name
+
+
+func _resolve_export_filename(dst_dir_abs: String, file_name: String, copied_map: Dictionary) -> String:
+	var used_names: Dictionary = {}
+	for existing_name in copied_map.values():
+		used_names[String(existing_name)] = true
+
+	if not used_names.has(file_name) and not FileAccess.file_exists(dst_dir_abs.path_join(file_name)):
+		return file_name
+
+	var basename := file_name.get_basename()
+	var extension := file_name.get_extension()
+	var suffix := 1
+	while true:
+		var candidate := "%s_%d" % [basename, suffix]
+		if extension != "":
+			candidate += ".%s" % extension
+		if not used_names.has(candidate) and not FileAccess.file_exists(dst_dir_abs.path_join(candidate)):
+			return candidate
+		suffix += 1
+
+	return ""
