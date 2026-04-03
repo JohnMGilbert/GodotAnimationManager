@@ -22,8 +22,9 @@ ProjectModel="*res://ProjectSettings/Autoload/ProjectModel.gd"
 
 [display]
 
+window/size/viewport_width=2304
+window/size/viewport_height=1296
 window/size/mode=2
-window/stretch/mode="disabled"
 window/stretch/aspect="ignore"
 
 [dotnet]
@@ -32,14 +33,13 @@ project/assembly_name="GodotAnimationManager"
 
 [gui]
 
-common/snap_controls_to_pixels=true
 theme/default_font_multichannel_signed_distance_field=true
 
 [rendering]
 
-2d/snap/snap_2d_transforms_to_pixel=true
-2d/snap/snap_2d_vertices_to_pixel=true
 textures/canvas_textures/default_texture_repeat=1
 renderer/rendering_method="gl_compatibility"
 renderer/rendering_method.mobile="gl_compatibility"
 environment/defaults/default_clear_color=Color(0.239216, 0.239216, 0.239216, 1)
+2d/snap/snap_2d_transforms_to_pixel=true
+2d/snap/snap_2d_vertices_to_pixel=true

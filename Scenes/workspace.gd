@@ -1,5 +1,7 @@
 extends Control
 const PreviewControllerScript = preload("res://Scenes/PreviewController.gd")
+const WorkspaceTheme = preload("res://Assets/theme_1.tres")
+const UiThemeScalerScript = preload("res://ProjectSettings/UiThemeScaler.gd")
 
 # Target proportions
 const MAIN_VS_FRACTION_TOP := 0.70
@@ -15,11 +17,22 @@ const FALLBACK_MIN_PREVIEW   := Vector2i(320, 200)
 const FALLBACK_MIN_INSPECTOR := Vector2i(320, 280)
 const FALLBACK_MIN_ASSETS    := Vector2i(400, 180)
 
-const TAB_BG_NORMAL  := Color("#3D3D3D")    # Dark grey
-const TAB_BG_ACTIVE  := Color("#666666")    # Blue-ish highlight
+const ASSET_TAB_BORDER_RAISED := Color(1, 1, 1, 0.34)
+const ASSET_TAB_BORDER_PRESSED := Color(0, 0, 0, 0.28)
+const ASSET_TAB_SHADOW_RAISED := Color(0, 0, 0, 0.14)
+const ASSET_TAB_SHADOW_PRESSED := Color(0, 0, 0, 0.08)
+const ASSET_TAB_BASE_PLATE := Color(0.278431, 0.0431373, 0.145098, 1)
+const ASSET_TAB_BASE_PLATE_BORDER := Color(0, 0, 0, 0.32)
+const ASSET_TAB_ICON_RAISED := Color(0.152941, 0.160784, 0.160784, 1)
+const ASSET_TAB_ICON_PRESSED := Color(0.152941, 0.160784, 0.160784, 0.70)
 
 # Editor-state file (lives alongside the .aam in the project dir)
 const EDITOR_STATE_FILE := ".aam_editor.json"
+
+@export_range(32.0, 240.0, 1.0) var asset_tab_width: float = 58.0
+@export_range(32.0, 240.0, 1.0) var asset_tab_height: float = 64.0
+@export_range(4.0, 24.0, 1.0) var asset_tab_depth_released: float = 8.0
+@export_range(1.0, 24.0, 1.0) var asset_tab_depth_pressed: float = 4.0
 
 # --- Node refs (adjust paths if your names differ) ---
 @onready var vs_main_assets: VSplitContainer       = %VS_Main_Assets
@@ -34,9 +47,21 @@ const EDITOR_STATE_FILE := ".aam_editor.json"
 @onready var assets_tabs: TabContainer = %AssetsTab
 
 # --- Assets vertical tabs (Sprites / Sound) ---
+@onready var tab_sprites_shell: Control = %TabShell_Sprites
+@onready var tab_sound_shell: Control = %TabShell_Sound
+@onready var tab_sprites_shadow: Panel = %PanelShadow_Sprites
+@onready var tab_sound_shadow: Panel = %PanelShadow_Sound
+@onready var tab_sprites_panel: PanelContainer = %PanelContainer_SpritesTab
+@onready var tab_sound_panel: PanelContainer = %PanelContainer_SoundTab
 @onready var tab_sprites_btn: TextureButton   = %Tab_Sprites
 @onready var tab_sound_btn: TextureButton     = %Tab_Sound
 @onready var tab_buttons: Array[TextureButton] = []
+@onready var tab_shells: Array[Control] = []
+@onready var tab_shadows: Array[Panel] = []
+@onready var tab_panels: Array[PanelContainer] = []
+var _asset_tab_style_raised: StyleBoxFlat
+var _asset_tab_style_pressed: StyleBoxFlat
+var _asset_tab_shadow_style: StyleBoxFlat
 
 # Sprites UI
 @onready var list_sprites: ItemList      = %List_Sprites
@@ -48,13 +73,14 @@ const EDITOR_STATE_FILE := ".aam_editor.json"
 @onready var list_sound: ItemList        = %List_Sound
 @onready var btn_import_sound: Button    = %Btn_ImportSound
 @onready var fd_import_sound: FileDialog = $FD_Import_Sound
+@onready var drag_indicator_sound_label: Label = %DragIndicatorLabel_Sound
 
 @onready var builder_view: Node = %BuilderView          # Should be a BuilderGrid
 @onready var preview_view: Control = %PreviewView
 @onready var preview_sprite: AnimatedSprite2D = %PreviewSprite
 
 @onready var btn_builder_settings: TextureButton = %Btn_BuilderSettings
-@onready var settings_window: Window = %SettingsWindow
+@onready var settings_window: SettingsWindow = %SettingsWindow
 
 @onready var le_anim_name: LineEdit = %LineEdit_AnimName
 
@@ -68,6 +94,23 @@ const EDITOR_STATE_FILE := ".aam_editor.json"
 
 @onready var btn_export: Button = %Btn_Export
 @onready var lbl_export_status: Label = %Label_Export_Status
+@onready var inspector_section_animation_info: Button = %SectionButton_AnimationInfo
+@onready var inspector_section_playback: Button = %SectionButton_PlaybackSettings
+@onready var inspector_section_sound: Button = %SectionButton_SoundSettings
+@onready var inspector_section_metadata: Button = %SectionButton_Metadata
+@onready var inspector_section_destination: Button = %SectionButton_Destination
+@onready var inspector_section_anim_name: Button = %SectionButton_AnimName
+@onready var inspector_section_format: Button = %SectionButton_Format
+@onready var inspector_section_options: Button = %SectionButton_Options
+
+@onready var inspector_content_animation_info: Control = %SectionContent_AnimationInfo
+@onready var inspector_content_playback: Control = %SectionContent_PlaybackSettings
+@onready var inspector_content_sound: Control = %SectionContent_SoundSettings
+@onready var inspector_content_metadata: Control = %SectionContent_Metadata
+@onready var inspector_content_destination: Control = %SectionContent_Destination
+@onready var inspector_content_anim_name: Control = %SectionContent_AnimName
+@onready var inspector_content_format: Control = %SectionContent_Format
+@onready var inspector_content_options: Control = %SectionContent_Options
 
 var preview_fps: float = 8.0
 var export_repo_path: String = ""   # Godot project / destination repo
@@ -101,19 +144,29 @@ var preview_controller: PreviewController = null
 @onready var btn_tag_cancel: Button       = %Btn_TagCancel
 var current_sprite_tag_filter: String = ""      # "" = no filter / All
 var _pending_tag_asset_ids: PackedStringArray = PackedStringArray()
+var _base_workspace_theme: Theme
+var _scaled_workspace_theme: Theme
 
 func _ready() -> void:
 	# Let the root fill the window, but DO NOT touch child mins or splits
 	set_anchors_preset(Control.PRESET_FULL_RECT)
 	resized.connect(_on_workspace_resized)
 	call_deferred("_apply_workspace_window_mode")
+	_base_workspace_theme = WorkspaceTheme
+	_apply_ui_scale(AppState.get_ui_scale())
 
 	tab_buttons = [tab_sprites_btn, tab_sound_btn]
+	tab_shells = [tab_sprites_shell, tab_sound_shell]
+	tab_shadows = [tab_sprites_shadow, tab_sound_shadow]
+	tab_panels = [tab_sprites_panel, tab_sound_panel]
+	_build_asset_tab_styles()
+	_apply_asset_tab_depth()
 	_connect_asset_tabs()
 	_select_asset_tab(0)
 
 	_wire_sprite_import_ui()
 	_wire_sound_import_ui()
+	_setup_inspector_dropdowns()
 
 	_setup_sprite_list()
 	_setup_sound_list()
@@ -168,6 +221,7 @@ func _ready() -> void:
 
 	if settings_window:
 		settings_window.settings_applied.connect(_on_settings_applied)
+		settings_window.theme = _scaled_workspace_theme
 
 	if btn_export:
 		btn_export.pressed.connect(_on_export_pressed)
@@ -192,6 +246,8 @@ func _ready() -> void:
 	# Load editor state (animations + settings) from the editor-state file
 	_load_editor_state()
 	call_deferred("_apply_workspace_layout")
+	if not AppState.ui_scale_changed.is_connected(_on_app_ui_scale_changed):
+		AppState.ui_scale_changed.connect(_on_app_ui_scale_changed)
 	
 		## FORCE-ENABLE MASTER BUS FOR DEBUG
 	#var master_idx := AudioServer.get_bus_index("Master")
@@ -203,6 +259,44 @@ func _ready() -> void:
 
 func _on_workspace_resized() -> void:
 	call_deferred("_apply_workspace_layout")
+
+
+func _setup_inspector_dropdowns() -> void:
+	var sections: Array[Array] = [
+		[inspector_section_animation_info, inspector_content_animation_info, "Animation Info"],
+		[inspector_section_playback, inspector_content_playback, "Playback Settings"],
+		[inspector_section_sound, inspector_content_sound, "Sound Settings"],
+		[inspector_section_metadata, inspector_content_metadata, "Metadata"],
+		[inspector_section_destination, inspector_content_destination, "Destination"],
+		[inspector_section_anim_name, inspector_content_anim_name, "Animation Name"],
+		[inspector_section_format, inspector_content_format, "Export Format"],
+		[inspector_section_options, inspector_content_options, "Options"],
+	]
+
+	for section in sections:
+		var button := section[0] as Button
+		var content := section[1] as Control
+		var label := String(section[2])
+		if button == null or content == null:
+			continue
+
+		button.toggle_mode = true
+		button.button_pressed = false
+		var toggle_callable := Callable(self, "_on_inspector_section_toggled").bind(button, content, label)
+		if not button.toggled.is_connected(toggle_callable):
+			button.toggled.connect(toggle_callable)
+		_set_inspector_section_state(button, content, label, false)
+
+
+func _on_inspector_section_toggled(pressed: bool, button: Button, content: Control, label: String) -> void:
+	_set_inspector_section_state(button, content, label, pressed)
+
+
+func _set_inspector_section_state(button: Button, content: Control, label: String, is_open: bool) -> void:
+	if button == null or content == null:
+		return
+	button.text = "%s %s" % ["v" if is_open else ">", label]
+	content.visible = is_open
 
 
 func _apply_workspace_window_mode() -> void:
@@ -324,7 +418,7 @@ func _on_builder_settings_pressed() -> void:
 	print("Pressed settings button")
 	if settings_window:
 		if builder_view:
-			settings_window.set_current_values(builder_view.cell_size, preview_fps, export_repo_path)
+			settings_window.set_current_values(builder_view.cell_size, preview_fps, export_repo_path, AppState.get_ui_scale())
 		settings_window.popup_centered()
 
 func _on_eraser_pressed() -> void:
@@ -342,9 +436,10 @@ func _on_preview_playpause_pressed() -> void:
 func _on_preview_loop_pressed() -> void:
 	if preview_controller:
 		preview_controller.set_loop_enabled(btn_preview_loop.button_pressed)
+	ProjectModel.set_export_playback(preview_fps, btn_preview_loop.button_pressed if btn_preview_loop else true)
 
 
-func _on_settings_applied(grid_cell_size: int, preview_fps_new: float, repo_path: String) -> void:
+func _on_settings_applied(grid_cell_size: int, preview_fps_new: float, repo_path: String, ui_scale: float) -> void:
 	# Save repo path (even if empty)
 	export_repo_path = repo_path
 
@@ -358,12 +453,43 @@ func _on_settings_applied(grid_cell_size: int, preview_fps_new: float, repo_path
 	if preview_controller:
 		preview_controller.set_preview_fps(preview_fps)
 	_on_builder_sequences_changed(builder_view.get_row_sequences())
+	ProjectModel.set_export_playback(preview_fps, btn_preview_loop.button_pressed if btn_preview_loop else true)
 
 	# Persist export repo in ProjectModel
 	if repo_path != "":
 		ProjectModel.set_export_repo(repo_path)
 
+	AppState.set_ui_scale(ui_scale)
+
 	save_editor_state()
+
+func _on_app_ui_scale_changed(ui_scale: float) -> void:
+	_apply_ui_scale(ui_scale)
+
+func _apply_ui_scale(ui_scale: float) -> void:
+	_scaled_workspace_theme = UiThemeScalerScript.build_scaled_theme(_base_workspace_theme, ui_scale)
+	if _scaled_workspace_theme == null:
+		return
+	theme = _scaled_workspace_theme
+	_apply_scaled_theme_to_subtree(self)
+	if settings_window:
+		settings_window.theme = _scaled_workspace_theme
+		if settings_window.fd_repo_dir:
+			settings_window.fd_repo_dir.theme = _scaled_workspace_theme
+
+func _apply_scaled_theme_to_subtree(node: Node) -> void:
+	if node == null:
+		return
+
+	if node is Control:
+		var control := node as Control
+		control.theme = _scaled_workspace_theme
+	elif node is Window:
+		var window := node as Window
+		window.theme = _scaled_workspace_theme
+
+	for child in node.get_children():
+		_apply_scaled_theme_to_subtree(child)
 
 func _prompt_spritesheet_import(path: String) -> void:
 	var img := Image.new()
@@ -401,24 +527,141 @@ func _connect_asset_tabs() -> void:
 		b.pressed.connect(func(idx := i) -> void:
 			_select_asset_tab(idx))
 
+	for i in tab_panels.size():
+		var panel: PanelContainer = tab_panels[i]
+		panel.mouse_default_cursor_shape = Control.CURSOR_POINTING_HAND
+		panel.gui_input.connect(func(event: InputEvent, idx := i) -> void:
+			if event is InputEventMouseButton and event.button_index == MOUSE_BUTTON_LEFT and event.pressed:
+				_select_asset_tab(idx))
+
+	for i in tab_shells.size():
+		var shell: Control = tab_shells[i]
+		shell.mouse_default_cursor_shape = Control.CURSOR_POINTING_HAND
+		shell.gui_input.connect(func(event: InputEvent, idx := i) -> void:
+			if event is InputEventMouseButton and event.button_index == MOUSE_BUTTON_LEFT and event.pressed:
+				_select_asset_tab(idx))
+
+
+func _build_asset_tab_styles() -> void:
+	var base_style := tab_sprites_panel.get_theme_stylebox("panel") as StyleBoxFlat
+	if base_style == null:
+		base_style = StyleBoxFlat.new()
+
+	_asset_tab_style_raised = _make_asset_tab_style(base_style, false)
+	_asset_tab_style_pressed = _make_asset_tab_style(base_style, true)
+	_asset_tab_shadow_style = _make_asset_tab_shadow_style(base_style)
+
+
+func _apply_asset_tab_depth() -> void:
+	var released_depth_y := asset_tab_depth_released
+	var released_depth_x = round(asset_tab_depth_released * 0.75)
+	var pressed_depth_y = min(asset_tab_depth_pressed, asset_tab_depth_released)
+	var pressed_depth_x = round(pressed_depth_y * 0.75)
+	var max_depth_y = max(released_depth_y, pressed_depth_y)
+	var max_depth_x = max(released_depth_x, pressed_depth_x)
+
+	for shell in tab_shells:
+		shell.custom_minimum_size = Vector2(
+			asset_tab_width + max_depth_x,
+			asset_tab_height + max_depth_y
+		)
+
+
+func _make_asset_tab_style(base_style: StyleBoxFlat, is_selected: bool) -> StyleBoxFlat:
+	var style := base_style.duplicate() as StyleBoxFlat
+	if style == null:
+		style = StyleBoxFlat.new()
+
+	style.border_width_left = 2
+	style.border_width_top = 2
+	style.border_width_right = 2
+	style.border_width_bottom = 2
+
+	if is_selected:
+		style.bg_color = base_style.bg_color.lightened(0.16)
+		style.border_color = ASSET_TAB_BORDER_RAISED
+		style.shadow_color = ASSET_TAB_SHADOW_RAISED
+		style.shadow_size = 2
+		style.shadow_offset = Vector2(1, 1)
+		style.content_margin_left = 1
+		style.content_margin_top = 0
+		style.content_margin_right = 0
+		style.content_margin_bottom = 2
+	else:
+		style.bg_color = base_style.bg_color.darkened(0.18)
+		style.border_color = ASSET_TAB_BORDER_PRESSED
+		style.shadow_color = ASSET_TAB_SHADOW_PRESSED
+		style.shadow_size = 0
+		style.shadow_offset = Vector2.ZERO
+		style.content_margin_left = 0
+		style.content_margin_top = 2
+		style.content_margin_right = 1
+		style.content_margin_bottom = 0
+
+	return style
+
+
+func _make_asset_tab_shadow_style(base_style: StyleBoxFlat) -> StyleBoxFlat:
+	var style := base_style.duplicate() as StyleBoxFlat
+	if style == null:
+		style = StyleBoxFlat.new()
+
+	style.bg_color = ASSET_TAB_BASE_PLATE
+	style.border_width_left = 2
+	style.border_width_top = 2
+	style.border_width_right = 2
+	style.border_width_bottom = 2
+	style.border_color = ASSET_TAB_BASE_PLATE_BORDER
+	style.shadow_color = Color(0, 0, 0, 0)
+	style.shadow_size = 0
+	style.shadow_offset = Vector2.ZERO
+	return style
+
 
 func _select_asset_tab(index: int) -> void:
 	var max_index: int = assets_tabs.get_tab_count() - 1
 	index = clamp(index, 0, max_index)
+	var released_depth_y := asset_tab_depth_released
+	var released_depth_x = round(asset_tab_depth_released * 0.75)
+	var pressed_depth_y = min(asset_tab_depth_pressed, asset_tab_depth_released)
+	var pressed_depth_x = round(pressed_depth_y * 0.75)
+	var max_depth_y = max(released_depth_y, pressed_depth_y)
+	var max_depth_x = max(released_depth_x, pressed_depth_x)
 
 	for j in tab_buttons.size():
 		var btn := tab_buttons[j]
 		btn.button_pressed = (j == index)
+		btn.modulate = ASSET_TAB_ICON_PRESSED if j == index else ASSET_TAB_ICON_RAISED
 
-		var tab_panel := btn.get_parent() as PanelContainer
+		var tab_panel := tab_panels[j] if j < tab_panels.size() else btn.get_parent() as PanelContainer
 		if tab_panel:
 			if j == index:
-				tab_panel.add_theme_color_override("panel", TAB_BG_ACTIVE)
+				_set_asset_tab_face_depth(tab_panel, max_depth_x, max_depth_y, pressed_depth_x, pressed_depth_y)
+				tab_panel.add_theme_stylebox_override("panel", _asset_tab_style_pressed)
 			else:
-				tab_panel.remove_theme_color_override("panel")
+				_set_asset_tab_face_depth(tab_panel, max_depth_x, max_depth_y, released_depth_x, released_depth_y)
+				tab_panel.add_theme_stylebox_override("panel", _asset_tab_style_raised)
+
+		if j < tab_shadows.size():
+			tab_shadows[j].add_theme_stylebox_override("panel", _asset_tab_shadow_style)
+			_set_asset_tab_shadow_depth(tab_shadows[j], released_depth_x, released_depth_y)
 
 	assets_tabs.current_tab = index
 	print("Index for asset tab is: ", index)
+
+
+func _set_asset_tab_shadow_depth(shadow: Panel, depth_x: float, depth_y: float) -> void:
+	shadow.offset_left = 0.0
+	shadow.offset_top = 0.0
+	shadow.offset_right = -depth_x
+	shadow.offset_bottom = -depth_y
+
+
+func _set_asset_tab_face_depth(tab_panel: PanelContainer, max_depth_x: float, max_depth_y: float, face_depth_x: float, face_depth_y: float) -> void:
+	tab_panel.offset_left = -face_depth_x
+	tab_panel.offset_top = -face_depth_y
+	tab_panel.offset_right = -(max_depth_x + face_depth_x)
+	tab_panel.offset_bottom = -(max_depth_y + face_depth_y)
 
 # TAGS
 func _normalize_tag_input(raw: String) -> String:
@@ -706,11 +949,15 @@ func _refresh_sound_list() -> void:
 
 	if ProjectModel.project_dir == "":
 		push_warning("No project open; cannot list audio.")
+		if drag_indicator_sound_label:
+			drag_indicator_sound_label.show()
 		return
 
 	# NOTE: implement ProjectModel.get_audio() -> Array[String]
 	var rel_paths: Array[String] = ProjectModel.get_audio()
 	if rel_paths.is_empty():
+		if drag_indicator_sound_label:
+			drag_indicator_sound_label.show()
 		return
 
 	for rel in rel_paths:
@@ -718,6 +965,9 @@ func _refresh_sound_list() -> void:
 		var idx := list_sound.add_item(label)
 		list_sound.set_item_metadata(idx, rel)
 		# Optional: you could set an icon here (e.g. a generic speaker icon)
+
+	if drag_indicator_sound_label:
+		drag_indicator_sound_label.hide()
 
 
 # -------------------------------------------------------------------
@@ -798,6 +1048,7 @@ func _on_export_pressed() -> void:
 		return
 
 	ProjectModel.set_animation(anim_name, anim_data)
+	ProjectModel.set_export_playback(preview_fps, btn_preview_loop.button_pressed if btn_preview_loop else true)
 
 	var err := ProjectModel.export_animation()
 	if err != OK:
@@ -828,6 +1079,7 @@ func save_editor_state() -> void:
 	var data: Dictionary = {}
 
 	data["preview_fps"] = preview_fps
+	data["preview_loop_enabled"] = btn_preview_loop.button_pressed if btn_preview_loop else true
 	data["export_repo_path"] = export_repo_path
 	if builder_view:
 		data["grid_cell_size"] = builder_view.cell_size
@@ -874,10 +1126,14 @@ func _load_editor_state() -> void:
 
 	preview_fps = float(data.get("preview_fps", preview_fps))
 	export_repo_path = String(data.get("export_repo_path", export_repo_path))
+	var preview_loop_enabled := bool(data.get("preview_loop_enabled", true))
+	if btn_preview_loop:
+		btn_preview_loop.button_pressed = preview_loop_enabled
 	if preview_controller:
 		preview_controller.set_preview_fps(preview_fps)
 		preview_controller.set_playing(btn_preview_playpause.button_pressed if btn_preview_playpause else true)
-		preview_controller.set_loop_enabled(btn_preview_loop.button_pressed if btn_preview_loop else true)
+		preview_controller.set_loop_enabled(preview_loop_enabled)
+	ProjectModel.set_export_playback(preview_fps, preview_loop_enabled)
 
 	if builder_view:
 		var cell_size_val := int(data.get("grid_cell_size", builder_view.cell_size))

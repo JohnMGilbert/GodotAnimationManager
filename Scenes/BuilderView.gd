@@ -1,21 +1,53 @@
 extends Control
 class_name BuilderGrid
 
+const UiTokens = preload("res://ProjectSettings/UiTokens.gd")
+
 signal sequences_changed(sequences: Array)  # Array[Array[String]] of rel paths
+signal zoom_changed(zoom: float)
 
 # --- Config ---
-@export var cell_size: int = 64
+var _cell_size: int = 64
+
+@export var cell_size: int:
+	get:
+		return _cell_size
+	set(value):
+		_cell_size = max(8, value)
+		_base_cell_size = _cell_size
+		_apply_zoom()
 @export var grid_color: Color = Color(0.22, 0.22, 0.25, 0.3)
 @export var major_line_every: int = 4
 @export var major_grid_color: Color = Color(0.35, 0.35, 0.40, 1.0)
 @export var drop_highlight: Color = Color(0.2, 0.6, 1.0, 0.35)
 @export var sound_icon: Texture2D = null   # icon to draw where sounds are placed
+@export_range(0.0, 256.0, 1.0) var sprite_padding: float = 0.0:
+	get:
+		return _sprite_padding
+	set(value):
+		_sprite_padding = maxf(0.0, value)
+		queue_redraw()
+@export_range(1.0, 8.0, 0.5) var sequence_border_width: float = 2.0:
+	get:
+		return _sequence_border_width
+	set(value):
+		_sequence_border_width = maxf(1.0, value)
+		queue_redraw()
+@export_range(0.5, 4.0, 0.05) var zoom_step: float = 0.15
+@export_range(0.25, 4.0, 0.05) var min_zoom: float = 0.5
+@export_range(1.0, 8.0, 0.05) var max_zoom: float = 3.0
+@export_range(0.1, 10.0, 0.05) var pan_gesture_speed: float = 1.0
 
 var placed: Dictionary = {}       # keys: Vector2i, values: String (relative path)
 var _tex_cache: Dictionary = {}   # keys: String (abs path), values: Texture2D
 var placed_sounds: Dictionary = {}  # keys: Vector2i, values: Array[String] of rel paths
 
 var erase_mode: bool = false  # true when eraser tool is active
+var _base_cell_size: int = 64
+var _sprite_padding: float = 0.0
+var _sequence_border_width: float = 2.0
+var _zoom: float = 1.0
+var _view_offset: Vector2 = Vector2.ZERO
 
 
 var _cols: int = 0
@@ -32,8 +64,8 @@ var _drag_rel: String = ""
 func _ready() -> void:
 	focus_mode = Control.FOCUS_ALL
 	mouse_filter = Control.MOUSE_FILTER_STOP
-	_update_grid_dims()
-	queue_redraw()
+	_base_cell_size = max(8, cell_size)
+	_apply_zoom()
 
 
 func _notification(what: int) -> void:
@@ -47,14 +79,48 @@ func _update_grid_dims() -> void:
 	_rows = max(1, int(floor(size.y / float(cell_size))))
 
 
+func _apply_zoom() -> void:
+	var scaled_cell_size := int(round(float(_base_cell_size) * _zoom))
+	_cell_size = max(8, scaled_cell_size)
+	_update_grid_dims()
+	queue_redraw()
+	zoom_changed.emit(_zoom)
+
+
+func get_zoom() -> float:
+	return _zoom
+
+
+func set_zoom(value: float) -> void:
+	_zoom = clampf(value, min_zoom, max_zoom)
+	_apply_zoom()
+
+
+func zoom_in() -> void:
+	set_zoom(_zoom + zoom_step)
+
+
+func zoom_out() -> void:
+	set_zoom(_zoom - zoom_step)
+
+
 func _to_cell(p: Vector2) -> Vector2i:
-	var c: int = int(floor(p.x / float(cell_size)))
-	var r: int = int(floor(p.y / float(cell_size)))
-	return Vector2i(clamp(c, 0, _cols - 1), clamp(r, 0, _rows - 1))
+	var world_pos := p + _view_offset
+	var c: int = int(floor(world_pos.x / float(cell_size)))
+	var r: int = int(floor(world_pos.y / float(cell_size)))
+	return Vector2i(c, r)
 
 
 func _cell_rect(cell: Vector2i) -> Rect2:
-	return Rect2(Vector2(cell.x * cell_size, cell.y * cell_size), Vector2(cell_size, cell_size))
+	return Rect2(
+		Vector2(cell.x * cell_size, cell.y * cell_size) - _view_offset,
+		Vector2(cell_size, cell_size)
+	)
+
+
+func pan_by(delta: Vector2) -> void:
+	_view_offset -= delta
+	queue_redraw()
 
 # ----------------------------------------------------
 # Drag & Drop from assets
@@ -131,9 +197,31 @@ func _erase_cell(cell: Vector2i) -> bool:
 # Mouse input (move existing sprites, delete, etc.)
 # ----------------------------------------------------
 func _gui_input(event: InputEvent) -> void:
+	if event is InputEventMagnifyGesture:
+		var gesture := event as InputEventMagnifyGesture
+		set_zoom(_zoom * gesture.factor)
+		accept_event()
+		return
+
+	if event is InputEventPanGesture:
+		var pan := event as InputEventPanGesture
+		pan_by(Vector2(pan.delta.x, -pan.delta.y) * pan_gesture_speed)
+		accept_event()
+		return
+
 	if event is InputEventMouseButton:
 		var mb := event as InputEventMouseButton
 		var cell: Vector2i = _to_cell(mb.position)
+
+		if mb.pressed and Input.is_key_pressed(KEY_CTRL):
+			if mb.button_index == MOUSE_BUTTON_WHEEL_UP:
+				zoom_in()
+				accept_event()
+				return
+			if mb.button_index == MOUSE_BUTTON_WHEEL_DOWN:
+				zoom_out()
+				accept_event()
+				return
 
 		# --- LEFT BUTTON ---
 		if mb.button_index == MOUSE_BUTTON_LEFT:
@@ -229,6 +317,17 @@ func _finish_drag(target_cell: Vector2i) -> void:
 #   - Frames ordered by ascending X.
 #   - Returns Array[Array[String]] for compatibility; currently a single sequence.
 func get_row_sequences() -> Array:
+	var sequence_entries := _get_sequence_entries()
+	var seq: Array = []
+	for entry in sequence_entries:
+		seq.append(entry["rel"])
+
+	if seq.is_empty():
+		return []
+	return [seq]
+
+
+func _get_sequence_entries() -> Array:
 	var column_best: Dictionary = {}  # x -> { "cell": Vector2i, "rel": String }
 
 	for k in placed.keys():
@@ -246,14 +345,11 @@ func get_row_sequences() -> Array:
 	var xs: Array = column_best.keys()
 	xs.sort()
 
-	var seq: Array = []
+	var entries: Array = []
 	for x in xs:
-		var entry: Dictionary = column_best[x]
-		seq.append(entry["rel"])
+		entries.append(column_best[x])
 
-	if seq.is_empty():
-		return []
-	return [seq]
+	return entries
 
 
 func _emit_sequences() -> void:
@@ -266,18 +362,30 @@ func _emit_sequences() -> void:
 func _draw() -> void:
 	var w: float = size.x
 	var h: float = size.y
-	for x in range(0, _cols + 1):
-		var xi: float = float(x * cell_size)
+	var start_col := int(floor(_view_offset.x / float(cell_size)))
+	var end_col := int(ceil((_view_offset.x + w) / float(cell_size)))
+	for x in range(start_col, end_col + 1):
+		var xi: float = float(x * cell_size) - _view_offset.x
 		var col: Color = major_grid_color if (x % major_line_every) == 0 else grid_color
 		draw_line(Vector2(xi, 0.0), Vector2(xi, h), col, 1.0)
-	for y in range(0, _rows + 1):
-		var yi: float = float(y * cell_size)
+	var start_row := int(floor(_view_offset.y / float(cell_size)))
+	var end_row := int(ceil((_view_offset.y + h) / float(cell_size)))
+	for y in range(start_row, end_row + 1):
+		var yi: float = float(y * cell_size) - _view_offset.y
 		var col2: Color = major_grid_color if (y % major_line_every) == 0 else grid_color
 		draw_line(Vector2(0.0, yi), Vector2(w, yi), col2, 1.0)
 
 	if _hover_cell.x >= 0:
 		var hr: Rect2 = _cell_rect(_hover_cell)
-		draw_rect(hr, drop_highlight, true)
+		if hr.intersects(Rect2(Vector2.ZERO, size)):
+			draw_rect(hr, drop_highlight, true)
+
+	var sequence_cells := {}
+	for entry in _get_sequence_entries():
+		var entry_cell: Vector2i = entry["cell"]
+		sequence_cells[entry_cell] = true
+	var sequence_outline: Rect2
+	var has_sequence_outline := false
 
 	# --- Draw sprites ---
 	for k in placed.keys():
@@ -289,21 +397,39 @@ func _draw() -> void:
 			continue
 
 		var rect: Rect2 = _cell_rect(cell)
+		if not rect.intersects(Rect2(Vector2.ZERO, size)):
+			continue
+		var padded_rect := rect.grow_individual(-sprite_padding, -sprite_padding, -sprite_padding, -sprite_padding)
+		if padded_rect.size.x <= 0.0 or padded_rect.size.y <= 0.0:
+			continue
 		var tw: int = tex.get_width()
 		var th: int = tex.get_height()
 		if tw <= 0 or th <= 0:
 			continue
 
-		var scale_factor: float = min(rect.size.x / float(tw), rect.size.y / float(th))
+		var scale_factor: float = min(padded_rect.size.x / float(tw), padded_rect.size.y / float(th))
 		var dst_size: Vector2 = Vector2(float(tw), float(th)) * scale_factor
-		var dst_pos: Vector2 = rect.position + (rect.size - dst_size) * 0.5
-		draw_texture_rect(tex, Rect2(dst_pos, dst_size), false)
+		var dst_pos: Vector2 = padded_rect.position + (padded_rect.size - dst_size) * 0.5
+		var dst_rect := Rect2(dst_pos, dst_size)
+		draw_texture_rect(tex, dst_rect, false)
+
+		if sequence_cells.has(cell):
+			if not has_sequence_outline:
+				sequence_outline = rect
+				has_sequence_outline = true
+			else:
+				sequence_outline = sequence_outline.merge(rect)
+
+	if has_sequence_outline:
+		draw_rect(sequence_outline, UiTokens.COLOR_ACCENT_SECONDARY, false, sequence_border_width)
 
 	# --- Draw sound icons on any cell that has sounds ---
 	if sound_icon != null:
 		for k in placed_sounds.keys():
 			var cell: Vector2i = k as Vector2i
 			var rect: Rect2 = _cell_rect(cell)
+			if not rect.intersects(Rect2(Vector2.ZERO, size)):
+				continue
 
 			# Make the icon smaller than the cell, e.g. 40% of cell size
 			var icon_size := rect.size * 0.5

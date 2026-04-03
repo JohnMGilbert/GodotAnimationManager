@@ -1,4 +1,4 @@
-[gd_scene load_steps=30 format=3 uid="uid://bqa0mw31xhwuj"]
+[gd_scene load_steps=29 format=3 uid="uid://bqa0mw31xhwuj"]
 
 [ext_resource type="Script" path="res://Scenes/workspace.gd" id="1_myusm"]
 [ext_resource type="Texture2D" uid="uid://c8y0qcbbgem6u" path="res://Assets/settings.png" id="2_5myuk"]
@@ -20,37 +20,68 @@
 [ext_resource type="Texture2D" uid="uid://dkt6djy4gyl2k" path="res://Assets/eraser_grey.png" id="13_c6k6f"]
 [ext_resource type="Texture2D" uid="uid://qojdbttfjoej" path="res://Assets/play-button-arrowhead.png" id="13_u7f72"]
 [ext_resource type="Texture2D" uid="uid://dywb3iexbxabv" path="res://Assets/pause.png" id="15_cbuxf"]
-[ext_resource type="FontFile" uid="uid://lpycw074j1m6" path="res://Assets/Gixel.ttf" id="16_sue0p"]
 [ext_resource type="Script" path="res://Scenes/widgets/SoundList.gd" id="17_4rsy7"]
 [ext_resource type="PackedScene" uid="uid://ddum0qkw4vig0" path="res://settings_window.tscn" id="17_sswpc"]
 [ext_resource type="Texture2D" uid="uid://c3i60hovrdah6" path="res://Assets/speaker-filled-audio-tool.png" id="18_srjvv"]
+[ext_resource type="FontFile" uid="uid://cr84p7hiulgxe" path="res://Assets/game_boy_1989.ttf" id="22_oqp5p"]
 [ext_resource type="Script" path="res://Scenes/SpritesheetDialog.gd" id="25_4ihhd"]
 
 [sub_resource type="StyleBoxFlat" id="StyleBoxFlat_f0813"]
-bg_color = Color(0.730913, 0.730913, 0.730913, 1)
+bg_color = Color(0.768627, 0.745098, 0.733333, 1)
+border_width_left = 2
+border_width_top = 2
+border_width_right = 2
+border_width_bottom = 2
+border_color = Color(0.286275, 0.278431, 0.52549, 1)
 corner_radius_top_left = 20
 corner_radius_top_right = 20
 corner_radius_bottom_right = 20
 corner_radius_bottom_left = 20
-
-[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_wlmre"]
-bg_color = Color(0.239216, 0.239216, 0.239216, 1)
+shadow_color = Color(0, 0, 0, 0.423529)
+shadow_size = 2
+shadow_offset = Vector2(2, 2)
 
 [sub_resource type="StyleBoxFlat" id="StyleBoxFlat_nkv7g"]
-bg_color = Color(0.4, 0.4, 0.4, 1)
+bg_color = Color(0.603922, 0.133333, 0.341176, 1)
+corner_radius_top_left = 12
+corner_radius_top_right = 12
+corner_radius_bottom_right = 12
+corner_radius_bottom_left = 12
+shadow_size = 2
+shadow_offset = Vector2(2, 2)
 
 [sub_resource type="StyleBoxFlat" id="StyleBoxFlat_j2td0"]
-bg_color = Color(0.4, 0.4, 0.4, 1)
+bg_color = Color(0.603922, 0.133333, 0.341176, 1)
+corner_radius_top_left = 12
+corner_radius_top_right = 12
+corner_radius_bottom_right = 12
+corner_radius_bottom_left = 12
+shadow_size = 2
+shadow_offset = Vector2(2, 2)
 
 [node name="Workspace" type="Control"]
 layout_mode = 3
 anchors_preset = 15
 anchor_right = 1.0
 anchor_bottom = 1.0
+offset_right = -3.0
+offset_bottom = -16.0
 grow_horizontal = 2
 grow_vertical = 2
+theme = ExtResource("2_o2a2a")
 script = ExtResource("1_myusm")
+asset_tab_width = 90.0
+asset_tab_height = 180.0
 sprite_icon_size = 48
+
+[node name="Background" type="ColorRect" parent="."]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+color = Color(0.152941, 0.160784, 0.160784, 1)
 
 [node name="MarginContainer" type="MarginContainer" parent="."]
 layout_mode = 1
@@ -93,16 +124,21 @@ script = ExtResource("2_fn6k4")
 grid_color = Color(0.219608, 0.219608, 0.25098, 0.156863)
 major_grid_color = Color(0.34902, 0.34902, 0.4, 0.4)
 sound_icon = ExtResource("18_srjvv")
+sprite_padding = 10.0
+pan_gesture_speed = 8.0
 
 [node name="BuilderOverlay" type="CanvasLayer" parent="MarginContainer/RootVBox/VS_Main_Assets/HS_Edit_Sidebar/BuilderPanel"]
 unique_name_in_owner = true
 script = ExtResource("4_txkii")
+button_bar_scale = 2.0
 
 [node name="ButtonBar" type="Panel" parent="MarginContainer/RootVBox/VS_Main_Assets/HS_Edit_Sidebar/BuilderPanel/BuilderOverlay"]
-offset_left = 15.0
-offset_top = 14.0
-offset_right = 52.0
-offset_bottom = 163.0
+unique_name_in_owner = true
+offset_left = 29.0
+offset_top = 28.0
+offset_right = 66.0
+offset_bottom = 177.0
+scale = Vector2(2, 2)
 theme_override_styles/panel = SubResource("StyleBoxFlat_f0813")
 
 [node name="Btn_BuilderSettings" type="TextureButton" parent="MarginContainer/RootVBox/VS_Main_Assets/HS_Edit_Sidebar/BuilderPanel/BuilderOverlay/ButtonBar"]
@@ -149,6 +185,7 @@ stretch_mode = 0
 unique_name_in_owner = true
 title = "Save New Animation"
 size = Vector2i(200, 100)
+theme = ExtResource("2_o2a2a")
 
 [node name="NewAnimName" type="LineEdit" parent="MarginContainer/RootVBox/VS_Main_Assets/HS_Edit_Sidebar/BuilderPanel/BuilderOverlay/ButtonBar/UnsavedAnimationDialogue"]
 unique_name_in_owner = true
@@ -168,6 +205,31 @@ offset_bottom = 624.0
 scale = Vector2(0.06, 0.06)
 texture_normal = ExtResource("13_c6k6f")
 texture_hover = ExtResource("12_6f4oy")
+
+[node name="ZoomControls" type="HBoxContainer" parent="MarginContainer/RootVBox/VS_Main_Assets/HS_Edit_Sidebar/BuilderPanel/BuilderOverlay"]
+unique_name_in_owner = true
+anchors_preset = 1
+anchor_left = 1.0
+anchor_right = 1.0
+offset_left = -1260.0
+offset_top = 28.0
+offset_right = -1176.0
+offset_bottom = 64.0
+theme = ExtResource("2_o2a2a")
+
+[node name="Btn_ZoomOut" type="Button" parent="MarginContainer/RootVBox/VS_Main_Assets/HS_Edit_Sidebar/BuilderPanel/BuilderOverlay/ZoomControls"]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(36, 36)
+layout_mode = 2
+tooltip_text = "Zoom Out"
+text = "-"
+
+[node name="Btn_ZoomIn" type="Button" parent="MarginContainer/RootVBox/VS_Main_Assets/HS_Edit_Sidebar/BuilderPanel/BuilderOverlay/ZoomControls"]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(36, 36)
+layout_mode = 2
+tooltip_text = "Zoom In"
+text = "+"
 
 [node name="VS_Preview_Inspector" type="VSplitContainer" parent="MarginContainer/RootVBox/VS_Main_Assets/HS_Edit_Sidebar"]
 unique_name_in_owner = true
@@ -232,87 +294,106 @@ unique_name_in_owner = true
 custom_minimum_size = Vector2(260, 220)
 layout_mode = 2
 size_flags_vertical = 3
-theme_override_styles/panel = SubResource("StyleBoxFlat_wlmre")
 
 [node name="InspectorTabs" type="TabContainer" parent="MarginContainer/RootVBox/VS_Main_Assets/HS_Edit_Sidebar/VS_Preview_Inspector/InspectorPanel"]
 layout_mode = 2
+
+[node name="Properties" type="Control" parent="MarginContainer/RootVBox/VS_Main_Assets/HS_Edit_Sidebar/VS_Preview_Inspector/InspectorPanel/InspectorTabs"]
+layout_mode = 2
+size_flags_horizontal = 3
+size_flags_vertical = 3
+
+[node name="Properties" type="ScrollContainer" parent="MarginContainer/RootVBox/VS_Main_Assets/HS_Edit_Sidebar/VS_Preview_Inspector/InspectorPanel/InspectorTabs/Properties"]
+layout_mode = 2
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_top = 34.0
+offset_bottom = 2.0
 theme = ExtResource("2_o2a2a")
 
-[node name="Properties" type="ScrollContainer" parent="MarginContainer/RootVBox/VS_Main_Assets/HS_Edit_Sidebar/VS_Preview_Inspector/InspectorPanel/InspectorTabs"]
-layout_mode = 2
-theme = ExtResource("2_o2a2a")
-
-[node name="MarginContainer" type="MarginContainer" parent="MarginContainer/RootVBox/VS_Main_Assets/HS_Edit_Sidebar/VS_Preview_Inspector/InspectorPanel/InspectorTabs/Properties"]
+[node name="MarginContainer" type="MarginContainer" parent="MarginContainer/RootVBox/VS_Main_Assets/HS_Edit_Sidebar/VS_Preview_Inspector/InspectorPanel/InspectorTabs/Properties/Properties"]
 layout_mode = 2
 
-[node name="VBoxContainer" type="VBoxContainer" parent="MarginContainer/RootVBox/VS_Main_Assets/HS_Edit_Sidebar/VS_Preview_Inspector/InspectorPanel/InspectorTabs/Properties/MarginContainer"]
+[node name="VBoxContainer" type="VBoxContainer" parent="MarginContainer/RootVBox/VS_Main_Assets/HS_Edit_Sidebar/VS_Preview_Inspector/InspectorPanel/InspectorTabs/Properties/Properties/MarginContainer"]
+layout_mode = 2
+theme_override_constants/separation = 8
+
+[node name="SectionButton_AnimationInfo" type="Button" parent="MarginContainer/RootVBox/VS_Main_Assets/HS_Edit_Sidebar/VS_Preview_Inspector/InspectorPanel/InspectorTabs/Properties/Properties/MarginContainer/VBoxContainer"]
+unique_name_in_owner = true
+layout_mode = 2
+text = "> Animation Info"
+alignment = 0
+
+[node name="SectionContent_AnimationInfo" type="VBoxContainer" parent="MarginContainer/RootVBox/VS_Main_Assets/HS_Edit_Sidebar/VS_Preview_Inspector/InspectorPanel/InspectorTabs/Properties/Properties/MarginContainer/VBoxContainer"]
+unique_name_in_owner = true
+visible = false
 layout_mode = 2
 
-[node name="AnimationInfo" type="Label" parent="MarginContainer/RootVBox/VS_Main_Assets/HS_Edit_Sidebar/VS_Preview_Inspector/InspectorPanel/InspectorTabs/Properties/MarginContainer/VBoxContainer"]
-layout_mode = 2
-text = "Animation Info"
-
-[node name="GridContainer" type="GridContainer" parent="MarginContainer/RootVBox/VS_Main_Assets/HS_Edit_Sidebar/VS_Preview_Inspector/InspectorPanel/InspectorTabs/Properties/MarginContainer/VBoxContainer"]
+[node name="GridContainer" type="GridContainer" parent="MarginContainer/RootVBox/VS_Main_Assets/HS_Edit_Sidebar/VS_Preview_Inspector/InspectorPanel/InspectorTabs/Properties/Properties/MarginContainer/VBoxContainer/SectionContent_AnimationInfo"]
 layout_mode = 2
 columns = 2
 
-[node name="NameL" type="Label" parent="MarginContainer/RootVBox/VS_Main_Assets/HS_Edit_Sidebar/VS_Preview_Inspector/InspectorPanel/InspectorTabs/Properties/MarginContainer/VBoxContainer/GridContainer"]
+[node name="NameL" type="Label" parent="MarginContainer/RootVBox/VS_Main_Assets/HS_Edit_Sidebar/VS_Preview_Inspector/InspectorPanel/InspectorTabs/Properties/Properties/MarginContainer/VBoxContainer/SectionContent_AnimationInfo/GridContainer"]
 layout_mode = 2
 text = "Name                 "
 
-[node name="LineEdit" type="LineEdit" parent="MarginContainer/RootVBox/VS_Main_Assets/HS_Edit_Sidebar/VS_Preview_Inspector/InspectorPanel/InspectorTabs/Properties/MarginContainer/VBoxContainer/GridContainer"]
+[node name="LineEdit" type="LineEdit" parent="MarginContainer/RootVBox/VS_Main_Assets/HS_Edit_Sidebar/VS_Preview_Inspector/InspectorPanel/InspectorTabs/Properties/Properties/MarginContainer/VBoxContainer/SectionContent_AnimationInfo/GridContainer"]
 layout_mode = 2
 
-[node name="FPSLabel" type="Label" parent="MarginContainer/RootVBox/VS_Main_Assets/HS_Edit_Sidebar/VS_Preview_Inspector/InspectorPanel/InspectorTabs/Properties/MarginContainer/VBoxContainer/GridContainer"]
+[node name="FPSLabel" type="Label" parent="MarginContainer/RootVBox/VS_Main_Assets/HS_Edit_Sidebar/VS_Preview_Inspector/InspectorPanel/InspectorTabs/Properties/Properties/MarginContainer/VBoxContainer/SectionContent_AnimationInfo/GridContainer"]
 layout_mode = 2
 text = "FPS"
 
-[node name="SpinBox" type="SpinBox" parent="MarginContainer/RootVBox/VS_Main_Assets/HS_Edit_Sidebar/VS_Preview_Inspector/InspectorPanel/InspectorTabs/Properties/MarginContainer/VBoxContainer/GridContainer"]
+[node name="SpinBox" type="SpinBox" parent="MarginContainer/RootVBox/VS_Main_Assets/HS_Edit_Sidebar/VS_Preview_Inspector/InspectorPanel/InspectorTabs/Properties/Properties/MarginContainer/VBoxContainer/SectionContent_AnimationInfo/GridContainer"]
 layout_mode = 2
 value = 24.0
 
-[node name="Total Frames" type="Label" parent="MarginContainer/RootVBox/VS_Main_Assets/HS_Edit_Sidebar/VS_Preview_Inspector/InspectorPanel/InspectorTabs/Properties/MarginContainer/VBoxContainer/GridContainer"]
+[node name="Total Frames" type="Label" parent="MarginContainer/RootVBox/VS_Main_Assets/HS_Edit_Sidebar/VS_Preview_Inspector/InspectorPanel/InspectorTabs/Properties/Properties/MarginContainer/VBoxContainer/SectionContent_AnimationInfo/GridContainer"]
 layout_mode = 2
 text = "Total Frames"
 
-[node name="TotalFrameCount" type="Label" parent="MarginContainer/RootVBox/VS_Main_Assets/HS_Edit_Sidebar/VS_Preview_Inspector/InspectorPanel/InspectorTabs/Properties/MarginContainer/VBoxContainer/GridContainer"]
+[node name="TotalFrameCount" type="Label" parent="MarginContainer/RootVBox/VS_Main_Assets/HS_Edit_Sidebar/VS_Preview_Inspector/InspectorPanel/InspectorTabs/Properties/Properties/MarginContainer/VBoxContainer/SectionContent_AnimationInfo/GridContainer"]
 unique_name_in_owner = true
 layout_mode = 2
 text = "0
 "
 
-[node name="DurationL" type="Label" parent="MarginContainer/RootVBox/VS_Main_Assets/HS_Edit_Sidebar/VS_Preview_Inspector/InspectorPanel/InspectorTabs/Properties/MarginContainer/VBoxContainer/GridContainer"]
+[node name="DurationL" type="Label" parent="MarginContainer/RootVBox/VS_Main_Assets/HS_Edit_Sidebar/VS_Preview_Inspector/InspectorPanel/InspectorTabs/Properties/Properties/MarginContainer/VBoxContainer/SectionContent_AnimationInfo/GridContainer"]
 layout_mode = 2
 text = "Duration
 "
 
-[node name="DurationValue" type="Label" parent="MarginContainer/RootVBox/VS_Main_Assets/HS_Edit_Sidebar/VS_Preview_Inspector/InspectorPanel/InspectorTabs/Properties/MarginContainer/VBoxContainer/GridContainer"]
+[node name="DurationValue" type="Label" parent="MarginContainer/RootVBox/VS_Main_Assets/HS_Edit_Sidebar/VS_Preview_Inspector/InspectorPanel/InspectorTabs/Properties/Properties/MarginContainer/VBoxContainer/SectionContent_AnimationInfo/GridContainer"]
 layout_mode = 2
 
-[node name="HSeparator" type="HSeparator" parent="MarginContainer/RootVBox/VS_Main_Assets/HS_Edit_Sidebar/VS_Preview_Inspector/InspectorPanel/InspectorTabs/Properties/MarginContainer/VBoxContainer"]
+[node name="SectionButton_PlaybackSettings" type="Button" parent="MarginContainer/RootVBox/VS_Main_Assets/HS_Edit_Sidebar/VS_Preview_Inspector/InspectorPanel/InspectorTabs/Properties/Properties/MarginContainer/VBoxContainer"]
+unique_name_in_owner = true
+layout_mode = 2
+text = "> Playback Settings"
+alignment = 0
+
+[node name="SectionContent_PlaybackSettings" type="VBoxContainer" parent="MarginContainer/RootVBox/VS_Main_Assets/HS_Edit_Sidebar/VS_Preview_Inspector/InspectorPanel/InspectorTabs/Properties/Properties/MarginContainer/VBoxContainer"]
+unique_name_in_owner = true
+visible = false
 layout_mode = 2
 
-[node name="PlaybackSettings" type="Label" parent="MarginContainer/RootVBox/VS_Main_Assets/HS_Edit_Sidebar/VS_Preview_Inspector/InspectorPanel/InspectorTabs/Properties/MarginContainer/VBoxContainer"]
-layout_mode = 2
-text = "Playback Settings"
-
-[node name="GridContainer2" type="GridContainer" parent="MarginContainer/RootVBox/VS_Main_Assets/HS_Edit_Sidebar/VS_Preview_Inspector/InspectorPanel/InspectorTabs/Properties/MarginContainer/VBoxContainer"]
+[node name="GridContainer2" type="GridContainer" parent="MarginContainer/RootVBox/VS_Main_Assets/HS_Edit_Sidebar/VS_Preview_Inspector/InspectorPanel/InspectorTabs/Properties/Properties/MarginContainer/VBoxContainer/SectionContent_PlaybackSettings"]
 layout_mode = 2
 columns = 2
 
-[node name="LoopAnimL" type="Label" parent="MarginContainer/RootVBox/VS_Main_Assets/HS_Edit_Sidebar/VS_Preview_Inspector/InspectorPanel/InspectorTabs/Properties/MarginContainer/VBoxContainer/GridContainer2"]
+[node name="LoopAnimL" type="Label" parent="MarginContainer/RootVBox/VS_Main_Assets/HS_Edit_Sidebar/VS_Preview_Inspector/InspectorPanel/InspectorTabs/Properties/Properties/MarginContainer/VBoxContainer/SectionContent_PlaybackSettings/GridContainer2"]
 layout_mode = 2
 text = "Loop Animation"
 
-[node name="LoopAnimCB" type="CheckBox" parent="MarginContainer/RootVBox/VS_Main_Assets/HS_Edit_Sidebar/VS_Preview_Inspector/InspectorPanel/InspectorTabs/Properties/MarginContainer/VBoxContainer/GridContainer2"]
+[node name="LoopAnimCB" type="CheckBox" parent="MarginContainer/RootVBox/VS_Main_Assets/HS_Edit_Sidebar/VS_Preview_Inspector/InspectorPanel/InspectorTabs/Properties/Properties/MarginContainer/VBoxContainer/SectionContent_PlaybackSettings/GridContainer2"]
 unique_name_in_owner = true
 layout_mode = 2
 
-[node name="LoopModeL" type="Label" parent="MarginContainer/RootVBox/VS_Main_Assets/HS_Edit_Sidebar/VS_Preview_Inspector/InspectorPanel/InspectorTabs/Properties/MarginContainer/VBoxContainer/GridContainer2"]
+[node name="LoopModeL" type="Label" parent="MarginContainer/RootVBox/VS_Main_Assets/HS_Edit_Sidebar/VS_Preview_Inspector/InspectorPanel/InspectorTabs/Properties/Properties/MarginContainer/VBoxContainer/SectionContent_PlaybackSettings/GridContainer2"]
 layout_mode = 2
 text = "Loop Mode"
 
-[node name="LoopModes" type="OptionButton" parent="MarginContainer/RootVBox/VS_Main_Assets/HS_Edit_Sidebar/VS_Preview_Inspector/InspectorPanel/InspectorTabs/Properties/MarginContainer/VBoxContainer/GridContainer2"]
+[node name="LoopModes" type="OptionButton" parent="MarginContainer/RootVBox/VS_Main_Assets/HS_Edit_Sidebar/VS_Preview_Inspector/InspectorPanel/InspectorTabs/Properties/Properties/MarginContainer/VBoxContainer/SectionContent_PlaybackSettings/GridContainer2"]
 layout_mode = 2
 item_count = 3
 selected = 0
@@ -323,180 +404,219 @@ popup/item_1/id = 1
 popup/item_2/text = "Clamp"
 popup/item_2/id = 2
 
-[node name="LoopCountL" type="Label" parent="MarginContainer/RootVBox/VS_Main_Assets/HS_Edit_Sidebar/VS_Preview_Inspector/InspectorPanel/InspectorTabs/Properties/MarginContainer/VBoxContainer/GridContainer2"]
+[node name="LoopCountL" type="Label" parent="MarginContainer/RootVBox/VS_Main_Assets/HS_Edit_Sidebar/VS_Preview_Inspector/InspectorPanel/InspectorTabs/Properties/Properties/MarginContainer/VBoxContainer/SectionContent_PlaybackSettings/GridContainer2"]
 layout_mode = 2
 text = "Loop Count"
 
-[node name="SpinBox" type="SpinBox" parent="MarginContainer/RootVBox/VS_Main_Assets/HS_Edit_Sidebar/VS_Preview_Inspector/InspectorPanel/InspectorTabs/Properties/MarginContainer/VBoxContainer/GridContainer2"]
+[node name="SpinBox" type="SpinBox" parent="MarginContainer/RootVBox/VS_Main_Assets/HS_Edit_Sidebar/VS_Preview_Inspector/InspectorPanel/InspectorTabs/Properties/Properties/MarginContainer/VBoxContainer/SectionContent_PlaybackSettings/GridContainer2"]
 layout_mode = 2
 
-[node name="HSeparator2" type="HSeparator" parent="MarginContainer/RootVBox/VS_Main_Assets/HS_Edit_Sidebar/VS_Preview_Inspector/InspectorPanel/InspectorTabs/Properties/MarginContainer/VBoxContainer"]
+[node name="SectionButton_SoundSettings" type="Button" parent="MarginContainer/RootVBox/VS_Main_Assets/HS_Edit_Sidebar/VS_Preview_Inspector/InspectorPanel/InspectorTabs/Properties/Properties/MarginContainer/VBoxContainer"]
+unique_name_in_owner = true
+layout_mode = 2
+text = "> Sound Settings"
+alignment = 0
+
+[node name="SectionContent_SoundSettings" type="VBoxContainer" parent="MarginContainer/RootVBox/VS_Main_Assets/HS_Edit_Sidebar/VS_Preview_Inspector/InspectorPanel/InspectorTabs/Properties/Properties/MarginContainer/VBoxContainer"]
+unique_name_in_owner = true
+visible = false
 layout_mode = 2
 
-[node name="SoundSettings" type="Label" parent="MarginContainer/RootVBox/VS_Main_Assets/HS_Edit_Sidebar/VS_Preview_Inspector/InspectorPanel/InspectorTabs/Properties/MarginContainer/VBoxContainer"]
-layout_mode = 2
-text = "Sound Settings"
-
-[node name="GridContainer3" type="GridContainer" parent="MarginContainer/RootVBox/VS_Main_Assets/HS_Edit_Sidebar/VS_Preview_Inspector/InspectorPanel/InspectorTabs/Properties/MarginContainer/VBoxContainer"]
+[node name="GridContainer3" type="GridContainer" parent="MarginContainer/RootVBox/VS_Main_Assets/HS_Edit_Sidebar/VS_Preview_Inspector/InspectorPanel/InspectorTabs/Properties/Properties/MarginContainer/VBoxContainer/SectionContent_SoundSettings"]
 layout_mode = 2
 columns = 2
 
-[node name="Label" type="Label" parent="MarginContainer/RootVBox/VS_Main_Assets/HS_Edit_Sidebar/VS_Preview_Inspector/InspectorPanel/InspectorTabs/Properties/MarginContainer/VBoxContainer/GridContainer3"]
+[node name="Label" type="Label" parent="MarginContainer/RootVBox/VS_Main_Assets/HS_Edit_Sidebar/VS_Preview_Inspector/InspectorPanel/InspectorTabs/Properties/Properties/MarginContainer/VBoxContainer/SectionContent_SoundSettings/GridContainer3"]
 layout_mode = 2
 text = "Volume               "
 
-[node name="HSlider" type="HSlider" parent="MarginContainer/RootVBox/VS_Main_Assets/HS_Edit_Sidebar/VS_Preview_Inspector/InspectorPanel/InspectorTabs/Properties/MarginContainer/VBoxContainer/GridContainer3"]
+[node name="HSlider" type="HSlider" parent="MarginContainer/RootVBox/VS_Main_Assets/HS_Edit_Sidebar/VS_Preview_Inspector/InspectorPanel/InspectorTabs/Properties/Properties/MarginContainer/VBoxContainer/SectionContent_SoundSettings/GridContainer3"]
 custom_minimum_size = Vector2(100, 2.08165e-12)
 layout_mode = 2
 value = 50.0
 tick_count = 2
 
-[node name="Label2" type="Label" parent="MarginContainer/RootVBox/VS_Main_Assets/HS_Edit_Sidebar/VS_Preview_Inspector/InspectorPanel/InspectorTabs/Properties/MarginContainer/VBoxContainer/GridContainer3"]
+[node name="Label2" type="Label" parent="MarginContainer/RootVBox/VS_Main_Assets/HS_Edit_Sidebar/VS_Preview_Inspector/InspectorPanel/InspectorTabs/Properties/Properties/MarginContainer/VBoxContainer/SectionContent_SoundSettings/GridContainer3"]
 layout_mode = 2
 text = "Pitch"
 
-[node name="SpinBox" type="SpinBox" parent="MarginContainer/RootVBox/VS_Main_Assets/HS_Edit_Sidebar/VS_Preview_Inspector/InspectorPanel/InspectorTabs/Properties/MarginContainer/VBoxContainer/GridContainer3"]
+[node name="SpinBox" type="SpinBox" parent="MarginContainer/RootVBox/VS_Main_Assets/HS_Edit_Sidebar/VS_Preview_Inspector/InspectorPanel/InspectorTabs/Properties/Properties/MarginContainer/VBoxContainer/SectionContent_SoundSettings/GridContainer3"]
 layout_mode = 2
 
-[node name="HSeparator3" type="HSeparator" parent="MarginContainer/RootVBox/VS_Main_Assets/HS_Edit_Sidebar/VS_Preview_Inspector/InspectorPanel/InspectorTabs/Properties/MarginContainer/VBoxContainer"]
+[node name="SectionButton_Metadata" type="Button" parent="MarginContainer/RootVBox/VS_Main_Assets/HS_Edit_Sidebar/VS_Preview_Inspector/InspectorPanel/InspectorTabs/Properties/Properties/MarginContainer/VBoxContainer"]
+unique_name_in_owner = true
 layout_mode = 2
+text = "> Metadata"
+alignment = 0
 
-[node name="Metadata" type="Label" parent="MarginContainer/RootVBox/VS_Main_Assets/HS_Edit_Sidebar/VS_Preview_Inspector/InspectorPanel/InspectorTabs/Properties/MarginContainer/VBoxContainer"]
-layout_mode = 2
-text = "Metadata"
-
-[node name="GridContainer4" type="GridContainer" parent="MarginContainer/RootVBox/VS_Main_Assets/HS_Edit_Sidebar/VS_Preview_Inspector/InspectorPanel/InspectorTabs/Properties/MarginContainer/VBoxContainer"]
-layout_mode = 2
-columns = 2
-
-[node name="Label" type="Label" parent="MarginContainer/RootVBox/VS_Main_Assets/HS_Edit_Sidebar/VS_Preview_Inspector/InspectorPanel/InspectorTabs/Properties/MarginContainer/VBoxContainer/GridContainer4"]
-layout_mode = 2
-text = "Tags                     "
-
-[node name="TagLineEditTemp" type="LineEdit" parent="MarginContainer/RootVBox/VS_Main_Assets/HS_Edit_Sidebar/VS_Preview_Inspector/InspectorPanel/InspectorTabs/Properties/MarginContainer/VBoxContainer/GridContainer4"]
-layout_mode = 2
-
-[node name="Label2" type="Label" parent="MarginContainer/RootVBox/VS_Main_Assets/HS_Edit_Sidebar/VS_Preview_Inspector/InspectorPanel/InspectorTabs/Properties/MarginContainer/VBoxContainer/GridContainer4"]
-layout_mode = 2
-text = "Description"
-
-[node name="TextEdit" type="TextEdit" parent="MarginContainer/RootVBox/VS_Main_Assets/HS_Edit_Sidebar/VS_Preview_Inspector/InspectorPanel/InspectorTabs/Properties/MarginContainer/VBoxContainer/GridContainer4"]
-custom_minimum_size = Vector2(120, 100)
-layout_mode = 2
-
-[node name="Export" type="ScrollContainer" parent="MarginContainer/RootVBox/VS_Main_Assets/HS_Edit_Sidebar/VS_Preview_Inspector/InspectorPanel/InspectorTabs"]
+[node name="SectionContent_Metadata" type="VBoxContainer" parent="MarginContainer/RootVBox/VS_Main_Assets/HS_Edit_Sidebar/VS_Preview_Inspector/InspectorPanel/InspectorTabs/Properties/Properties/MarginContainer/VBoxContainer"]
+unique_name_in_owner = true
 visible = false
 layout_mode = 2
 
-[node name="MarginContainer" type="MarginContainer" parent="MarginContainer/RootVBox/VS_Main_Assets/HS_Edit_Sidebar/VS_Preview_Inspector/InspectorPanel/InspectorTabs/Export"]
+[node name="GridContainer4" type="GridContainer" parent="MarginContainer/RootVBox/VS_Main_Assets/HS_Edit_Sidebar/VS_Preview_Inspector/InspectorPanel/InspectorTabs/Properties/Properties/MarginContainer/VBoxContainer/SectionContent_Metadata"]
+layout_mode = 2
+columns = 2
+
+[node name="Label" type="Label" parent="MarginContainer/RootVBox/VS_Main_Assets/HS_Edit_Sidebar/VS_Preview_Inspector/InspectorPanel/InspectorTabs/Properties/Properties/MarginContainer/VBoxContainer/SectionContent_Metadata/GridContainer4"]
+layout_mode = 2
+text = "Tags                     "
+
+[node name="TagLineEditTemp" type="LineEdit" parent="MarginContainer/RootVBox/VS_Main_Assets/HS_Edit_Sidebar/VS_Preview_Inspector/InspectorPanel/InspectorTabs/Properties/Properties/MarginContainer/VBoxContainer/SectionContent_Metadata/GridContainer4"]
 layout_mode = 2
 
-[node name="Export_Root" type="VBoxContainer" parent="MarginContainer/RootVBox/VS_Main_Assets/HS_Edit_Sidebar/VS_Preview_Inspector/InspectorPanel/InspectorTabs/Export/MarginContainer"]
+[node name="Label2" type="Label" parent="MarginContainer/RootVBox/VS_Main_Assets/HS_Edit_Sidebar/VS_Preview_Inspector/InspectorPanel/InspectorTabs/Properties/Properties/MarginContainer/VBoxContainer/SectionContent_Metadata/GridContainer4"]
+layout_mode = 2
+text = "Description"
+
+[node name="TextEdit" type="TextEdit" parent="MarginContainer/RootVBox/VS_Main_Assets/HS_Edit_Sidebar/VS_Preview_Inspector/InspectorPanel/InspectorTabs/Properties/Properties/MarginContainer/VBoxContainer/SectionContent_Metadata/GridContainer4"]
+custom_minimum_size = Vector2(120, 100)
 layout_mode = 2
 
-[node name="Section_Destination" type="VBoxContainer" parent="MarginContainer/RootVBox/VS_Main_Assets/HS_Edit_Sidebar/VS_Preview_Inspector/InspectorPanel/InspectorTabs/Export/MarginContainer/Export_Root"]
+[node name="Export" type="Control" parent="MarginContainer/RootVBox/VS_Main_Assets/HS_Edit_Sidebar/VS_Preview_Inspector/InspectorPanel/InspectorTabs"]
+visible = false
+layout_mode = 2
+size_flags_horizontal = 3
+size_flags_vertical = 3
+
+[node name="Export" type="ScrollContainer" parent="MarginContainer/RootVBox/VS_Main_Assets/HS_Edit_Sidebar/VS_Preview_Inspector/InspectorPanel/InspectorTabs/Export"]
+layout_mode = 2
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_top = 34.0
+offset_bottom = 2.0
+theme = ExtResource("2_o2a2a")
+
+[node name="MarginContainer" type="MarginContainer" parent="MarginContainer/RootVBox/VS_Main_Assets/HS_Edit_Sidebar/VS_Preview_Inspector/InspectorPanel/InspectorTabs/Export/Export"]
 layout_mode = 2
 
-[node name="Label" type="Label" parent="MarginContainer/RootVBox/VS_Main_Assets/HS_Edit_Sidebar/VS_Preview_Inspector/InspectorPanel/InspectorTabs/Export/MarginContainer/Export_Root/Section_Destination"]
+[node name="Export_Root" type="VBoxContainer" parent="MarginContainer/RootVBox/VS_Main_Assets/HS_Edit_Sidebar/VS_Preview_Inspector/InspectorPanel/InspectorTabs/Export/Export/MarginContainer"]
 layout_mode = 2
-text = "Destination"
+theme_override_constants/separation = 8
 
-[node name="HBoxContainer" type="HBoxContainer" parent="MarginContainer/RootVBox/VS_Main_Assets/HS_Edit_Sidebar/VS_Preview_Inspector/InspectorPanel/InspectorTabs/Export/MarginContainer/Export_Root/Section_Destination"]
+[node name="Section_Destination" type="VBoxContainer" parent="MarginContainer/RootVBox/VS_Main_Assets/HS_Edit_Sidebar/VS_Preview_Inspector/InspectorPanel/InspectorTabs/Export/Export/MarginContainer/Export_Root"]
 layout_mode = 2
 
-[node name="LineEdit_GameRepoPath" type="LineEdit" parent="MarginContainer/RootVBox/VS_Main_Assets/HS_Edit_Sidebar/VS_Preview_Inspector/InspectorPanel/InspectorTabs/Export/MarginContainer/Export_Root/Section_Destination/HBoxContainer"]
+[node name="SectionButton_Destination" type="Button" parent="MarginContainer/RootVBox/VS_Main_Assets/HS_Edit_Sidebar/VS_Preview_Inspector/InspectorPanel/InspectorTabs/Export/Export/MarginContainer/Export_Root/Section_Destination"]
+unique_name_in_owner = true
+layout_mode = 2
+text = "> Destination"
+alignment = 0
+
+[node name="SectionContent_Destination" type="VBoxContainer" parent="MarginContainer/RootVBox/VS_Main_Assets/HS_Edit_Sidebar/VS_Preview_Inspector/InspectorPanel/InspectorTabs/Export/Export/MarginContainer/Export_Root/Section_Destination"]
+unique_name_in_owner = true
+visible = false
+layout_mode = 2
+
+[node name="HBoxContainer" type="HBoxContainer" parent="MarginContainer/RootVBox/VS_Main_Assets/HS_Edit_Sidebar/VS_Preview_Inspector/InspectorPanel/InspectorTabs/Export/Export/MarginContainer/Export_Root/Section_Destination/SectionContent_Destination"]
+layout_mode = 2
+
+[node name="LineEdit_GameRepoPath" type="LineEdit" parent="MarginContainer/RootVBox/VS_Main_Assets/HS_Edit_Sidebar/VS_Preview_Inspector/InspectorPanel/InspectorTabs/Export/Export/MarginContainer/Export_Root/Section_Destination/SectionContent_Destination/HBoxContainer"]
 unique_name_in_owner = true
 layout_mode = 2
 
-[node name="Btn_ChangeRepo" type="Button" parent="MarginContainer/RootVBox/VS_Main_Assets/HS_Edit_Sidebar/VS_Preview_Inspector/InspectorPanel/InspectorTabs/Export/MarginContainer/Export_Root/Section_Destination/HBoxContainer"]
+[node name="Btn_ChangeRepo" type="Button" parent="MarginContainer/RootVBox/VS_Main_Assets/HS_Edit_Sidebar/VS_Preview_Inspector/InspectorPanel/InspectorTabs/Export/Export/MarginContainer/Export_Root/Section_Destination/SectionContent_Destination/HBoxContainer"]
 layout_mode = 2
 text = "Change Repo"
 
-[node name="Btn_OpenRepo" type="Button" parent="MarginContainer/RootVBox/VS_Main_Assets/HS_Edit_Sidebar/VS_Preview_Inspector/InspectorPanel/InspectorTabs/Export/MarginContainer/Export_Root/Section_Destination/HBoxContainer"]
+[node name="Btn_OpenRepo" type="Button" parent="MarginContainer/RootVBox/VS_Main_Assets/HS_Edit_Sidebar/VS_Preview_Inspector/InspectorPanel/InspectorTabs/Export/Export/MarginContainer/Export_Root/Section_Destination/SectionContent_Destination/HBoxContainer"]
 layout_mode = 2
 text = "Open Repo"
 
-[node name="HSeparator" type="HSeparator" parent="MarginContainer/RootVBox/VS_Main_Assets/HS_Edit_Sidebar/VS_Preview_Inspector/InspectorPanel/InspectorTabs/Export/MarginContainer/Export_Root/Section_Destination"]
+[node name="Section_AnimName" type="VBoxContainer" parent="MarginContainer/RootVBox/VS_Main_Assets/HS_Edit_Sidebar/VS_Preview_Inspector/InspectorPanel/InspectorTabs/Export/Export/MarginContainer/Export_Root"]
 layout_mode = 2
 
-[node name="Section_AnimName" type="VBoxContainer" parent="MarginContainer/RootVBox/VS_Main_Assets/HS_Edit_Sidebar/VS_Preview_Inspector/InspectorPanel/InspectorTabs/Export/MarginContainer/Export_Root/Section_Destination"]
+[node name="SectionButton_AnimName" type="Button" parent="MarginContainer/RootVBox/VS_Main_Assets/HS_Edit_Sidebar/VS_Preview_Inspector/InspectorPanel/InspectorTabs/Export/Export/MarginContainer/Export_Root/Section_AnimName"]
+unique_name_in_owner = true
+layout_mode = 2
+text = "> Animation Name"
+alignment = 0
+
+[node name="SectionContent_AnimName" type="VBoxContainer" parent="MarginContainer/RootVBox/VS_Main_Assets/HS_Edit_Sidebar/VS_Preview_Inspector/InspectorPanel/InspectorTabs/Export/Export/MarginContainer/Export_Root/Section_AnimName"]
+unique_name_in_owner = true
+visible = false
 layout_mode = 2
 
-[node name="Label" type="Label" parent="MarginContainer/RootVBox/VS_Main_Assets/HS_Edit_Sidebar/VS_Preview_Inspector/InspectorPanel/InspectorTabs/Export/MarginContainer/Export_Root/Section_Destination/Section_AnimName"]
+[node name="Label" type="Label" parent="MarginContainer/RootVBox/VS_Main_Assets/HS_Edit_Sidebar/VS_Preview_Inspector/InspectorPanel/InspectorTabs/Export/Export/MarginContainer/Export_Root/Section_AnimName/SectionContent_AnimName"]
 layout_mode = 2
 text = "Animation Name:"
 
-[node name="LineEdit_AnimName" type="LineEdit" parent="MarginContainer/RootVBox/VS_Main_Assets/HS_Edit_Sidebar/VS_Preview_Inspector/InspectorPanel/InspectorTabs/Export/MarginContainer/Export_Root/Section_Destination/Section_AnimName"]
+[node name="LineEdit_AnimName" type="LineEdit" parent="MarginContainer/RootVBox/VS_Main_Assets/HS_Edit_Sidebar/VS_Preview_Inspector/InspectorPanel/InspectorTabs/Export/Export/MarginContainer/Export_Root/Section_AnimName/SectionContent_AnimName"]
 unique_name_in_owner = true
 layout_mode = 2
 
-[node name="HSeparator2" type="HSeparator" parent="MarginContainer/RootVBox/VS_Main_Assets/HS_Edit_Sidebar/VS_Preview_Inspector/InspectorPanel/InspectorTabs/Export/MarginContainer/Export_Root/Section_Destination"]
+[node name="Section_Format" type="VBoxContainer" parent="MarginContainer/RootVBox/VS_Main_Assets/HS_Edit_Sidebar/VS_Preview_Inspector/InspectorPanel/InspectorTabs/Export/Export/MarginContainer/Export_Root"]
 layout_mode = 2
 
-[node name="Section_Format" type="VBoxContainer" parent="MarginContainer/RootVBox/VS_Main_Assets/HS_Edit_Sidebar/VS_Preview_Inspector/InspectorPanel/InspectorTabs/Export/MarginContainer/Export_Root/Section_Destination"]
+[node name="SectionButton_Format" type="Button" parent="MarginContainer/RootVBox/VS_Main_Assets/HS_Edit_Sidebar/VS_Preview_Inspector/InspectorPanel/InspectorTabs/Export/Export/MarginContainer/Export_Root/Section_Format"]
+unique_name_in_owner = true
+layout_mode = 2
+text = "> Export Format"
+alignment = 0
+
+[node name="SectionContent_Format" type="VBoxContainer" parent="MarginContainer/RootVBox/VS_Main_Assets/HS_Edit_Sidebar/VS_Preview_Inspector/InspectorPanel/InspectorTabs/Export/Export/MarginContainer/Export_Root/Section_Format"]
+unique_name_in_owner = true
+visible = false
 layout_mode = 2
 
-[node name="Label" type="Label" parent="MarginContainer/RootVBox/VS_Main_Assets/HS_Edit_Sidebar/VS_Preview_Inspector/InspectorPanel/InspectorTabs/Export/MarginContainer/Export_Root/Section_Destination/Section_Format"]
-layout_mode = 2
-text = "Export Format"
-
-[node name="VBoxContainer" type="VBoxContainer" parent="MarginContainer/RootVBox/VS_Main_Assets/HS_Edit_Sidebar/VS_Preview_Inspector/InspectorPanel/InspectorTabs/Export/MarginContainer/Export_Root/Section_Destination/Section_Format"]
+[node name="VBoxContainer" type="VBoxContainer" parent="MarginContainer/RootVBox/VS_Main_Assets/HS_Edit_Sidebar/VS_Preview_Inspector/InspectorPanel/InspectorTabs/Export/Export/MarginContainer/Export_Root/Section_Format/SectionContent_Format"]
 layout_mode = 2
 
-[node name="HBoxContainer" type="HBoxContainer" parent="MarginContainer/RootVBox/VS_Main_Assets/HS_Edit_Sidebar/VS_Preview_Inspector/InspectorPanel/InspectorTabs/Export/MarginContainer/Export_Root/Section_Destination/Section_Format/VBoxContainer"]
+[node name="HBoxContainer" type="HBoxContainer" parent="MarginContainer/RootVBox/VS_Main_Assets/HS_Edit_Sidebar/VS_Preview_Inspector/InspectorPanel/InspectorTabs/Export/Export/MarginContainer/Export_Root/Section_Format/SectionContent_Format/VBoxContainer"]
 layout_mode = 2
 
-[node name="VBoxContainer" type="VBoxContainer" parent="MarginContainer/RootVBox/VS_Main_Assets/HS_Edit_Sidebar/VS_Preview_Inspector/InspectorPanel/InspectorTabs/Export/MarginContainer/Export_Root/Section_Destination/Section_Format/VBoxContainer/HBoxContainer"]
+[node name="VBoxContainer" type="VBoxContainer" parent="MarginContainer/RootVBox/VS_Main_Assets/HS_Edit_Sidebar/VS_Preview_Inspector/InspectorPanel/InspectorTabs/Export/Export/MarginContainer/Export_Root/Section_Format/SectionContent_Format/VBoxContainer/HBoxContainer"]
 layout_mode = 2
 
-[node name="CheckBox" type="CheckBox" parent="MarginContainer/RootVBox/VS_Main_Assets/HS_Edit_Sidebar/VS_Preview_Inspector/InspectorPanel/InspectorTabs/Export/MarginContainer/Export_Root/Section_Destination/Section_Format/VBoxContainer/HBoxContainer/VBoxContainer"]
+[node name="CheckBox" type="CheckBox" parent="MarginContainer/RootVBox/VS_Main_Assets/HS_Edit_Sidebar/VS_Preview_Inspector/InspectorPanel/InspectorTabs/Export/Export/MarginContainer/Export_Root/Section_Format/SectionContent_Format/VBoxContainer/HBoxContainer/VBoxContainer"]
 unique_name_in_owner = true
 layout_mode = 2
 text = "JSON"
 
-[node name="CheckBox2" type="CheckBox" parent="MarginContainer/RootVBox/VS_Main_Assets/HS_Edit_Sidebar/VS_Preview_Inspector/InspectorPanel/InspectorTabs/Export/MarginContainer/Export_Root/Section_Destination/Section_Format/VBoxContainer/HBoxContainer/VBoxContainer"]
+[node name="CheckBox2" type="CheckBox" parent="MarginContainer/RootVBox/VS_Main_Assets/HS_Edit_Sidebar/VS_Preview_Inspector/InspectorPanel/InspectorTabs/Export/Export/MarginContainer/Export_Root/Section_Format/SectionContent_Format/VBoxContainer/HBoxContainer/VBoxContainer"]
 unique_name_in_owner = true
 layout_mode = 2
 text = ".tres"
 
-[node name="CheckBox3" type="CheckBox" parent="MarginContainer/RootVBox/VS_Main_Assets/HS_Edit_Sidebar/VS_Preview_Inspector/InspectorPanel/InspectorTabs/Export/MarginContainer/Export_Root/Section_Destination/Section_Format/VBoxContainer/HBoxContainer/VBoxContainer"]
+[node name="CheckBox3" type="CheckBox" parent="MarginContainer/RootVBox/VS_Main_Assets/HS_Edit_Sidebar/VS_Preview_Inspector/InspectorPanel/InspectorTabs/Export/Export/MarginContainer/Export_Root/Section_Format/SectionContent_Format/VBoxContainer/HBoxContainer/VBoxContainer"]
 unique_name_in_owner = true
 layout_mode = 2
 text = ".tscn"
 
-[node name="HSeparator3" type="HSeparator" parent="MarginContainer/RootVBox/VS_Main_Assets/HS_Edit_Sidebar/VS_Preview_Inspector/InspectorPanel/InspectorTabs/Export/MarginContainer/Export_Root/Section_Destination"]
+[node name="Section_Options" type="VBoxContainer" parent="MarginContainer/RootVBox/VS_Main_Assets/HS_Edit_Sidebar/VS_Preview_Inspector/InspectorPanel/InspectorTabs/Export/Export/MarginContainer/Export_Root"]
 layout_mode = 2
 
-[node name="Section_Options" type="VBoxContainer" parent="MarginContainer/RootVBox/VS_Main_Assets/HS_Edit_Sidebar/VS_Preview_Inspector/InspectorPanel/InspectorTabs/Export/MarginContainer/Export_Root/Section_Destination"]
+[node name="SectionButton_Options" type="Button" parent="MarginContainer/RootVBox/VS_Main_Assets/HS_Edit_Sidebar/VS_Preview_Inspector/InspectorPanel/InspectorTabs/Export/Export/MarginContainer/Export_Root/Section_Options"]
+unique_name_in_owner = true
+layout_mode = 2
+text = "> Options"
+alignment = 0
+
+[node name="SectionContent_Options" type="VBoxContainer" parent="MarginContainer/RootVBox/VS_Main_Assets/HS_Edit_Sidebar/VS_Preview_Inspector/InspectorPanel/InspectorTabs/Export/Export/MarginContainer/Export_Root/Section_Options"]
+unique_name_in_owner = true
+visible = false
 layout_mode = 2
 
-[node name="Label" type="Label" parent="MarginContainer/RootVBox/VS_Main_Assets/HS_Edit_Sidebar/VS_Preview_Inspector/InspectorPanel/InspectorTabs/Export/MarginContainer/Export_Root/Section_Destination/Section_Options"]
-layout_mode = 2
-text = "Options"
-
-[node name="CheckBox_Trim" type="CheckBox" parent="MarginContainer/RootVBox/VS_Main_Assets/HS_Edit_Sidebar/VS_Preview_Inspector/InspectorPanel/InspectorTabs/Export/MarginContainer/Export_Root/Section_Destination/Section_Options"]
+[node name="CheckBox_Trim" type="CheckBox" parent="MarginContainer/RootVBox/VS_Main_Assets/HS_Edit_Sidebar/VS_Preview_Inspector/InspectorPanel/InspectorTabs/Export/Export/MarginContainer/Export_Root/Section_Options/SectionContent_Options"]
 unique_name_in_owner = true
 layout_mode = 2
 text = "Trim Transparent Edges"
 
-[node name="CheckBox_Rename" type="CheckBox" parent="MarginContainer/RootVBox/VS_Main_Assets/HS_Edit_Sidebar/VS_Preview_Inspector/InspectorPanel/InspectorTabs/Export/MarginContainer/Export_Root/Section_Destination/Section_Options"]
+[node name="CheckBox_Rename" type="CheckBox" parent="MarginContainer/RootVBox/VS_Main_Assets/HS_Edit_Sidebar/VS_Preview_Inspector/InspectorPanel/InspectorTabs/Export/Export/MarginContainer/Export_Root/Section_Options/SectionContent_Options"]
 unique_name_in_owner = true
 layout_mode = 2
 text = "Rename Frames Sequentially"
 
-[node name="CheckBox_Overwrite" type="CheckBox" parent="MarginContainer/RootVBox/VS_Main_Assets/HS_Edit_Sidebar/VS_Preview_Inspector/InspectorPanel/InspectorTabs/Export/MarginContainer/Export_Root/Section_Destination/Section_Options"]
+[node name="CheckBox_Overwrite" type="CheckBox" parent="MarginContainer/RootVBox/VS_Main_Assets/HS_Edit_Sidebar/VS_Preview_Inspector/InspectorPanel/InspectorTabs/Export/Export/MarginContainer/Export_Root/Section_Options/SectionContent_Options"]
 unique_name_in_owner = true
 layout_mode = 2
 
-[node name="HSeparator4" type="HSeparator" parent="MarginContainer/RootVBox/VS_Main_Assets/HS_Edit_Sidebar/VS_Preview_Inspector/InspectorPanel/InspectorTabs/Export/MarginContainer/Export_Root/Section_Destination"]
-layout_mode = 2
-
-[node name="Btn_Export" type="Button" parent="MarginContainer/RootVBox/VS_Main_Assets/HS_Edit_Sidebar/VS_Preview_Inspector/InspectorPanel/InspectorTabs/Export/MarginContainer/Export_Root/Section_Destination"]
+[node name="Btn_Export" type="Button" parent="MarginContainer/RootVBox/VS_Main_Assets/HS_Edit_Sidebar/VS_Preview_Inspector/InspectorPanel/InspectorTabs/Export/Export/MarginContainer/Export_Root"]
 unique_name_in_owner = true
 layout_mode = 2
 text = "Export"
 
-[node name="Label_Export_Status" type="Label" parent="MarginContainer/RootVBox/VS_Main_Assets/HS_Edit_Sidebar/VS_Preview_Inspector/InspectorPanel/InspectorTabs/Export/MarginContainer/Export_Root/Section_Destination"]
+[node name="Label_Export_Status" type="Label" parent="MarginContainer/RootVBox/VS_Main_Assets/HS_Edit_Sidebar/VS_Preview_Inspector/InspectorPanel/InspectorTabs/Export/Export/MarginContainer/Export_Root"]
 unique_name_in_owner = true
 layout_mode = 2
 
@@ -512,22 +632,62 @@ layout_direction = 2
 layout_mode = 2
 size_flags_horizontal = 3
 size_flags_vertical = 3
+theme_override_constants/separation = 200
 collapsed = true
 dragger_visibility = 2
 
 [node name="AssetsTabBar" type="VBoxContainer" parent="MarginContainer/RootVBox/VS_Main_Assets/AssetsPanel/AssetTabSplit"]
 unique_name_in_owner = true
+z_index = 2
 custom_minimum_size = Vector2(60, 2.08165e-12)
 layout_mode = 2
+theme_override_constants/separation = 40
 
-[node name="PanelContainer_SpritesTab" type="PanelContainer" parent="MarginContainer/RootVBox/VS_Main_Assets/AssetsPanel/AssetTabSplit/AssetsTabBar"]
-unique_name_in_owner = true
+[node name="SpacerTop" type="Control" parent="MarginContainer/RootVBox/VS_Main_Assets/AssetsPanel/AssetTabSplit/AssetsTabBar"]
 layout_mode = 2
 size_flags_vertical = 3
+
+[node name="Row_Sprites" type="HBoxContainer" parent="MarginContainer/RootVBox/VS_Main_Assets/AssetsPanel/AssetTabSplit/AssetsTabBar"]
+layout_mode = 2
+size_flags_horizontal = 3
+
+[node name="PadLeft_Sprites" type="Control" parent="MarginContainer/RootVBox/VS_Main_Assets/AssetsPanel/AssetTabSplit/AssetsTabBar/Row_Sprites"]
+custom_minimum_size = Vector2(10, 0)
+layout_mode = 2
+
+[node name="TabShell_Sprites" type="Control" parent="MarginContainer/RootVBox/VS_Main_Assets/AssetsPanel/AssetTabSplit/AssetsTabBar/Row_Sprites"]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(64, 72)
+layout_mode = 2
+mouse_filter = 1
+
+[node name="PanelShadow_Sprites" type="Panel" parent="MarginContainer/RootVBox/VS_Main_Assets/AssetsPanel/AssetTabSplit/AssetsTabBar/Row_Sprites/TabShell_Sprites"]
+unique_name_in_owner = true
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_left = 6.0
+offset_top = 8.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+
+[node name="PanelContainer_SpritesTab" type="PanelContainer" parent="MarginContainer/RootVBox/VS_Main_Assets/AssetsPanel/AssetTabSplit/AssetsTabBar/Row_Sprites/TabShell_Sprites"]
+unique_name_in_owner = true
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_right = -6.0
+offset_bottom = -8.0
+grow_horizontal = 2
+grow_vertical = 2
 theme_override_styles/panel = SubResource("StyleBoxFlat_nkv7g")
 
-[node name="Tab_Sprites" type="TextureButton" parent="MarginContainer/RootVBox/VS_Main_Assets/AssetsPanel/AssetTabSplit/AssetsTabBar/PanelContainer_SpritesTab"]
+[node name="Tab_Sprites" type="TextureButton" parent="MarginContainer/RootVBox/VS_Main_Assets/AssetsPanel/AssetTabSplit/AssetsTabBar/Row_Sprites/TabShell_Sprites/PanelContainer_SpritesTab"]
 unique_name_in_owner = true
+modulate = Color(0.152941, 0.160784, 0.160784, 1)
 custom_minimum_size = Vector2(40, 40)
 layout_mode = 2
 size_flags_horizontal = 4
@@ -538,14 +698,51 @@ texture_hover = ExtResource("6_fm0m5")
 ignore_texture_size = true
 stretch_mode = 0
 
-[node name="PanelContainer_SoundTab" type="PanelContainer" parent="MarginContainer/RootVBox/VS_Main_Assets/AssetsPanel/AssetTabSplit/AssetsTabBar"]
-unique_name_in_owner = true
+[node name="PadRight_Sprites" type="Control" parent="MarginContainer/RootVBox/VS_Main_Assets/AssetsPanel/AssetTabSplit/AssetsTabBar/Row_Sprites"]
 layout_mode = 2
-size_flags_vertical = 3
+size_flags_horizontal = 3
+
+[node name="Row_Sound" type="HBoxContainer" parent="MarginContainer/RootVBox/VS_Main_Assets/AssetsPanel/AssetTabSplit/AssetsTabBar"]
+layout_mode = 2
+size_flags_horizontal = 3
+
+[node name="PadLeft_Sound" type="Control" parent="MarginContainer/RootVBox/VS_Main_Assets/AssetsPanel/AssetTabSplit/AssetsTabBar/Row_Sound"]
+custom_minimum_size = Vector2(10, 0)
+layout_mode = 2
+
+[node name="TabShell_Sound" type="Control" parent="MarginContainer/RootVBox/VS_Main_Assets/AssetsPanel/AssetTabSplit/AssetsTabBar/Row_Sound"]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(64, 72)
+layout_mode = 2
+mouse_filter = 1
+
+[node name="PanelShadow_Sound" type="Panel" parent="MarginContainer/RootVBox/VS_Main_Assets/AssetsPanel/AssetTabSplit/AssetsTabBar/Row_Sound/TabShell_Sound"]
+unique_name_in_owner = true
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_left = 6.0
+offset_top = 8.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+
+[node name="PanelContainer_SoundTab" type="PanelContainer" parent="MarginContainer/RootVBox/VS_Main_Assets/AssetsPanel/AssetTabSplit/AssetsTabBar/Row_Sound/TabShell_Sound"]
+unique_name_in_owner = true
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_right = -6.0
+offset_bottom = -8.0
+grow_horizontal = 2
+grow_vertical = 2
 theme_override_styles/panel = SubResource("StyleBoxFlat_j2td0")
 
-[node name="Tab_Sound" type="TextureButton" parent="MarginContainer/RootVBox/VS_Main_Assets/AssetsPanel/AssetTabSplit/AssetsTabBar/PanelContainer_SoundTab"]
+[node name="Tab_Sound" type="TextureButton" parent="MarginContainer/RootVBox/VS_Main_Assets/AssetsPanel/AssetTabSplit/AssetsTabBar/Row_Sound/TabShell_Sound/PanelContainer_SoundTab"]
 unique_name_in_owner = true
+modulate = Color(0.152941, 0.160784, 0.160784, 1)
 custom_minimum_size = Vector2(40, 40)
 layout_mode = 2
 size_flags_horizontal = 4
@@ -555,6 +752,14 @@ texture_pressed = ExtResource("3_bgert")
 texture_hover = ExtResource("8_qwge4")
 ignore_texture_size = true
 stretch_mode = 0
+
+[node name="PadRight_Sound" type="Control" parent="MarginContainer/RootVBox/VS_Main_Assets/AssetsPanel/AssetTabSplit/AssetsTabBar/Row_Sound"]
+layout_mode = 2
+size_flags_horizontal = 3
+
+[node name="SpacerBottom" type="Control" parent="MarginContainer/RootVBox/VS_Main_Assets/AssetsPanel/AssetTabSplit/AssetsTabBar"]
+layout_mode = 2
+size_flags_vertical = 3
 
 [node name="AssetsTab" type="TabContainer" parent="MarginContainer/RootVBox/VS_Main_Assets/AssetsPanel/AssetTabSplit"]
 unique_name_in_owner = true
@@ -615,13 +820,14 @@ script = ExtResource("5_gcset")
 
 [node name="DragIndicatorLabel" type="Label" parent="MarginContainer/RootVBox/VS_Main_Assets/AssetsPanel/AssetTabSplit/AssetsTab/MarginContainer/TabPage_Sprites/List_Sprites"]
 unique_name_in_owner = true
-layout_mode = 0
-offset_left = 220.0
-offset_top = 44.0
-offset_right = 569.0
-offset_bottom = 99.0
-theme_override_colors/font_color = Color(1, 1, 1, 0.215686)
-theme_override_fonts/font = ExtResource("16_sue0p")
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+theme_override_colors/font_color = Color(0.286275, 0.278431, 0.52549, 0.376471)
+theme_override_fonts/font = ExtResource("22_oqp5p")
 theme_override_font_sizes/font_size = 40
 text = "Drag Sprites Here"
 horizontal_alignment = 1
@@ -679,14 +885,16 @@ fixed_icon_size = Vector2i(20, 20)
 script = ExtResource("17_4rsy7")
 audio_icon = ExtResource("18_srjvv")
 
-[node name="DragIndicatorLabel" type="Label" parent="MarginContainer/RootVBox/VS_Main_Assets/AssetsPanel/AssetTabSplit/AssetsTab/MarginContainer2/TabPage_Sound/List_Sound"]
-layout_mode = 0
-offset_left = 220.0
-offset_top = 44.0
-offset_right = 569.0
-offset_bottom = 99.0
-theme_override_colors/font_color = Color(1, 1, 1, 0.215686)
-theme_override_fonts/font = ExtResource("16_sue0p")
+[node name="DragIndicatorLabel_Sound" type="Label" parent="MarginContainer/RootVBox/VS_Main_Assets/AssetsPanel/AssetTabSplit/AssetsTab/MarginContainer2/TabPage_Sound/List_Sound"]
+unique_name_in_owner = true
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+theme_override_colors/font_color = Color(0.286275, 0.278431, 0.52549, 0.376471)
+theme_override_fonts/font = ExtResource("22_oqp5p")
 theme_override_font_sizes/font_size = 40
 text = "Drag Sounds Here"
 horizontal_alignment = 1
@@ -713,16 +921,17 @@ title = "Add Tag"
 position = Vector2i(0, 36)
 size = Vector2i(160, 150)
 visible = false
+theme = ExtResource("2_o2a2a")
 
 [node name="MarginContainer" type="MarginContainer" parent="Win_AddTag"]
 anchors_preset = 15
 anchor_right = 1.0
 anchor_bottom = 1.0
 theme = ExtResource("2_o2a2a")
-theme_override_constants/margin_left = 5
-theme_override_constants/margin_top = 5
-theme_override_constants/margin_right = 5
-theme_override_constants/margin_bottom = 5
+theme_override_constants/margin_left = 15
+theme_override_constants/margin_top = 15
+theme_override_constants/margin_right = 15
+theme_override_constants/margin_bottom = 15
 
 [node name="VBoxContainer" type="VBoxContainer" parent="Win_AddTag/MarginContainer"]
 layout_mode = 2
@@ -767,6 +976,7 @@ title = "Import Sprites"
 size = Vector2i(400, 300)
 visible = false
 min_size = Vector2i(400, 300)
+theme = ExtResource("2_o2a2a")
 script = ExtResource("25_4ihhd")
 
 [node name="MarginContainer" type="MarginContainer" parent="SpritesheetDialog"]
@@ -774,10 +984,10 @@ anchors_preset = 15
 anchor_right = 1.0
 anchor_bottom = 1.0
 theme = ExtResource("2_o2a2a")
-theme_override_constants/margin_left = 10
-theme_override_constants/margin_top = 10
-theme_override_constants/margin_right = 10
-theme_override_constants/margin_bottom = 10
+theme_override_constants/margin_left = 20
+theme_override_constants/margin_top = 20
+theme_override_constants/margin_right = 20
+theme_override_constants/margin_bottom = 20
 
 [node name="VBoxContainer" type="VBoxContainer" parent="SpritesheetDialog/MarginContainer"]
 layout_mode = 2

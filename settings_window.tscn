@@ -1,6 +1,19 @@
-[gd_scene load_steps=2 format=3 uid="uid://ddum0qkw4vig0"]
+[gd_scene load_steps=4 format=3 uid="uid://ddum0qkw4vig0"]
 
 [ext_resource type="Script" path="res://Scenes/SettingsWindow.gd" id="1_gaj2e"]
+[ext_resource type="Theme" uid="uid://b4eob2ew7phm" path="res://Assets/theme_1.tres" id="2_hf6wx"]
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_settings_popup"]
+bg_color = Color(1, 1, 1, 1)
+border_width_left = 2
+border_width_top = 2
+border_width_right = 2
+border_width_bottom = 2
+border_color = Color(0.152941, 0.160784, 0.160784, 1)
+corner_radius_top_left = 6
+corner_radius_top_right = 6
+corner_radius_bottom_right = 6
+corner_radius_bottom_left = 6
 
 [node name="SettingsWindow" type="Window"]
 title = "Settings"
@@ -8,6 +21,7 @@ position = Vector2i(0, 36)
 size = Vector2i(400, 220)
 content_scale_mode = 2
 content_scale_aspect = 4
+theme = ExtResource("2_hf6wx")
 script = ExtResource("1_gaj2e")
 
 [node name="MarginContainer" type="MarginContainer" parent="."]
@@ -19,69 +33,76 @@ theme_override_constants/margin_top = 10
 theme_override_constants/margin_right = 10
 theme_override_constants/margin_bottom = 10
 
-[node name="VBoxContainer" type="VBoxContainer" parent="MarginContainer"]
+[node name="PanelContainer" type="PanelContainer" parent="MarginContainer"]
+layout_mode = 2
+size_flags_horizontal = 3
+size_flags_vertical = 3
+theme_override_styles/panel = SubResource("StyleBoxFlat_settings_popup")
+
+[node name="VBoxContainer" type="VBoxContainer" parent="MarginContainer/PanelContainer"]
 layout_mode = 2
 
-[node name="HBoxContainer" type="HBoxContainer" parent="MarginContainer/VBoxContainer"]
+[node name="HBoxContainer" type="HBoxContainer" parent="MarginContainer/PanelContainer/VBoxContainer"]
 layout_mode = 2
 
-[node name="Label" type="Label" parent="MarginContainer/VBoxContainer/HBoxContainer"]
+[node name="Label" type="Label" parent="MarginContainer/PanelContainer/VBoxContainer/HBoxContainer"]
 layout_mode = 2
 text = "Grid Cell Size"
 
-[node name="Spin_CellSize" type="SpinBox" parent="MarginContainer/VBoxContainer/HBoxContainer"]
+[node name="Spin_CellSize" type="SpinBox" parent="MarginContainer/PanelContainer/VBoxContainer/HBoxContainer"]
 unique_name_in_owner = true
 layout_mode = 2
 
-[node name="HBoxContainer2" type="HBoxContainer" parent="MarginContainer/VBoxContainer"]
+[node name="HBoxContainer2" type="HBoxContainer" parent="MarginContainer/PanelContainer/VBoxContainer"]
 layout_mode = 2
 
-[node name="Label" type="Label" parent="MarginContainer/VBoxContainer/HBoxContainer2"]
+[node name="Label" type="Label" parent="MarginContainer/PanelContainer/VBoxContainer/HBoxContainer2"]
 layout_mode = 2
 text = "Preview FPS"
 
-[node name="Spin_PreviewFPS" type="SpinBox" parent="MarginContainer/VBoxContainer/HBoxContainer2"]
+[node name="Spin_PreviewFPS" type="SpinBox" parent="MarginContainer/PanelContainer/VBoxContainer/HBoxContainer2"]
 unique_name_in_owner = true
 layout_mode = 2
 
-[node name="HBoxContainerRepo" type="HBoxContainer" parent="MarginContainer/VBoxContainer"]
+[node name="HBoxContainerRepo" type="HBoxContainer" parent="MarginContainer/PanelContainer/VBoxContainer"]
 layout_mode = 2
 
-[node name="Label" type="Label" parent="MarginContainer/VBoxContainer/HBoxContainerRepo"]
+[node name="Label" type="Label" parent="MarginContainer/PanelContainer/VBoxContainer/HBoxContainerRepo"]
 layout_mode = 2
 text = "Game Repo Path"
 
-[node name="LineEdit_RepoPath" type="LineEdit" parent="MarginContainer/VBoxContainer/HBoxContainerRepo"]
+[node name="LineEdit_RepoPath" type="LineEdit" parent="MarginContainer/PanelContainer/VBoxContainer/HBoxContainerRepo"]
 unique_name_in_owner = true
 layout_mode = 2
 size_flags_horizontal = 3
 
-[node name="Btn_BrowseRepo" type="Button" parent="MarginContainer/VBoxContainer/HBoxContainerRepo"]
+[node name="Btn_BrowseRepo" type="Button" parent="MarginContainer/PanelContainer/VBoxContainer/HBoxContainerRepo"]
 unique_name_in_owner = true
 layout_mode = 2
 text = "Browse..."
 
-[node name="BottomSpacer" type="Control" parent="MarginContainer/VBoxContainer"]
+[node name="BottomSpacer" type="Control" parent="MarginContainer/PanelContainer/VBoxContainer"]
 layout_mode = 2
 size_flags_vertical = 3
 
-[node name="HBoxContainer3" type="HBoxContainer" parent="MarginContainer/VBoxContainer"]
+[node name="HBoxContainer3" type="HBoxContainer" parent="MarginContainer/PanelContainer/VBoxContainer"]
 layout_mode = 2
 alignment = 2
 
-[node name="Spacer" type="Control" parent="MarginContainer/VBoxContainer/HBoxContainer3"]
+[node name="Spacer" type="Control" parent="MarginContainer/PanelContainer/VBoxContainer/HBoxContainer3"]
 layout_mode = 2
 size_flags_horizontal = 3
 
-[node name="Btn_SettingsApply" type="Button" parent="MarginContainer/VBoxContainer/HBoxContainer3"]
+[node name="Btn_SettingsApply" type="Button" parent="MarginContainer/PanelContainer/VBoxContainer/HBoxContainer3"]
 unique_name_in_owner = true
 layout_mode = 2
 text = "Apply"
 
-[node name="Btn_SettingsCancel" type="Button" parent="MarginContainer/VBoxContainer/HBoxContainer3"]
+[node name="Btn_SettingsCancel" type="Button" parent="MarginContainer/PanelContainer/VBoxContainer/HBoxContainer3"]
 unique_name_in_owner = true
 layout_mode = 2
 text = "Cancel"
 
 [node name="FD_RepoDir" type="FileDialog" parent="."]
 size = Vector2i(392, 159)
+theme = ExtResource("2_hf6wx")

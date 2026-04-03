@@ -1,32 +1,42 @@
 extends Window
 class_name SettingsWindow
 
-signal settings_applied(grid_cell_size: int, preview_fps: float, repo_path: String)
+signal settings_applied(grid_cell_size: int, preview_fps: float, repo_path: String, ui_scale: float)
 
-@onready var spin_cell_size: SpinBox = %Spin_CellSize
-@onready var spin_preview_fps: SpinBox = %Spin_PreviewFPS
-@onready var line_repo_path: LineEdit = %LineEdit_RepoPath
-@onready var btn_browse_repo: Button = %Btn_BrowseRepo
+@onready var spin_cell_size: SpinBox = get_node_or_null("MarginContainer/PanelContainer/VBoxContainer/HBoxContainer/Spin_CellSize")
+@onready var spin_preview_fps: SpinBox = get_node_or_null("MarginContainer/PanelContainer/VBoxContainer/HBoxContainer2/Spin_PreviewFPS")
+@onready var spin_ui_scale: SpinBox = get_node_or_null("MarginContainer/PanelContainer/VBoxContainer/HBoxContainerUIScale/Spin_UIScale")
+@onready var content_vbox: VBoxContainer = get_node_or_null("MarginContainer/PanelContainer/VBoxContainer")
+@onready var repo_row: HBoxContainer = get_node_or_null("MarginContainer/PanelContainer/VBoxContainer/HBoxContainerRepo")
+@onready var line_repo_path: LineEdit = get_node_or_null("MarginContainer/PanelContainer/VBoxContainer/HBoxContainerRepo/LineEdit_RepoPath")
+@onready var btn_browse_repo: Button = get_node_or_null("MarginContainer/PanelContainer/VBoxContainer/HBoxContainerRepo/Btn_BrowseRepo")
 
-@onready var btn_cancel: Button = %Btn_SettingsCancel
-@onready var btn_apply: Button = %Btn_SettingsApply
+@onready var btn_cancel: Button = get_node_or_null("MarginContainer/PanelContainer/VBoxContainer/HBoxContainer3/Btn_SettingsCancel")
+@onready var btn_apply: Button = get_node_or_null("MarginContainer/PanelContainer/VBoxContainer/HBoxContainer3/Btn_SettingsApply")
 @onready var fd_repo_dir: FileDialog = $FD_RepoDir
 
 func _ready() -> void:
-	btn_cancel.pressed.connect(_on_cancel_pressed)
-	btn_apply.pressed.connect(_on_apply_pressed)
+	_ensure_ui_scale_row()
+	call_deferred("_fit_to_contents")
+
+	fd_repo_dir.theme = theme
+	if btn_cancel:
+		btn_cancel.pressed.connect(_on_cancel_pressed)
+	if btn_apply:
+		btn_apply.pressed.connect(_on_apply_pressed)
 	close_requested.connect(_on_cancel_pressed)
 
 	# Browse for repo folder
-	btn_browse_repo.pressed.connect(func() -> void:
-		fd_repo_dir.file_mode = FileDialog.FILE_MODE_OPEN_DIR
-		fd_repo_dir.access = FileDialog.ACCESS_FILESYSTEM
-		if line_repo_path.text != "":
-			fd_repo_dir.current_dir = line_repo_path.text
-		else:
-			OS.get_environment("HOME")
-		fd_repo_dir.popup_centered_ratio(0.75)
-	)
+	if btn_browse_repo:
+		btn_browse_repo.pressed.connect(func() -> void:
+			fd_repo_dir.file_mode = FileDialog.FILE_MODE_OPEN_DIR
+			fd_repo_dir.access = FileDialog.ACCESS_FILESYSTEM
+			if line_repo_path and line_repo_path.text != "":
+				fd_repo_dir.current_dir = line_repo_path.text
+			else:
+				OS.get_environment("HOME")
+			fd_repo_dir.popup_centered_ratio(0.75)
+		)
 
 	fd_repo_dir.dir_selected.connect(func(path: String) -> void:
 		line_repo_path.text = path
@@ -36,13 +46,64 @@ func _on_cancel_pressed() -> void:
 	hide()
 
 func _on_apply_pressed() -> void:
-	var cell_size: int = int(spin_cell_size.value)
-	var fps: float = float(spin_preview_fps.value)
-	var repo: String = line_repo_path.text.strip_edges()
-	settings_applied.emit(cell_size, fps, repo)
+	var cell_size: int = int(spin_cell_size.value) if spin_cell_size else 0
+	var fps: float = float(spin_preview_fps.value) if spin_preview_fps else 0.0
+	var repo: String = line_repo_path.text.strip_edges() if line_repo_path else ""
+	var ui_scale: float = float(spin_ui_scale.value) if spin_ui_scale else AppState.get_ui_scale()
+	settings_applied.emit(cell_size, fps, repo, ui_scale)
 	hide()
 
-func set_current_values(grid_cell_size: int, preview_fps: float, repo_path: String) -> void:
-	spin_cell_size.value = grid_cell_size
-	spin_preview_fps.value = preview_fps
-	line_repo_path.text = repo_path
+func set_current_values(grid_cell_size: int, preview_fps: float, repo_path: String, ui_scale: float) -> void:
+	if spin_cell_size:
+		spin_cell_size.value = grid_cell_size
+	if spin_preview_fps:
+		spin_preview_fps.value = preview_fps
+	if line_repo_path:
+		line_repo_path.text = repo_path
+	if spin_ui_scale:
+		spin_ui_scale.value = ui_scale
+
+func _ensure_ui_scale_row() -> void:
+	if spin_ui_scale != null:
+		return
+	if content_vbox == null:
+		push_warning("SettingsWindow is missing its content VBoxContainer; UI scale control could not be created.")
+		return
+
+	var row := HBoxContainer.new()
+	row.name = "HBoxContainerUIScale"
+
+	var label := Label.new()
+	label.name = "LabelUIScale"
+	label.text = "UI Scale"
+	row.add_child(label)
+
+	spin_ui_scale = SpinBox.new()
+	spin_ui_scale.name = "Spin_UIScale"
+	spin_ui_scale.custom_minimum_size = Vector2(120, 0)
+	spin_ui_scale.min_value = 0.75
+	spin_ui_scale.max_value = 1.75
+	spin_ui_scale.step = 0.05
+	spin_ui_scale.value = AppState.get_ui_scale()
+	row.add_child(spin_ui_scale)
+
+	var hint := Label.new()
+	hint.name = "LabelUIScaleHint"
+	hint.text = "1.0 = default"
+	hint.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	row.add_child(hint)
+
+	if repo_row and repo_row.get_parent() == content_vbox:
+		var repo_index := repo_row.get_index()
+		content_vbox.add_child(row)
+		content_vbox.move_child(row, repo_index)
+	else:
+		content_vbox.add_child(row)
+
+func _fit_to_contents() -> void:
+	if content_vbox == null:
+		return
+	content_vbox.reset_size()
+	var min_size := content_vbox.get_combined_minimum_size()
+	size.x = max(size.x, int(ceil(min_size.x)) + 56)
+	size.y = max(size.y, int(ceil(min_size.y)) + 96)
