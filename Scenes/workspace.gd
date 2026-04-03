@@ -94,6 +94,23 @@ var _asset_tab_shadow_style: StyleBoxFlat
 
 @onready var btn_export: Button = %Btn_Export
 @onready var lbl_export_status: Label = %Label_Export_Status
+@onready var inspector_section_animation_info: Button = %SectionButton_AnimationInfo
+@onready var inspector_section_playback: Button = %SectionButton_PlaybackSettings
+@onready var inspector_section_sound: Button = %SectionButton_SoundSettings
+@onready var inspector_section_metadata: Button = %SectionButton_Metadata
+@onready var inspector_section_destination: Button = %SectionButton_Destination
+@onready var inspector_section_anim_name: Button = %SectionButton_AnimName
+@onready var inspector_section_format: Button = %SectionButton_Format
+@onready var inspector_section_options: Button = %SectionButton_Options
+
+@onready var inspector_content_animation_info: Control = %SectionContent_AnimationInfo
+@onready var inspector_content_playback: Control = %SectionContent_PlaybackSettings
+@onready var inspector_content_sound: Control = %SectionContent_SoundSettings
+@onready var inspector_content_metadata: Control = %SectionContent_Metadata
+@onready var inspector_content_destination: Control = %SectionContent_Destination
+@onready var inspector_content_anim_name: Control = %SectionContent_AnimName
+@onready var inspector_content_format: Control = %SectionContent_Format
+@onready var inspector_content_options: Control = %SectionContent_Options
 
 var preview_fps: float = 8.0
 var export_repo_path: String = ""   # Godot project / destination repo
@@ -149,6 +166,7 @@ func _ready() -> void:
 
 	_wire_sprite_import_ui()
 	_wire_sound_import_ui()
+	_setup_inspector_dropdowns()
 
 	_setup_sprite_list()
 	_setup_sound_list()
@@ -241,6 +259,44 @@ func _ready() -> void:
 
 func _on_workspace_resized() -> void:
 	call_deferred("_apply_workspace_layout")
+
+
+func _setup_inspector_dropdowns() -> void:
+	var sections: Array[Array] = [
+		[inspector_section_animation_info, inspector_content_animation_info, "Animation Info"],
+		[inspector_section_playback, inspector_content_playback, "Playback Settings"],
+		[inspector_section_sound, inspector_content_sound, "Sound Settings"],
+		[inspector_section_metadata, inspector_content_metadata, "Metadata"],
+		[inspector_section_destination, inspector_content_destination, "Destination"],
+		[inspector_section_anim_name, inspector_content_anim_name, "Animation Name"],
+		[inspector_section_format, inspector_content_format, "Export Format"],
+		[inspector_section_options, inspector_content_options, "Options"],
+	]
+
+	for section in sections:
+		var button := section[0] as Button
+		var content := section[1] as Control
+		var label := String(section[2])
+		if button == null or content == null:
+			continue
+
+		button.toggle_mode = true
+		button.button_pressed = false
+		var toggle_callable := Callable(self, "_on_inspector_section_toggled").bind(button, content, label)
+		if not button.toggled.is_connected(toggle_callable):
+			button.toggled.connect(toggle_callable)
+		_set_inspector_section_state(button, content, label, false)
+
+
+func _on_inspector_section_toggled(pressed: bool, button: Button, content: Control, label: String) -> void:
+	_set_inspector_section_state(button, content, label, pressed)
+
+
+func _set_inspector_section_state(button: Button, content: Control, label: String, is_open: bool) -> void:
+	if button == null or content == null:
+		return
+	button.text = "%s %s" % ["v" if is_open else ">", label]
+	content.visible = is_open
 
 
 func _apply_workspace_window_mode() -> void:
