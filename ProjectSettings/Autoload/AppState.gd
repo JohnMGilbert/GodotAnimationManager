@@ -2,12 +2,18 @@
 extends Node
 
 const MAX_RECENTS  := 12
+const DEFAULT_UI_SCALE := 1.0
+const MIN_UI_SCALE := 0.75
+const MAX_UI_SCALE := 1.75
 
 const CONFIG_PATH := "user://settings.cfg"
 const AnimationProjectSchema = preload("res://ProjectSettings/AnimationProjectSchema.gd")
 
+signal ui_scale_changed(ui_scale: float)
+
 var recents: Array[String] = []
 var last_project_dir: String = ""   # absolute dir that holds .aam files
+var ui_scale: float = DEFAULT_UI_SCALE
 
 func _ready() -> void:
 	_load_settings()
@@ -18,14 +24,17 @@ func _load_settings() -> void:
 	if err == OK:
 		recents = _normalize_string_array(cfg.get_value("general", "recents", []))
 		last_project_dir = String(cfg.get_value("general", "last_project_dir", ""))
+		ui_scale = _sanitize_ui_scale(float(cfg.get_value("general", "ui_scale", DEFAULT_UI_SCALE)))
 	else:
 		recents = []
 		last_project_dir = ""
+		ui_scale = DEFAULT_UI_SCALE
 
 func _save_settings() -> void:
 	var cfg := ConfigFile.new()
 	cfg.set_value("general", "recents", recents)
 	cfg.set_value("general", "last_project_dir", last_project_dir)
+	cfg.set_value("general", "ui_scale", ui_scale)
 	cfg.save(CONFIG_PATH)
 
 func get_recents() -> Array[String]:
@@ -55,6 +64,17 @@ func set_last_project_dir(dir: String) -> void:
 
 func get_last_project_dir() -> String:
 	return last_project_dir
+
+func get_ui_scale() -> float:
+	return ui_scale
+
+func set_ui_scale(value: float) -> void:
+	var sanitized := _sanitize_ui_scale(value)
+	if is_equal_approx(ui_scale, sanitized):
+		return
+	ui_scale = sanitized
+	_save_settings()
+	ui_scale_changed.emit(ui_scale)
 
 func create_new_project(path: String) -> Error:
 	var data := AnimationProjectSchema.create_empty_project(path.get_file().get_basename())
@@ -89,3 +109,6 @@ func _normalize_string_array(raw: Variant) -> Array[String]:
 			if value is String:
 				out.append(value)
 	return out
+
+func _sanitize_ui_scale(value: float) -> float:
+	return snappedf(clampf(value, MIN_UI_SCALE, MAX_UI_SCALE), 0.05)

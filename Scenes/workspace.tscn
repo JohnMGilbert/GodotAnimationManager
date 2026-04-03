@@ -32,11 +32,14 @@ border_width_left = 2
 border_width_top = 2
 border_width_right = 2
 border_width_bottom = 2
-border_color = Color(0.152941, 0.160784, 0.160784, 1)
+border_color = Color(0.286275, 0.278431, 0.52549, 1)
 corner_radius_top_left = 20
 corner_radius_top_right = 20
 corner_radius_bottom_right = 20
 corner_radius_bottom_left = 20
+shadow_color = Color(0, 0, 0, 0.423529)
+shadow_size = 2
+shadow_offset = Vector2(2, 2)
 
 [sub_resource type="StyleBoxFlat" id="StyleBoxFlat_nkv7g"]
 bg_color = Color(0.768627, 0.745098, 0.733333, 1)
@@ -168,6 +171,7 @@ stretch_mode = 0
 unique_name_in_owner = true
 title = "Save New Animation"
 size = Vector2i(200, 100)
+theme = ExtResource("2_o2a2a")
 
 [node name="NewAnimName" type="LineEdit" parent="MarginContainer/RootVBox/VS_Main_Assets/HS_Edit_Sidebar/BuilderPanel/BuilderOverlay/ButtonBar/UnsavedAnimationDialogue"]
 unique_name_in_owner = true
@@ -673,10 +677,10 @@ script = ExtResource("5_gcset")
 [node name="DragIndicatorLabel" type="Label" parent="MarginContainer/RootVBox/VS_Main_Assets/AssetsPanel/AssetTabSplit/AssetsTab/MarginContainer/TabPage_Sprites/List_Sprites"]
 unique_name_in_owner = true
 layout_mode = 0
-offset_left = 220.0
-offset_top = 44.0
-offset_right = 569.0
-offset_bottom = 99.0
+offset_left = 419.0
+offset_top = 291.0
+offset_right = 768.0
+offset_bottom = 346.0
 theme_override_colors/font_color = Color(1, 1, 1, 0.215686)
 theme_override_fonts/font = ExtResource("16_sue0p")
 theme_override_font_sizes/font_size = 40
@@ -770,16 +774,17 @@ title = "Add Tag"
 position = Vector2i(0, 36)
 size = Vector2i(160, 150)
 visible = false
+theme = ExtResource("2_o2a2a")
 
 [node name="MarginContainer" type="MarginContainer" parent="Win_AddTag"]
 anchors_preset = 15
 anchor_right = 1.0
 anchor_bottom = 1.0
 theme = ExtResource("2_o2a2a")
-theme_override_constants/margin_left = 5
-theme_override_constants/margin_top = 5
-theme_override_constants/margin_right = 5
-theme_override_constants/margin_bottom = 5
+theme_override_constants/margin_left = 15
+theme_override_constants/margin_top = 15
+theme_override_constants/margin_right = 15
+theme_override_constants/margin_bottom = 15
 
 [node name="VBoxContainer" type="VBoxContainer" parent="Win_AddTag/MarginContainer"]
 layout_mode = 2
@@ -824,6 +829,7 @@ title = "Import Sprites"
 size = Vector2i(400, 300)
 visible = false
 min_size = Vector2i(400, 300)
+theme = ExtResource("2_o2a2a")
 script = ExtResource("25_4ihhd")
 
 [node name="MarginContainer" type="MarginContainer" parent="SpritesheetDialog"]
@@ -831,10 +837,10 @@ anchors_preset = 15
 anchor_right = 1.0
 anchor_bottom = 1.0
 theme = ExtResource("2_o2a2a")
-theme_override_constants/margin_left = 10
-theme_override_constants/margin_top = 10
-theme_override_constants/margin_right = 10
-theme_override_constants/margin_bottom = 10
+theme_override_constants/margin_left = 20
+theme_override_constants/margin_top = 20
+theme_override_constants/margin_right = 20
+theme_override_constants/margin_bottom = 20
 
 [node name="VBoxContainer" type="VBoxContainer" parent="SpritesheetDialog/MarginContainer"]
 layout_mode = 2

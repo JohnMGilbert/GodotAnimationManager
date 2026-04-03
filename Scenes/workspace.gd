@@ -1,5 +1,7 @@
 extends Control
 const PreviewControllerScript = preload("res://Scenes/PreviewController.gd")
+const WorkspaceTheme = preload("res://Assets/theme_1.tres")
+const UiThemeScalerScript = preload("res://ProjectSettings/UiThemeScaler.gd")
 
 # Target proportions
 const MAIN_VS_FRACTION_TOP := 0.70
@@ -54,7 +56,7 @@ const EDITOR_STATE_FILE := ".aam_editor.json"
 @onready var preview_sprite: AnimatedSprite2D = %PreviewSprite
 
 @onready var btn_builder_settings: TextureButton = %Btn_BuilderSettings
-@onready var settings_window: Window = %SettingsWindow
+@onready var settings_window: SettingsWindow = %SettingsWindow
 
 @onready var le_anim_name: LineEdit = %LineEdit_AnimName
 
@@ -101,12 +103,16 @@ var preview_controller: PreviewController = null
 @onready var btn_tag_cancel: Button       = %Btn_TagCancel
 var current_sprite_tag_filter: String = ""      # "" = no filter / All
 var _pending_tag_asset_ids: PackedStringArray = PackedStringArray()
+var _base_workspace_theme: Theme
+var _scaled_workspace_theme: Theme
 
 func _ready() -> void:
 	# Let the root fill the window, but DO NOT touch child mins or splits
 	set_anchors_preset(Control.PRESET_FULL_RECT)
 	resized.connect(_on_workspace_resized)
 	call_deferred("_apply_workspace_window_mode")
+	_base_workspace_theme = WorkspaceTheme
+	_apply_ui_scale(AppState.get_ui_scale())
 
 	tab_buttons = [tab_sprites_btn, tab_sound_btn]
 	_connect_asset_tabs()
@@ -168,6 +174,7 @@ func _ready() -> void:
 
 	if settings_window:
 		settings_window.settings_applied.connect(_on_settings_applied)
+		settings_window.theme = _scaled_workspace_theme
 
 	if btn_export:
 		btn_export.pressed.connect(_on_export_pressed)
@@ -192,6 +199,8 @@ func _ready() -> void:
 	# Load editor state (animations + settings) from the editor-state file
 	_load_editor_state()
 	call_deferred("_apply_workspace_layout")
+	if not AppState.ui_scale_changed.is_connected(_on_app_ui_scale_changed):
+		AppState.ui_scale_changed.connect(_on_app_ui_scale_changed)
 	
 		## FORCE-ENABLE MASTER BUS FOR DEBUG
 	#var master_idx := AudioServer.get_bus_index("Master")
@@ -324,7 +333,7 @@ func _on_builder_settings_pressed() -> void:
 	print("Pressed settings button")
 	if settings_window:
 		if builder_view:
-			settings_window.set_current_values(builder_view.cell_size, preview_fps, export_repo_path)
+			settings_window.set_current_values(builder_view.cell_size, preview_fps, export_repo_path, AppState.get_ui_scale())
 		settings_window.popup_centered()
 
 func _on_eraser_pressed() -> void:
@@ -344,7 +353,7 @@ func _on_preview_loop_pressed() -> void:
 		preview_controller.set_loop_enabled(btn_preview_loop.button_pressed)
 
 
-func _on_settings_applied(grid_cell_size: int, preview_fps_new: float, repo_path: String) -> void:
+func _on_settings_applied(grid_cell_size: int, preview_fps_new: float, repo_path: String, ui_scale: float) -> void:
 	# Save repo path (even if empty)
 	export_repo_path = repo_path
 
@@ -363,7 +372,37 @@ func _on_settings_applied(grid_cell_size: int, preview_fps_new: float, repo_path
 	if repo_path != "":
 		ProjectModel.set_export_repo(repo_path)
 
+	AppState.set_ui_scale(ui_scale)
+
 	save_editor_state()
+
+func _on_app_ui_scale_changed(ui_scale: float) -> void:
+	_apply_ui_scale(ui_scale)
+
+func _apply_ui_scale(ui_scale: float) -> void:
+	_scaled_workspace_theme = UiThemeScalerScript.build_scaled_theme(_base_workspace_theme, ui_scale)
+	if _scaled_workspace_theme == null:
+		return
+	theme = _scaled_workspace_theme
+	_apply_scaled_theme_to_subtree(self)
+	if settings_window:
+		settings_window.theme = _scaled_workspace_theme
+		if settings_window.fd_repo_dir:
+			settings_window.fd_repo_dir.theme = _scaled_workspace_theme
+
+func _apply_scaled_theme_to_subtree(node: Node) -> void:
+	if node == null:
+		return
+
+	if node is Control:
+		var control := node as Control
+		control.theme = _scaled_workspace_theme
+	elif node is Window:
+		var window := node as Window
+		window.theme = _scaled_workspace_theme
+
+	for child in node.get_children():
+		_apply_scaled_theme_to_subtree(child)
 
 func _prompt_spritesheet_import(path: String) -> void:
 	var img := Image.new()
