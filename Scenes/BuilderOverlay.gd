@@ -1,10 +1,25 @@
+@tool
 extends CanvasLayer
 class_name BuilderOverlay
 
 signal current_animation_dirty_changed(is_dirty: bool)
 
 # --- Node refs ---
+var _button_bar_scale: float = 1.0
+
+@export_range(0.25, 4.0, 0.05) var button_bar_scale: float:
+	get:
+		return _button_bar_scale
+	set(value):
+		_button_bar_scale = max(value, 0.01)
+		_apply_button_bar_scale()
+		_position_overlay_controls()
+
+@onready var button_bar: Control = %ButtonBar
 @onready var builder_grid: BuilderGrid = %BuilderView
+@onready var zoom_controls: Control = %ZoomControls
+@onready var btn_zoom_out: Button = %Btn_ZoomOut
+@onready var btn_zoom_in: Button = %Btn_ZoomIn
 @onready var btn_change_anim: BaseButton = %ChangeAnimation
 @onready var popup_anim_switch: PopupMenu = %AnimationSwitcherPopup
 @onready var btn_save_anim: BaseButton = %SaveAnimation
@@ -25,11 +40,20 @@ var current_animation_idx: int = -1
 
 
 func _ready() -> void:
+	_apply_button_bar_scale()
+	call_deferred("_position_overlay_controls")
+
 	if not builder_grid:
 		push_warning("BuilderOverlay: BuilderView (BuilderGrid) not found. Check %BuilderView reference.")
 
 	if btn_change_anim:
 		btn_change_anim.pressed.connect(_on_change_animation_pressed)
+
+	if btn_zoom_out:
+		btn_zoom_out.pressed.connect(_on_zoom_out_pressed)
+
+	if btn_zoom_in:
+		btn_zoom_in.pressed.connect(_on_zoom_in_pressed)
 
 	if popup_anim_switch:
 		popup_anim_switch.id_pressed.connect(_on_animation_switcher_id_pressed)
@@ -42,10 +66,49 @@ func _ready() -> void:
 
 	if builder_grid:
 		builder_grid.sequences_changed.connect(_on_grid_sequences_changed)
+		builder_grid.resized.connect(_position_overlay_controls)
 
 	_ensure_default_animation()
 	_update_save_icon_state()
 	_rebuild_animation_switcher_menu()
+
+
+func _apply_button_bar_scale() -> void:
+	var target := button_bar if button_bar else get_node_or_null("%ButtonBar") as Control
+	if target == null:
+		return
+
+	target.pivot_offset = Vector2.ZERO
+	target.scale = Vector2.ONE * _button_bar_scale
+
+
+func _position_overlay_controls() -> void:
+	if builder_grid == null:
+		return
+
+	var grid_rect := builder_grid.get_global_rect()
+
+	if button_bar:
+		button_bar.position = grid_rect.position + Vector2(15.0, 14.0)
+
+	if zoom_controls:
+		var zoom_size := zoom_controls.size
+		if zoom_size == Vector2.ZERO:
+			zoom_size = zoom_controls.get_combined_minimum_size()
+		zoom_controls.position = Vector2(
+			grid_rect.end.x - zoom_size.x - 14.0,
+			grid_rect.position.y + 14.0
+		)
+
+
+func _on_zoom_out_pressed() -> void:
+	if builder_grid:
+		builder_grid.zoom_out()
+
+
+func _on_zoom_in_pressed() -> void:
+	if builder_grid:
+		builder_grid.zoom_in()
 
 
 # -------------------------------------------------------------------
@@ -407,4 +470,3 @@ func load_all_animation_data(project_data: Dictionary) -> void:
 
 	_rebuild_animation_switcher_menu()
 	_update_save_icon_state()
-

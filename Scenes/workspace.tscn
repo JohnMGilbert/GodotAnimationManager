@@ -1,4 +1,4 @@
-[gd_scene load_steps=30 format=3 uid="uid://bqa0mw31xhwuj"]
+[gd_scene load_steps=29 format=3 uid="uid://bqa0mw31xhwuj"]
 
 [ext_resource type="Script" path="res://Scenes/workspace.gd" id="1_myusm"]
 [ext_resource type="Texture2D" uid="uid://c8y0qcbbgem6u" path="res://Assets/settings.png" id="2_5myuk"]
@@ -33,9 +33,6 @@ corner_radius_top_right = 20
 corner_radius_bottom_right = 20
 corner_radius_bottom_left = 20
 
-[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_wlmre"]
-bg_color = Color(0.239216, 0.239216, 0.239216, 1)
-
 [sub_resource type="StyleBoxFlat" id="StyleBoxFlat_nkv7g"]
 bg_color = Color(0.4, 0.4, 0.4, 1)
 
@@ -49,6 +46,7 @@ anchor_right = 1.0
 anchor_bottom = 1.0
 grow_horizontal = 2
 grow_vertical = 2
+theme = ExtResource("2_o2a2a")
 script = ExtResource("1_myusm")
 sprite_icon_size = 48
 
@@ -93,16 +91,20 @@ script = ExtResource("2_fn6k4")
 grid_color = Color(0.219608, 0.219608, 0.25098, 0.156863)
 major_grid_color = Color(0.34902, 0.34902, 0.4, 0.4)
 sound_icon = ExtResource("18_srjvv")
+pan_gesture_speed = 8.0
 
 [node name="BuilderOverlay" type="CanvasLayer" parent="MarginContainer/RootVBox/VS_Main_Assets/HS_Edit_Sidebar/BuilderPanel"]
 unique_name_in_owner = true
 script = ExtResource("4_txkii")
+button_bar_scale = 2.0
 
 [node name="ButtonBar" type="Panel" parent="MarginContainer/RootVBox/VS_Main_Assets/HS_Edit_Sidebar/BuilderPanel/BuilderOverlay"]
-offset_left = 15.0
-offset_top = 14.0
-offset_right = 52.0
-offset_bottom = 163.0
+unique_name_in_owner = true
+offset_left = 29.0
+offset_top = 28.0
+offset_right = 66.0
+offset_bottom = 177.0
+scale = Vector2(2, 2)
 theme_override_styles/panel = SubResource("StyleBoxFlat_f0813")
 
 [node name="Btn_BuilderSettings" type="TextureButton" parent="MarginContainer/RootVBox/VS_Main_Assets/HS_Edit_Sidebar/BuilderPanel/BuilderOverlay/ButtonBar"]
@@ -169,6 +171,31 @@ scale = Vector2(0.06, 0.06)
 texture_normal = ExtResource("13_c6k6f")
 texture_hover = ExtResource("12_6f4oy")
 
+[node name="ZoomControls" type="HBoxContainer" parent="MarginContainer/RootVBox/VS_Main_Assets/HS_Edit_Sidebar/BuilderPanel/BuilderOverlay"]
+unique_name_in_owner = true
+anchors_preset = 1
+anchor_left = 1.0
+anchor_right = 1.0
+offset_left = -682.0
+offset_top = 28.0
+offset_right = -598.0
+offset_bottom = 64.0
+theme = ExtResource("2_o2a2a")
+
+[node name="Btn_ZoomOut" type="Button" parent="MarginContainer/RootVBox/VS_Main_Assets/HS_Edit_Sidebar/BuilderPanel/BuilderOverlay/ZoomControls"]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(36, 36)
+layout_mode = 2
+tooltip_text = "Zoom Out"
+text = "-"
+
+[node name="Btn_ZoomIn" type="Button" parent="MarginContainer/RootVBox/VS_Main_Assets/HS_Edit_Sidebar/BuilderPanel/BuilderOverlay/ZoomControls"]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(36, 36)
+layout_mode = 2
+tooltip_text = "Zoom In"
+text = "+"
+
 [node name="VS_Preview_Inspector" type="VSplitContainer" parent="MarginContainer/RootVBox/VS_Main_Assets/HS_Edit_Sidebar"]
 unique_name_in_owner = true
 layout_mode = 2
@@ -232,11 +259,9 @@ unique_name_in_owner = true
 custom_minimum_size = Vector2(260, 220)
 layout_mode = 2
 size_flags_vertical = 3
-theme_override_styles/panel = SubResource("StyleBoxFlat_wlmre")
 
 [node name="InspectorTabs" type="TabContainer" parent="MarginContainer/RootVBox/VS_Main_Assets/HS_Edit_Sidebar/VS_Preview_Inspector/InspectorPanel"]
 layout_mode = 2
-theme = ExtResource("2_o2a2a")
 
 [node name="Properties" type="ScrollContainer" parent="MarginContainer/RootVBox/VS_Main_Assets/HS_Edit_Sidebar/VS_Preview_Inspector/InspectorPanel/InspectorTabs"]
 layout_mode = 2
