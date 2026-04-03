@@ -17,8 +17,12 @@ const FALLBACK_MIN_PREVIEW   := Vector2i(320, 200)
 const FALLBACK_MIN_INSPECTOR := Vector2i(320, 280)
 const FALLBACK_MIN_ASSETS    := Vector2i(400, 180)
 
-const TAB_BG_NORMAL  := Color("#3D3D3D")    # Dark grey
-const TAB_BG_ACTIVE  := Color("#666666")    # Blue-ish highlight
+const ASSET_TAB_BORDER_RAISED := Color(1, 1, 1, 0.34)
+const ASSET_TAB_BORDER_PRESSED := Color(0, 0, 0, 0.28)
+const ASSET_TAB_SHADOW_RAISED := Color(0, 0, 0, 0.42)
+const ASSET_TAB_SHADOW_PRESSED := Color(0, 0, 0, 0.18)
+const ASSET_TAB_ICON_RAISED := Color(0.152941, 0.160784, 0.160784, 1)
+const ASSET_TAB_ICON_PRESSED := Color(0.152941, 0.160784, 0.160784, 0.70)
 
 # Editor-state file (lives alongside the .aam in the project dir)
 const EDITOR_STATE_FILE := ".aam_editor.json"
@@ -36,9 +40,14 @@ const EDITOR_STATE_FILE := ".aam_editor.json"
 @onready var assets_tabs: TabContainer = %AssetsTab
 
 # --- Assets vertical tabs (Sprites / Sound) ---
+@onready var tab_sprites_panel: PanelContainer = %PanelContainer_SpritesTab
+@onready var tab_sound_panel: PanelContainer = %PanelContainer_SoundTab
 @onready var tab_sprites_btn: TextureButton   = %Tab_Sprites
 @onready var tab_sound_btn: TextureButton     = %Tab_Sound
 @onready var tab_buttons: Array[TextureButton] = []
+@onready var tab_panels: Array[PanelContainer] = []
+var _asset_tab_style_raised: StyleBoxFlat
+var _asset_tab_style_pressed: StyleBoxFlat
 
 # Sprites UI
 @onready var list_sprites: ItemList      = %List_Sprites
@@ -116,6 +125,8 @@ func _ready() -> void:
 	_apply_ui_scale(AppState.get_ui_scale())
 
 	tab_buttons = [tab_sprites_btn, tab_sound_btn]
+	tab_panels = [tab_sprites_panel, tab_sound_panel]
+	_build_asset_tab_styles()
 	_connect_asset_tabs()
 	_select_asset_tab(0)
 
@@ -441,6 +452,56 @@ func _connect_asset_tabs() -> void:
 		b.pressed.connect(func(idx := i) -> void:
 			_select_asset_tab(idx))
 
+	for i in tab_panels.size():
+		var panel: PanelContainer = tab_panels[i]
+		panel.mouse_default_cursor_shape = Control.CURSOR_POINTING_HAND
+		panel.gui_input.connect(func(event: InputEvent, idx := i) -> void:
+			if event is InputEventMouseButton and event.button_index == MOUSE_BUTTON_LEFT and event.pressed:
+				_select_asset_tab(idx))
+
+
+func _build_asset_tab_styles() -> void:
+	var base_style := tab_sprites_panel.get_theme_stylebox("panel") as StyleBoxFlat
+	if base_style == null:
+		base_style = StyleBoxFlat.new()
+
+	_asset_tab_style_raised = _make_asset_tab_style(base_style, true)
+	_asset_tab_style_pressed = _make_asset_tab_style(base_style, false)
+
+
+func _make_asset_tab_style(base_style: StyleBoxFlat, is_selected: bool) -> StyleBoxFlat:
+	var style := base_style.duplicate() as StyleBoxFlat
+	if style == null:
+		style = StyleBoxFlat.new()
+
+	style.border_width_left = 2
+	style.border_width_top = 2
+	style.border_width_right = 2
+	style.border_width_bottom = 2
+
+	if is_selected:
+		style.bg_color = base_style.bg_color.lightened(0.16)
+		style.border_color = ASSET_TAB_BORDER_RAISED
+		style.shadow_color = ASSET_TAB_SHADOW_RAISED
+		style.shadow_size = 8
+		style.shadow_offset = Vector2(3, 4)
+		style.content_margin_left = 1
+		style.content_margin_top = 0
+		style.content_margin_right = 0
+		style.content_margin_bottom = 2
+	else:
+		style.bg_color = base_style.bg_color.darkened(0.18)
+		style.border_color = ASSET_TAB_BORDER_PRESSED
+		style.shadow_color = ASSET_TAB_SHADOW_PRESSED
+		style.shadow_size = 1
+		style.shadow_offset = Vector2(0, 1)
+		style.content_margin_left = 0
+		style.content_margin_top = 2
+		style.content_margin_right = 1
+		style.content_margin_bottom = 0
+
+	return style
+
 
 func _select_asset_tab(index: int) -> void:
 	var max_index: int = assets_tabs.get_tab_count() - 1
@@ -449,13 +510,14 @@ func _select_asset_tab(index: int) -> void:
 	for j in tab_buttons.size():
 		var btn := tab_buttons[j]
 		btn.button_pressed = (j == index)
+		btn.modulate = ASSET_TAB_ICON_RAISED if j == index else ASSET_TAB_ICON_PRESSED
 
-		var tab_panel := btn.get_parent() as PanelContainer
+		var tab_panel := tab_panels[j] if j < tab_panels.size() else btn.get_parent() as PanelContainer
 		if tab_panel:
 			if j == index:
-				tab_panel.add_theme_color_override("panel", TAB_BG_ACTIVE)
+				tab_panel.add_theme_stylebox_override("panel", _asset_tab_style_raised)
 			else:
-				tab_panel.remove_theme_color_override("panel")
+				tab_panel.add_theme_stylebox_override("panel", _asset_tab_style_pressed)
 
 	assets_tabs.current_tab = index
 	print("Index for asset tab is: ", index)

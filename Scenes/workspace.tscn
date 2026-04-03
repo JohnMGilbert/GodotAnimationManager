@@ -42,10 +42,22 @@ shadow_size = 2
 shadow_offset = Vector2(2, 2)
 
 [sub_resource type="StyleBoxFlat" id="StyleBoxFlat_nkv7g"]
-bg_color = Color(0.768627, 0.745098, 0.733333, 1)
+bg_color = Color(0.603922, 0.133333, 0.341176, 1)
+corner_radius_top_left = 12
+corner_radius_top_right = 12
+corner_radius_bottom_right = 12
+corner_radius_bottom_left = 12
+shadow_size = 2
+shadow_offset = Vector2(2, 2)
 
 [sub_resource type="StyleBoxFlat" id="StyleBoxFlat_j2td0"]
-bg_color = Color(0.768627, 0.745098, 0.733333, 1)
+bg_color = Color(0.603922, 0.133333, 0.341176, 1)
+corner_radius_top_left = 12
+corner_radius_top_right = 12
+corner_radius_bottom_right = 12
+corner_radius_bottom_left = 12
+shadow_size = 2
+shadow_offset = Vector2(2, 2)
 
 [node name="Workspace" type="Control"]
 layout_mode = 3
@@ -571,13 +583,16 @@ layout_direction = 2
 layout_mode = 2
 size_flags_horizontal = 3
 size_flags_vertical = 3
+theme_override_constants/separation = 200
 collapsed = true
 dragger_visibility = 2
 
 [node name="AssetsTabBar" type="VBoxContainer" parent="MarginContainer/RootVBox/VS_Main_Assets/AssetsPanel/AssetTabSplit"]
 unique_name_in_owner = true
+z_index = 2
 custom_minimum_size = Vector2(60, 2.08165e-12)
 layout_mode = 2
+theme_override_constants/separation = 40
 
 [node name="PanelContainer_SpritesTab" type="PanelContainer" parent="MarginContainer/RootVBox/VS_Main_Assets/AssetsPanel/AssetTabSplit/AssetsTabBar"]
 unique_name_in_owner = true
