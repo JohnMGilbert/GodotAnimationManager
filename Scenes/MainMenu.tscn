@@ -1,20 +1,27 @@
-[gd_scene load_steps=6 format=3 uid="uid://co8jp6sy2u541"]
+[gd_scene load_steps=9 format=3 uid="uid://co8jp6sy2u541"]
 
 [ext_resource type="Script" path="res://Scenes/MainMenu.gd" id="1_12pkj"]
 [ext_resource type="Theme" uid="uid://b4ecs3e4crxki" path="res://Assets/mm_theme.tres" id="2_j0n5o"]
 [ext_resource type="Theme" uid="uid://b4eob2ew7phm" path="res://Assets/theme_1.tres" id="3_3ehsq"]
 [ext_resource type="FontFile" uid="uid://bjpm2qkneqm4m" path="res://Assets/Pretendo.ttf" id="3_e6y78"]
+[ext_resource type="FontFile" uid="uid://cr84p7hiulgxe" path="res://Assets/game_boy_1989.ttf" id="4_y1m7t"]
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_wiokl"]
+bg_color = Color(0.603922, 0.133333, 0.341176, 1)
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_oufeq"]
+bg_color = Color(0.286275, 0.278431, 0.52549, 1)
 
 [sub_resource type="StyleBoxFlat" id="StyleBoxFlat_ogilt"]
 bg_color = Color(0.548691, 0.518607, 0.503511, 1)
-border_width_left = 64
-border_width_top = 32
-border_width_right = 64
-border_width_bottom = 32
+border_width_left = 150
+border_width_top = 64
+border_width_right = 150
+border_width_bottom = 64
 border_color = Color(0.152941, 0.160784, 0.160784, 1)
 corner_radius_top_left = 30
 corner_radius_top_right = 30
-corner_radius_bottom_right = 30
+corner_radius_bottom_right = 70
 corner_radius_bottom_left = 30
 
 [node name="Control" type="Control"]
@@ -47,18 +54,79 @@ theme_override_constants/margin_top = 120
 theme_override_constants/margin_right = 100
 theme_override_constants/margin_bottom = 120
 
-[node name="Panel" type="Panel" parent="RootMarginContainer"]
-layout_mode = 2
+[node name="LogoControl" type="Node2D" parent="RootMarginContainer"]
+position = Vector2(10, 48)
+scale = Vector2(0.73, 0.73)
+
+[node name="Panel" type="Panel" parent="RootMarginContainer/LogoControl"]
+offset_left = 35.0
+offset_top = 35.0
+offset_right = 535.0
+offset_bottom = 50.0
+theme_override_styles/panel = SubResource("StyleBoxFlat_wiokl")
+
+[node name="Panel2" type="Panel" parent="RootMarginContainer/LogoControl"]
+offset_left = 35.0
+offset_top = 60.0
+offset_right = 535.0
+offset_bottom = 75.0
+theme_override_styles/panel = SubResource("StyleBoxFlat_oufeq")
+
+[node name="GodotLabel" type="Label" parent="RootMarginContainer/LogoControl"]
+offset_left = 572.0
+offset_top = 26.0
+offset_right = 861.0
+offset_bottom = 106.0
+theme_override_colors/font_color = Color(0.286275, 0.278431, 0.52549, 1)
+theme_override_fonts/font = ExtResource("3_e6y78")
+theme_override_font_sizes/font_size = 85
+text = "Godot"
+
+[node name="Title" type="Label" parent="RootMarginContainer/LogoControl"]
+unique_name_in_owner = true
+offset_left = 892.0
+offset_top = 27.0
+offset_right = 1821.0
+offset_bottom = 118.0
+theme_override_colors/font_color = Color(0.286275, 0.278431, 0.52549, 1)
+theme_override_fonts/font = ExtResource("4_y1m7t")
+theme_override_font_sizes/font_size = 85
+text = "Animation Manager
+"
+horizontal_alignment = 1
+
+[node name="Panel3" type="Panel" parent="RootMarginContainer/LogoControl"]
+offset_left = 1850.0
+offset_top = 35.0
+offset_right = 2100.0
+offset_bottom = 50.0
+theme_override_styles/panel = SubResource("StyleBoxFlat_wiokl")
+
+[node name="Panel4" type="Panel" parent="RootMarginContainer/LogoControl"]
+offset_left = 1850.0
+offset_top = 60.0
+offset_right = 2100.0
+offset_bottom = 75.0
+theme_override_styles/panel = SubResource("StyleBoxFlat_oufeq")
+
+[node name="Node2D" type="Node2D" parent="RootMarginContainer"]
+position = Vector2(80, 68)
+
+[node name="Panel" type="Panel" parent="RootMarginContainer/Node2D"]
+offset_left = 100.0
+offset_top = 120.0
+offset_right = 1300.0
+offset_bottom = 820.0
 size_flags_horizontal = 3
 size_flags_vertical = 3
 theme_override_styles/panel = SubResource("StyleBoxFlat_ogilt")
 
-[node name="CenterContainer" type="CenterContainer" parent="RootMarginContainer/Panel"]
+[node name="CenterContainer" type="CenterContainer" parent="RootMarginContainer/Node2D/Panel"]
 layout_mode = 2
 anchor_right = 1.0
 anchor_bottom = 1.0
 
-[node name="MarginContainer" type="MarginContainer" parent="RootMarginContainer/Panel/CenterContainer"]
+[node name="MarginContainer" type="MarginContainer" parent="RootMarginContainer/Node2D/Panel/CenterContainer"]
 layout_mode = 2
 theme = ExtResource("2_j0n5o")
 theme_override_constants/margin_left = 120
@@ -66,83 +134,66 @@ theme_override_constants/margin_top = 75
 theme_override_constants/margin_right = 120
 theme_override_constants/margin_bottom = 80
 
-[node name="VBoxContainer" type="VBoxContainer" parent="RootMarginContainer/Panel/CenterContainer/MarginContainer"]
+[node name="VBoxContainer" type="VBoxContainer" parent="RootMarginContainer/Node2D/Panel/CenterContainer/MarginContainer"]
 layout_mode = 2
 alignment = 1
 
-[node name="HBoxContainer" type="HBoxContainer" parent="RootMarginContainer/Panel/CenterContainer/MarginContainer/VBoxContainer"]
-layout_mode = 2
-
-[node name="GodotLabel" type="Label" parent="RootMarginContainer/Panel/CenterContainer/MarginContainer/VBoxContainer/HBoxContainer"]
-layout_mode = 2
-theme_override_fonts/font = ExtResource("3_e6y78")
-theme_override_font_sizes/font_size = 60
-text = "Godot"
-
-[node name="Title" type="Label" parent="RootMarginContainer/Panel/CenterContainer/MarginContainer/VBoxContainer/HBoxContainer"]
-unique_name_in_owner = true
-layout_mode = 2
-theme_override_font_sizes/font_size = 65
-text = "Animation Manager
-"
-horizontal_alignment = 1
-
-[node name="NewDialog" type="FileDialog" parent="RootMarginContainer/Panel/CenterContainer/MarginContainer/VBoxContainer"]
+[node name="NewDialog" type="FileDialog" parent="RootMarginContainer/Node2D/Panel/CenterContainer/MarginContainer/VBoxContainer"]
 unique_name_in_owner = true
 title = "Create New Project"
 size = Vector2i(444, 178)
 theme = ExtResource("3_3ehsq")
 
-[node name="OpenDialog" type="FileDialog" parent="RootMarginContainer/Panel/CenterContainer/MarginContainer/VBoxContainer"]
+[node name="OpenDialog" type="FileDialog" parent="RootMarginContainer/Node2D/Panel/CenterContainer/MarginContainer/VBoxContainer"]
 unique_name_in_owner = true
 size = Vector2i(444, 178)
 theme = ExtResource("3_3ehsq")
 
-[node name="NoticeDialog" type="AcceptDialog" parent="RootMarginContainer/Panel/CenterContainer/MarginContainer/VBoxContainer"]
+[node name="NoticeDialog" type="AcceptDialog" parent="RootMarginContainer/Node2D/Panel/CenterContainer/MarginContainer/VBoxContainer"]
 unique_name_in_owner = true
 theme = ExtResource("3_3ehsq")
 
-[node name="ActionRow" type="HBoxContainer" parent="RootMarginContainer/Panel/CenterContainer/MarginContainer/VBoxContainer"]
+[node name="ActionRow" type="HBoxContainer" parent="RootMarginContainer/Node2D/Panel/CenterContainer/MarginContainer/VBoxContainer"]
 layout_mode = 2
 theme_override_constants/separation = 20
 alignment = 1
 
-[node name="NewProject" type="Button" parent="RootMarginContainer/Panel/CenterContainer/MarginContainer/VBoxContainer/ActionRow"]
+[node name="NewProject" type="Button" parent="RootMarginContainer/Node2D/Panel/CenterContainer/MarginContainer/VBoxContainer/ActionRow"]
 unique_name_in_owner = true
-custom_minimum_size = Vector2(180, 0)
+custom_minimum_size = Vector2(200, 60)
 layout_mode = 2
 text = "New Project"
 
-[node name="OpenProject" type="Button" parent="RootMarginContainer/Panel/CenterContainer/MarginContainer/VBoxContainer/ActionRow"]
+[node name="OpenProject" type="Button" parent="RootMarginContainer/Node2D/Panel/CenterContainer/MarginContainer/VBoxContainer/ActionRow"]
 unique_name_in_owner = true
-custom_minimum_size = Vector2(180, 0)
+custom_minimum_size = Vector2(200, 2.08165e-12)
 layout_mode = 2
 text = "Open Project"
 
-[node name="SecondaryRow" type="HBoxContainer" parent="RootMarginContainer/Panel/CenterContainer/MarginContainer/VBoxContainer"]
+[node name="SecondaryRow" type="HBoxContainer" parent="RootMarginContainer/Node2D/Panel/CenterContainer/MarginContainer/VBoxContainer"]
 layout_mode = 2
 theme_override_constants/separation = 16
 alignment = 2
 
-[node name="Remove" type="Button" parent="RootMarginContainer/Panel/CenterContainer/MarginContainer/VBoxContainer/SecondaryRow"]
+[node name="Remove" type="Button" parent="RootMarginContainer/Node2D/Panel/CenterContainer/MarginContainer/VBoxContainer/SecondaryRow"]
 unique_name_in_owner = true
 visible = false
 layout_mode = 2
 text = "Remove Selected"
 
-[node name="Quit" type="Button" parent="RootMarginContainer/Panel/CenterContainer/MarginContainer/VBoxContainer/SecondaryRow"]
+[node name="Quit" type="Button" parent="RootMarginContainer/Node2D/Panel/CenterContainer/MarginContainer/VBoxContainer/SecondaryRow"]
 unique_name_in_owner = true
 custom_minimum_size = Vector2(140, 0)
 layout_mode = 2
 text = "Quit"
 
-[node name="Label2" type="Label" parent="RootMarginContainer/Panel/CenterContainer/MarginContainer/VBoxContainer"]
+[node name="Label2" type="Label" parent="RootMarginContainer/Node2D/Panel/CenterContainer/MarginContainer/VBoxContainer"]
 visible = false
 layout_mode = 2
 text = "Recent Projects"
 horizontal_alignment = 1
 
-[node name="RecentList" type="ItemList" parent="RootMarginContainer/Panel/CenterContainer/MarginContainer/VBoxContainer"]
+[node name="RecentList" type="ItemList" parent="RootMarginContainer/Node2D/Panel/CenterContainer/MarginContainer/VBoxContainer"]
 unique_name_in_owner = true
 visible = false
 custom_minimum_size = Vector2(420, 180)

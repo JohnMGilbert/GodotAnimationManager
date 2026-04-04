@@ -123,6 +123,7 @@ var export_repo_path: String = ""   # Godot project / destination repo
 
 @export var sprite_icon_size: int = 96   # size of sprite thumbnails in the list
 @export var sprite_label_font_size: int = 14
+@export_range(4, 64, 1) var delete_sprite_name_max_length: int = 24
 
 @onready var btn_eraser: TextureButton = %EraseBtn
 var eraser_active: bool = false
@@ -150,7 +151,7 @@ var preview_controller: PreviewController = null
 @onready var btn_tag_cancel: Button       = %Btn_TagCancel
 var current_sprite_tag_filter: String = ""      # "" = no filter / All
 var _pending_tag_asset_ids: PackedStringArray = PackedStringArray()
-var _pending_delete_sprite_asset_id: String = ""
+var _pending_delete_sprite_asset_ids: PackedStringArray = PackedStringArray()
 var _base_workspace_theme: Theme
 var _scaled_workspace_theme: Theme
 
@@ -889,9 +890,13 @@ func _on_list_sprites_gui_input(event: InputEvent) -> void:
 	if asset_id == "":
 		return
 
-	_pending_delete_sprite_asset_id = asset_id
-	list_sprites.deselect_all()
-	list_sprites.select(item_index)
+	var selected_asset_ids := _get_selected_sprite_asset_ids()
+	if selected_asset_ids.is_empty() or not list_sprites.is_selected(item_index):
+		list_sprites.deselect_all()
+		list_sprites.select(item_index)
+		selected_asset_ids = PackedStringArray([asset_id])
+
+	_pending_delete_sprite_asset_ids = selected_asset_ids
 	sprite_asset_context_menu.position = Vector2i(mouse_event.global_position)
 	sprite_asset_context_menu.popup()
 
@@ -899,12 +904,15 @@ func _on_list_sprites_gui_input(event: InputEvent) -> void:
 func _on_sprite_asset_context_menu_id_pressed(id: int) -> void:
 	if id != SPRITE_CONTEXT_DELETE_ID:
 		return
-	if _pending_delete_sprite_asset_id == "":
+	if _pending_delete_sprite_asset_ids.is_empty():
 		return
 
 	if lbl_delete_sprite_message:
-		var asset_name := _pending_delete_sprite_asset_id.get_file()
-		lbl_delete_sprite_message.text = "Delete \"%s\"?\n\nThis asset will be removed from the entire project." % asset_name
+		if _pending_delete_sprite_asset_ids.size() > 1:
+			lbl_delete_sprite_message.text = "Delete \"Multiple sprites\"?\n\nThese assets will be removed from the entire project."
+		else:
+			var asset_name := _truncate_display_name(_pending_delete_sprite_asset_ids[0].get_file())
+			lbl_delete_sprite_message.text = "Delete \"%s\"?\n\nThis asset will be removed from the entire project." % asset_name
 
 	if win_delete_sprite_confirm:
 		win_delete_sprite_confirm.popup_centered()
@@ -913,22 +921,29 @@ func _on_sprite_asset_context_menu_id_pressed(id: int) -> void:
 func _on_delete_sprite_cancel_pressed() -> void:
 	if win_delete_sprite_confirm:
 		win_delete_sprite_confirm.hide()
-	_pending_delete_sprite_asset_id = ""
+	_pending_delete_sprite_asset_ids = PackedStringArray()
 
 
 func _on_delete_sprite_confirm_pressed() -> void:
-	if _pending_delete_sprite_asset_id == "":
+	if _pending_delete_sprite_asset_ids.is_empty():
 		_on_delete_sprite_cancel_pressed()
 		return
 
-	var asset_id := _pending_delete_sprite_asset_id
-	var err := ProjectModel.delete_sprite_asset(asset_id)
-	if err != OK:
-		_notify("Failed to delete sprite %s (code %d)." % [asset_id, err])
-		return
+	var failed_asset_id := ""
+	var failed_err := OK
+	for asset_id in _pending_delete_sprite_asset_ids:
+		var err := ProjectModel.delete_sprite_asset(asset_id)
+		if err != OK:
+			failed_asset_id = asset_id
+			failed_err = err
+			break
 
-	if builder_overlay:
-		builder_overlay.remove_sprite_asset_references(asset_id)
+		if builder_overlay:
+			builder_overlay.remove_sprite_asset_references(asset_id)
+
+	if failed_err != OK:
+		_notify("Failed to delete sprite %s (code %d)." % [failed_asset_id, failed_err])
+		return
 
 	_refresh_sprite_tag_filter_options()
 	_refresh_sprite_list()
@@ -938,6 +953,13 @@ func _on_delete_sprite_confirm_pressed() -> void:
 
 	save_editor_state()
 	_on_delete_sprite_cancel_pressed()
+
+
+func _truncate_display_name(name: String) -> String:
+	var max_length := maxi(delete_sprite_name_max_length, 4)
+	if name.length() <= max_length:
+		return name
+	return name.substr(0, max_length - 3) + "..."
 
 func _on_Btn_AddTags_pressed() -> void:
 	var asset_ids := _get_selected_sprite_asset_ids()

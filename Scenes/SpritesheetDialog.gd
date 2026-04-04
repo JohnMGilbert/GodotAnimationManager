@@ -37,7 +37,7 @@ func _resize_to_contents() -> void:
 
 func _on_content_cancelled() -> void:
 	hide()
-	decided.emit(_sheet_path, false, 1, 1, "")
+	_sheet_path = ""
 
 
 func _on_content_submitted(split: bool, cols: int, rows: int, tag_all: String) -> void:
