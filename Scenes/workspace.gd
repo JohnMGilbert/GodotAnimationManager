@@ -25,6 +25,7 @@ const ASSET_TAB_BASE_PLATE := Color(0.278431, 0.0431373, 0.145098, 1)
 const ASSET_TAB_BASE_PLATE_BORDER := Color(0, 0, 0, 0.32)
 const ASSET_TAB_ICON_RAISED := Color(0.152941, 0.160784, 0.160784, 1)
 const ASSET_TAB_ICON_PRESSED := Color(0.152941, 0.160784, 0.160784, 0.70)
+const SPRITE_CONTEXT_DELETE_ID := 1
 
 # Editor-state file (lives alongside the .aam in the project dir)
 const EDITOR_STATE_FILE := ".aam_editor.json"
@@ -68,6 +69,11 @@ var _asset_tab_shadow_style: StyleBoxFlat
 @onready var btn_import_sprites: Button  = %Btn_ImportSprites
 @onready var fd_import_sprites: FileDialog = $FD_Import_Sprites
 @onready var drag_indicator_lable: Label = %DragIndicatorLabel
+@onready var sprite_asset_context_menu: PopupMenu = %SpriteAssetContextMenu
+@onready var win_delete_sprite_confirm: Window = %DeleteSpriteConfirm
+@onready var lbl_delete_sprite_message: Label = %Label_Message
+@onready var btn_delete_sprite_cancel: Button = %Btn_DeleteSpriteCancel
+@onready var btn_delete_sprite_confirm: Button = %Btn_DeleteSpriteConfirm
 
 # --- SOUND UI (mirrors sprite tab) ---
 @onready var list_sound: ItemList        = %List_Sound
@@ -144,6 +150,7 @@ var preview_controller: PreviewController = null
 @onready var btn_tag_cancel: Button       = %Btn_TagCancel
 var current_sprite_tag_filter: String = ""      # "" = no filter / All
 var _pending_tag_asset_ids: PackedStringArray = PackedStringArray()
+var _pending_delete_sprite_asset_id: String = ""
 var _base_workspace_theme: Theme
 var _scaled_workspace_theme: Theme
 
@@ -170,6 +177,7 @@ func _ready() -> void:
 
 	_setup_sprite_list()
 	_setup_sound_list()
+	_setup_sprite_asset_context_menu()
 
 	_refresh_sprite_list()
 	_refresh_sound_list()
@@ -199,6 +207,9 @@ func _ready() -> void:
 
 	if btn_tag_submit:
 		btn_tag_submit.pressed.connect(_on_Btn_TagSubmit_pressed)
+
+	if list_sprites:
+		list_sprites.gui_input.connect(_on_list_sprites_gui_input)
 
 	if edit_tag_name:
 		edit_tag_name.text_changed.connect(_on_TagName_text_changed)
@@ -243,6 +254,18 @@ func _ready() -> void:
 		
 	if opt_existing_tags:
 		opt_existing_tags.item_selected.connect(_on_ExistingTag_item_selected)
+
+	if sprite_asset_context_menu:
+		sprite_asset_context_menu.id_pressed.connect(_on_sprite_asset_context_menu_id_pressed)
+
+	if btn_delete_sprite_cancel:
+		btn_delete_sprite_cancel.pressed.connect(_on_delete_sprite_cancel_pressed)
+
+	if btn_delete_sprite_confirm:
+		btn_delete_sprite_confirm.pressed.connect(_on_delete_sprite_confirm_pressed)
+
+	if win_delete_sprite_confirm:
+		win_delete_sprite_confirm.close_requested.connect(_on_delete_sprite_cancel_pressed)
 	# Load editor state (animations + settings) from the editor-state file
 	_load_editor_state()
 	call_deferred("_apply_workspace_layout")
@@ -800,6 +823,14 @@ func _setup_sprite_list() -> void:
 	list_sprites.add_theme_font_size_override("font_size", sprite_label_font_size)
 
 
+func _setup_sprite_asset_context_menu() -> void:
+	if sprite_asset_context_menu == null:
+		return
+
+	sprite_asset_context_menu.clear()
+	sprite_asset_context_menu.add_item("Delete", SPRITE_CONTEXT_DELETE_ID)
+
+
 func _refresh_sprite_list() -> void:
 	if list_sprites == null:
 		return
@@ -838,6 +869,75 @@ func _refresh_sprite_list() -> void:
 			drag_indicator_lable.show()
 		else:
 			drag_indicator_lable.hide()
+
+
+func _on_list_sprites_gui_input(event: InputEvent) -> void:
+	if list_sprites == null or sprite_asset_context_menu == null:
+		return
+	if not (event is InputEventMouseButton):
+		return
+
+	var mouse_event := event as InputEventMouseButton
+	if mouse_event.button_index != MOUSE_BUTTON_RIGHT or not mouse_event.pressed:
+		return
+
+	var item_index := list_sprites.get_item_at_position(mouse_event.position, true)
+	if item_index < 0:
+		return
+
+	var asset_id := String(list_sprites.get_item_metadata(item_index))
+	if asset_id == "":
+		return
+
+	_pending_delete_sprite_asset_id = asset_id
+	list_sprites.deselect_all()
+	list_sprites.select(item_index)
+	sprite_asset_context_menu.position = Vector2i(mouse_event.global_position)
+	sprite_asset_context_menu.popup()
+
+
+func _on_sprite_asset_context_menu_id_pressed(id: int) -> void:
+	if id != SPRITE_CONTEXT_DELETE_ID:
+		return
+	if _pending_delete_sprite_asset_id == "":
+		return
+
+	if lbl_delete_sprite_message:
+		var asset_name := _pending_delete_sprite_asset_id.get_file()
+		lbl_delete_sprite_message.text = "Delete \"%s\"?\n\nThis asset will be removed from the entire project." % asset_name
+
+	if win_delete_sprite_confirm:
+		win_delete_sprite_confirm.popup_centered()
+
+
+func _on_delete_sprite_cancel_pressed() -> void:
+	if win_delete_sprite_confirm:
+		win_delete_sprite_confirm.hide()
+	_pending_delete_sprite_asset_id = ""
+
+
+func _on_delete_sprite_confirm_pressed() -> void:
+	if _pending_delete_sprite_asset_id == "":
+		_on_delete_sprite_cancel_pressed()
+		return
+
+	var asset_id := _pending_delete_sprite_asset_id
+	var err := ProjectModel.delete_sprite_asset(asset_id)
+	if err != OK:
+		_notify("Failed to delete sprite %s (code %d)." % [asset_id, err])
+		return
+
+	if builder_overlay:
+		builder_overlay.remove_sprite_asset_references(asset_id)
+
+	_refresh_sprite_tag_filter_options()
+	_refresh_sprite_list()
+
+	if builder_view:
+		_on_builder_sequences_changed(builder_view.get_row_sequences())
+
+	save_editor_state()
+	_on_delete_sprite_cancel_pressed()
 
 func _on_Btn_AddTags_pressed() -> void:
 	var asset_ids := _get_selected_sprite_asset_ids()

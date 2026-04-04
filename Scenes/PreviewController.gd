@@ -52,6 +52,11 @@ func apply_sequence_preview(sequences: Array) -> void:
 		if tex != null:
 			frames.add_frame(anim_name, tex)
 
+	if frames.get_frame_count(anim_name) == 0:
+		_preview_sprite.sprite_frames = null
+		_frame_sounds.clear()
+		return
+
 	_preview_sprite.sprite_frames = frames
 	_preview_sprite.animation = anim_name
 	_position_preview_sprite()
@@ -68,6 +73,12 @@ func set_playing(enabled: bool) -> void:
 	is_playing = enabled
 
 	if _preview_sprite == null:
+		return
+
+	var frames := _preview_sprite.sprite_frames
+	if frames == null or not frames.has_animation("preview") or frames.get_frame_count("preview") == 0:
+		if not is_playing and _preview_audio:
+			_preview_audio.stop()
 		return
 
 	if is_playing:

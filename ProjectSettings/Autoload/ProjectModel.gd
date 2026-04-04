@@ -292,6 +292,41 @@ func import_sprites_from_sheet(
 	data["assets"]["sprites"] = sprites
 	return save()
 
+
+func delete_sprite_asset(asset_id: String) -> Error:
+	if project_dir == "":
+		return ERR_INVALID_DATA
+
+	var normalized_asset_id := String(asset_id).strip_edges()
+	if normalized_asset_id == "":
+		return ERR_INVALID_PARAMETER
+
+	var sprites: Array[String] = get_sprites()
+	if sprites.has(normalized_asset_id):
+		sprites.erase(normalized_asset_id)
+	data["assets"]["sprites"] = sprites
+
+	var tags_dict := _get_asset_tags_dict()
+	if tags_dict.has(normalized_asset_id):
+		tags_dict.erase(normalized_asset_id)
+	data["asset_tags"] = tags_dict
+
+	var animations = data.get("animations", {})
+	if animations is Dictionary:
+		for anim_name in animations.keys():
+			var anim_data = animations[anim_name]
+			if anim_data is Dictionary:
+				animations[anim_name] = _remove_sprite_from_animation_data(anim_data as Dictionary, normalized_asset_id)
+		data["animations"] = animations
+
+	var abs_path := project_dir.path_join(normalized_asset_id)
+	if FileAccess.file_exists(abs_path):
+		var remove_err := DirAccess.remove_absolute(abs_path)
+		if remove_err != OK:
+			return remove_err
+
+	return save()
+
 func import_audio(files: PackedStringArray) -> int:
 	if project_dir == "":
 		return ERR_CANT_OPEN
@@ -540,6 +575,40 @@ func _normalize_single_tag(raw: String) -> String:
 
 	# Join with a single space
 	return " ".join(filtered)
+
+
+func _remove_sprite_from_animation_data(anim: Dictionary, asset_id: String) -> Dictionary:
+	var cleaned := anim.duplicate(true)
+
+	if cleaned.has("cells"):
+		var kept_cells: Array = []
+		var raw_cells = cleaned.get("cells", [])
+		if raw_cells is Array:
+			for cell in raw_cells:
+				if not (cell is Dictionary):
+					continue
+				var cell_dict := cell as Dictionary
+				if String(cell_dict.get("rel", "")) != asset_id:
+					kept_cells.append(cell_dict)
+		cleaned["cells"] = kept_cells
+
+	if cleaned.has("sequences"):
+		var kept_sequences: Array = []
+		var raw_sequences = cleaned.get("sequences", [])
+		if raw_sequences is Array:
+			for seq in raw_sequences:
+				if not (seq is Array):
+					continue
+				var kept_seq: Array = []
+				for rel in seq:
+					var rel_str := String(rel)
+					if rel_str != asset_id:
+						kept_seq.append(rel_str)
+				if not kept_seq.is_empty():
+					kept_sequences.append(kept_seq)
+		cleaned["sequences"] = kept_sequences
+
+	return cleaned
 	
 	
 const ERR_NO_PROJECT        := 1001

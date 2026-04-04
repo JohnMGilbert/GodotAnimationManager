@@ -1,0 +1,146 @@
+[gd_scene load_steps=4 format=3 uid="uid://b8bq1ydss6jt5"]
+
+[ext_resource type="Theme" uid="uid://b4eob2ew7phm" path="res://Assets/theme_1.tres" id="1_721xw"]
+[ext_resource type="Script" path="res://Scenes/widgets/SpritesheetPreview.gd" id="2_aj4a3"]
+[ext_resource type="Script" path="res://Scenes/SpritesheetDialogContent.gd" id="2_ipa21"]
+
+[node name="SpriteSheetDialogueMarginContainer" type="MarginContainer"]
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_right = -1484.0
+offset_bottom = -796.0
+theme = ExtResource("1_721xw")
+theme_override_constants/margin_left = 20
+theme_override_constants/margin_top = 20
+theme_override_constants/margin_right = 20
+theme_override_constants/margin_bottom = 20
+script = ExtResource("2_ipa21")
+
+[node name="Panel" type="Panel" parent="."]
+layout_mode = 2
+
+[node name="HBoxContainer_Main" type="HBoxContainer" parent="Panel"]
+layout_mode = 2
+offset_right = 756.0
+offset_bottom = 392.0
+size_flags_horizontal = 3
+size_flags_vertical = 3
+theme_override_constants/separation = 20
+
+[node name="VBoxContainer" type="VBoxContainer" parent="Panel/HBoxContainer_Main"]
+custom_minimum_size = Vector2(320, 0)
+layout_mode = 2
+size_flags_vertical = 3
+
+[node name="Label_Info" type="Label" parent="Panel/HBoxContainer_Main/VBoxContainer"]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(10, 10)
+layout_mode = 2
+text = "temp
+temp
+temo"
+autowrap_mode = 3
+
+[node name="Btn_AutoDetect" type="Button" parent="Panel/HBoxContainer_Main/VBoxContainer"]
+unique_name_in_owner = true
+layout_mode = 2
+text = "Auto Detect Frames"
+
+[node name="Label_DetectStatus" type="Label" parent="Panel/HBoxContainer_Main/VBoxContainer"]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(10, 10)
+layout_mode = 2
+text = "Detected layout will appear here."
+autowrap_mode = 3
+
+[node name="HBoxContainer3" type="HBoxContainer" parent="Panel/HBoxContainer_Main/VBoxContainer"]
+layout_mode = 2
+
+[node name="Label" type="Label" parent="Panel/HBoxContainer_Main/VBoxContainer/HBoxContainer3"]
+layout_mode = 2
+size_flags_horizontal = 4
+text = "Columns:"
+
+[node name="Spin_Cols" type="SpinBox" parent="Panel/HBoxContainer_Main/VBoxContainer/HBoxContainer3"]
+unique_name_in_owner = true
+layout_mode = 2
+size_flags_horizontal = 3
+min_value = 1.0
+value = 1.0
+
+[node name="HBoxContainer" type="HBoxContainer" parent="Panel/HBoxContainer_Main/VBoxContainer"]
+layout_mode = 2
+
+[node name="Label" type="Label" parent="Panel/HBoxContainer_Main/VBoxContainer/HBoxContainer"]
+unique_name_in_owner = true
+layout_mode = 2
+text = "Rows:"
+
+[node name="Spin_Rows" type="SpinBox" parent="Panel/HBoxContainer_Main/VBoxContainer/HBoxContainer"]
+unique_name_in_owner = true
+layout_mode = 2
+size_flags_horizontal = 3
+min_value = 1.0
+value = 1.0
+
+[node name="Check_Split" type="CheckBox" parent="Panel/HBoxContainer_Main/VBoxContainer"]
+unique_name_in_owner = true
+layout_mode = 2
+text = "Split this image into frames"
+
+[node name="HBoxContainer4" type="HBoxContainer" parent="Panel/HBoxContainer_Main/VBoxContainer"]
+layout_mode = 2
+
+[node name="Check_TagAll" type="CheckBox" parent="Panel/HBoxContainer_Main/VBoxContainer/HBoxContainer4"]
+unique_name_in_owner = true
+layout_mode = 2
+text = "Tag all frames?"
+
+[node name="Line_TagAll" type="LineEdit" parent="Panel/HBoxContainer_Main/VBoxContainer/HBoxContainer4"]
+unique_name_in_owner = true
+layout_mode = 2
+size_flags_horizontal = 3
+
+[node name="Control_Spacer" type="Control" parent="Panel/HBoxContainer_Main/VBoxContainer"]
+layout_mode = 2
+size_flags_vertical = 3
+
+[node name="HBoxContainer2" type="HBoxContainer" parent="Panel/HBoxContainer_Main/VBoxContainer"]
+layout_mode = 2
+alignment = 2
+
+[node name="Spacer" type="Control" parent="Panel/HBoxContainer_Main/VBoxContainer/HBoxContainer2"]
+layout_mode = 2
+size_flags_horizontal = 3
+
+[node name="Btn_Cancel" type="Button" parent="Panel/HBoxContainer_Main/VBoxContainer/HBoxContainer2"]
+unique_name_in_owner = true
+layout_mode = 2
+text = "Cancel"
+
+[node name="Btn_OK" type="Button" parent="Panel/HBoxContainer_Main/VBoxContainer/HBoxContainer2"]
+unique_name_in_owner = true
+layout_mode = 2
+text = "Ok"
+
+[node name="VBoxContainer_Preview" type="VBoxContainer" parent="Panel/HBoxContainer_Main"]
+layout_mode = 2
+size_flags_horizontal = 3
+size_flags_vertical = 3
+
+[node name="Label_Preview" type="Label" parent="Panel/HBoxContainer_Main/VBoxContainer_Preview"]
+layout_mode = 2
+text = "Preview Window"
+
+[node name="PreviewFrame" type="PanelContainer" parent="Panel/HBoxContainer_Main/VBoxContainer_Preview"]
+layout_mode = 2
+size_flags_horizontal = 3
+size_flags_vertical = 3
+
+[node name="SpritesheetPreview" type="Control" parent="Panel/HBoxContainer_Main/VBoxContainer_Preview/PreviewFrame"]
+unique_name_in_owner = true
+layout_mode = 2
+size_flags_horizontal = 3
+size_flags_vertical = 3
+script = ExtResource("2_aj4a3")

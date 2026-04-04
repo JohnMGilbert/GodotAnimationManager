@@ -460,6 +460,24 @@ func build_all_animation_data() -> Dictionary:
 	return { "animations": stored }
 
 
+func remove_sprite_asset_references(asset_id: String) -> void:
+	if asset_id == "":
+		return
+
+	for name in animation_order:
+		var data := _ensure_anim_entry(name)
+		data[KEY_DATA] = _remove_sprite_from_animation_data(data.get(KEY_DATA, {}), asset_id)
+		animations[name] = data
+
+	var current_name := _get_current_anim_name()
+	if current_name != "" and builder_grid:
+		var current_data := _ensure_anim_entry(current_name)
+		builder_grid.load_from_animation_data(current_data.get(KEY_DATA, {}))
+
+	current_animation_dirty_changed.emit(_is_current_animation_dirty())
+	_update_save_icon_state()
+
+
 func load_all_animation_data(project_data: Dictionary) -> void:
 	animations.clear()
 	animation_order.clear()
@@ -487,3 +505,37 @@ func load_all_animation_data(project_data: Dictionary) -> void:
 
 	_rebuild_animation_switcher_menu()
 	_update_save_icon_state()
+
+
+func _remove_sprite_from_animation_data(anim: Dictionary, asset_id: String) -> Dictionary:
+	var cleaned := anim.duplicate(true)
+
+	if cleaned.has("cells"):
+		var kept_cells: Array = []
+		var raw_cells = cleaned.get("cells", [])
+		if raw_cells is Array:
+			for cell in raw_cells:
+				if not (cell is Dictionary):
+					continue
+				var cell_dict := cell as Dictionary
+				if String(cell_dict.get("rel", "")) != asset_id:
+					kept_cells.append(cell_dict)
+		cleaned["cells"] = kept_cells
+
+	if cleaned.has("sequences"):
+		var kept_sequences: Array = []
+		var raw_sequences = cleaned.get("sequences", [])
+		if raw_sequences is Array:
+			for seq in raw_sequences:
+				if not (seq is Array):
+					continue
+				var kept_seq: Array = []
+				for rel in seq:
+					var rel_str := String(rel)
+					if rel_str != asset_id:
+						kept_seq.append(rel_str)
+				if not kept_seq.is_empty():
+					kept_sequences.append(kept_seq)
+		cleaned["sequences"] = kept_sequences
+
+	return cleaned

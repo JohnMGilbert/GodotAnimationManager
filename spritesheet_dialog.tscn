@@ -1,0 +1,22 @@
+[gd_scene load_steps=5 format=3 uid="uid://nwx7sk7cfh5l"]
+
+[ext_resource type="Theme" uid="uid://b4eob2ew7phm" path="res://Assets/theme_1.tres" id="1_cfp2r"]
+[ext_resource type="Script" path="res://Scenes/SpritesheetDialog.gd" id="2_yl0dl"]
+[ext_resource type="PackedScene" uid="uid://b8bq1ydss6jt5" path="res://SpritesheetDialogMarginContainer.tscn" id="3_0v51e"]
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_gq2uf"]
+expand_margin_top = 35.0
+
+[node name="SpritesheetDialog" type="Window"]
+transparent_bg = true
+title = "Import Sprites"
+position = Vector2i(0, 36)
+size = Vector2i(860, 360)
+transparent = true
+min_size = Vector2i(860, 360)
+theme = ExtResource("1_cfp2r")
+theme_override_styles/embedded_border = SubResource("StyleBoxFlat_gq2uf")
+script = ExtResource("2_yl0dl")
+
+[node name="Content" parent="." instance=ExtResource("3_0v51e")]
+custom_minimum_size = Vector2(1000, 600)

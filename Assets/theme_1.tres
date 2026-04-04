@@ -1,4 +1,4 @@
-[gd_resource type="Theme" load_steps=15 format=3 uid="uid://b4eob2ew7phm"]
+[gd_resource type="Theme" load_steps=16 format=3 uid="uid://b4eob2ew7phm"]
 
 [sub_resource type="StyleBoxFlat" id="StyleBoxFlat_button_hover"]
 bg_color = Color(0.34902, 0.341176, 0.611765, 1)
@@ -145,6 +145,18 @@ shadow_offset = Vector2(-1, -1)
 [sub_resource type="StyleBoxFlat" id="StyleBoxFlat_q3ecl"]
 bg_color = Color(0.152941, 0.160784, 0.160784, 1)
 
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_window_panel"]
+bg_color = Color(0.768627, 0.745098, 0.733333, 1)
+border_width_left = 2
+border_width_top = 2
+border_width_right = 2
+border_width_bottom = 2
+border_color = Color(0.152941, 0.160784, 0.160784, 1)
+corner_radius_top_left = 8
+corner_radius_top_right = 8
+corner_radius_bottom_right = 8
+corner_radius_bottom_left = 8
+
 [resource]
 Button/colors/font_color = Color(0.768627, 0.745098, 0.733333, 1)
 Button/colors/font_focus_color = Color(0.768627, 0.745098, 0.733333, 1)
@@ -210,4 +222,4 @@ TextEdit/styles/focus = SubResource("StyleBoxFlat_input_focus")
 TextEdit/styles/normal = SubResource("StyleBoxFlat_input")
 VBoxContainer/constants/separation = 10
 Window/colors/title_color = Color(0.152941, 0.160784, 0.160784, 1)
-Window/styles/panel = SubResource("StyleBoxFlat_panel")
+Window/styles/panel = SubResource("StyleBoxFlat_window_panel")

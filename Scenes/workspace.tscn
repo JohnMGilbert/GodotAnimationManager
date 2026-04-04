@@ -24,7 +24,7 @@
 [ext_resource type="PackedScene" uid="uid://ddum0qkw4vig0" path="res://settings_window.tscn" id="17_sswpc"]
 [ext_resource type="Texture2D" uid="uid://c3i60hovrdah6" path="res://Assets/speaker-filled-audio-tool.png" id="18_srjvv"]
 [ext_resource type="FontFile" uid="uid://cr84p7hiulgxe" path="res://Assets/game_boy_1989.ttf" id="22_oqp5p"]
-[ext_resource type="Script" path="res://Scenes/SpritesheetDialog.gd" id="25_4ihhd"]
+[ext_resource type="PackedScene" uid="uid://nwx7sk7cfh5l" path="res://spritesheet_dialog.tscn" id="25_r61ma"]
 
 [sub_resource type="StyleBoxFlat" id="StyleBoxFlat_f0813"]
 bg_color = Color(0.768627, 0.745098, 0.733333, 1)
@@ -906,14 +906,64 @@ visible = false
 
 [node name="FD_Import_Sprites" type="FileDialog" parent="."]
 title = "Open File(s)"
-size = Vector2i(312, 159)
+size = Vector2i(312, 185)
 theme = ExtResource("2_o2a2a")
 ok_button_text = "Open"
 file_mode = 1
 filters = PackedStringArray("*.png", "*.jpeg", "*.jpg")
 
 [node name="FD_Import_Sound" type="FileDialog" parent="."]
+size = Vector2i(436, 185)
 theme = ExtResource("2_o2a2a")
+
+[node name="SpriteAssetContextMenu" type="PopupMenu" parent="."]
+unique_name_in_owner = true
+theme = ExtResource("2_o2a2a")
+
+[node name="DeleteSpriteConfirm" type="Window" parent="."]
+unique_name_in_owner = true
+title = "Delete Sprite"
+size = Vector2i(420, 170)
+visible = false
+min_size = Vector2i(420, 170)
+theme = ExtResource("2_o2a2a")
+
+[node name="MarginContainer" type="MarginContainer" parent="DeleteSpriteConfirm"]
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+theme = ExtResource("2_o2a2a")
+theme_override_constants/margin_left = 16
+theme_override_constants/margin_top = 16
+theme_override_constants/margin_right = 16
+theme_override_constants/margin_bottom = 16
+
+[node name="VBoxContainer" type="VBoxContainer" parent="DeleteSpriteConfirm/MarginContainer"]
+layout_mode = 2
+size_flags_horizontal = 3
+size_flags_vertical = 3
+
+[node name="Label_Message" type="Label" parent="DeleteSpriteConfirm/MarginContainer/VBoxContainer"]
+unique_name_in_owner = true
+layout_mode = 2
+text = "Delete this sprite asset?
+
+This asset will be removed from the entire project."
+autowrap_mode = 3
+
+[node name="HBoxContainer" type="HBoxContainer" parent="DeleteSpriteConfirm/MarginContainer/VBoxContainer"]
+layout_mode = 2
+alignment = 2
+
+[node name="Btn_DeleteSpriteCancel" type="Button" parent="DeleteSpriteConfirm/MarginContainer/VBoxContainer/HBoxContainer"]
+unique_name_in_owner = true
+layout_mode = 2
+text = "Cancel"
+
+[node name="Btn_DeleteSpriteConfirm" type="Button" parent="DeleteSpriteConfirm/MarginContainer/VBoxContainer/HBoxContainer"]
+unique_name_in_owner = true
+layout_mode = 2
+text = "Delete"
 
 [node name="Win_AddTag" type="Window" parent="."]
 unique_name_in_owner = true
@@ -970,92 +1020,6 @@ unique_name_in_owner = true
 layout_mode = 2
 text = "Add Tag"
 
-[node name="SpritesheetDialog" type="Window" parent="."]
+[node name="SpritesheetDialog" parent="." instance=ExtResource("25_r61ma")]
 unique_name_in_owner = true
-title = "Import Sprites"
-size = Vector2i(400, 300)
 visible = false
-min_size = Vector2i(400, 300)
-theme = ExtResource("2_o2a2a")
-script = ExtResource("25_4ihhd")
-
-[node name="MarginContainer" type="MarginContainer" parent="SpritesheetDialog"]
-anchors_preset = 15
-anchor_right = 1.0
-anchor_bottom = 1.0
-theme = ExtResource("2_o2a2a")
-theme_override_constants/margin_left = 20
-theme_override_constants/margin_top = 20
-theme_override_constants/margin_right = 20
-theme_override_constants/margin_bottom = 20
-
-[node name="VBoxContainer" type="VBoxContainer" parent="SpritesheetDialog/MarginContainer"]
-layout_mode = 2
-size_flags_horizontal = 3
-size_flags_vertical = 3
-
-[node name="Label_Info" type="Label" parent="SpritesheetDialog/MarginContainer/VBoxContainer"]
-unique_name_in_owner = true
-layout_mode = 2
-
-[node name="HBoxContainer3" type="HBoxContainer" parent="SpritesheetDialog/MarginContainer/VBoxContainer"]
-layout_mode = 2
-
-[node name="Label" type="Label" parent="SpritesheetDialog/MarginContainer/VBoxContainer/HBoxContainer3"]
-layout_mode = 2
-text = "Columns:"
-
-[node name="Spin_Cols" type="SpinBox" parent="SpritesheetDialog/MarginContainer/VBoxContainer/HBoxContainer3"]
-unique_name_in_owner = true
-layout_mode = 2
-min_value = 1.0
-value = 1.0
-
-[node name="HBoxContainer" type="HBoxContainer" parent="SpritesheetDialog/MarginContainer/VBoxContainer"]
-layout_mode = 2
-
-[node name="Label" type="Label" parent="SpritesheetDialog/MarginContainer/VBoxContainer/HBoxContainer"]
-unique_name_in_owner = true
-layout_mode = 2
-text = "Rows:"
-
-[node name="Spin_Rows" type="SpinBox" parent="SpritesheetDialog/MarginContainer/VBoxContainer/HBoxContainer"]
-unique_name_in_owner = true
-layout_mode = 2
-min_value = 1.0
-value = 1.0
-
-[node name="Check_Split" type="CheckBox" parent="SpritesheetDialog/MarginContainer/VBoxContainer"]
-unique_name_in_owner = true
-layout_mode = 2
-text = "Split this image into frames"
-
-[node name="HBoxContainer2" type="HBoxContainer" parent="SpritesheetDialog/MarginContainer/VBoxContainer"]
-layout_mode = 2
-alignment = 2
-
-[node name="Spacer" type="Control" parent="SpritesheetDialog/MarginContainer/VBoxContainer/HBoxContainer2"]
-layout_mode = 2
-size_flags_horizontal = 3
-
-[node name="Btn_Cancel" type="Button" parent="SpritesheetDialog/MarginContainer/VBoxContainer/HBoxContainer2"]
-unique_name_in_owner = true
-layout_mode = 2
-text = "Cancel"
-
-[node name="Btn_OK" type="Button" parent="SpritesheetDialog/MarginContainer/VBoxContainer/HBoxContainer2"]
-unique_name_in_owner = true
-layout_mode = 2
-text = "Ok"
-
-[node name="HBoxContainer4" type="HBoxContainer" parent="SpritesheetDialog/MarginContainer/VBoxContainer"]
-layout_mode = 2
-
-[node name="Check_TagAll" type="CheckBox" parent="SpritesheetDialog/MarginContainer/VBoxContainer/HBoxContainer4"]
-unique_name_in_owner = true
-layout_mode = 2
-text = "Tag all frames?"
-
-[node name="Line_TagAll" type="LineEdit" parent="SpritesheetDialog/MarginContainer/VBoxContainer/HBoxContainer4"]
-unique_name_in_owner = true
-layout_mode = 2

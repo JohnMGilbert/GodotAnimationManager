@@ -3,6 +3,8 @@ class_name SettingsWindow
 
 signal settings_applied(grid_cell_size: int, preview_fps: float, repo_path: String, ui_scale: float)
 
+@onready var header: Control = get_node_or_null("MarginContainer/PanelContainer/VBoxContainer/Header")
+@onready var btn_close: Button = get_node_or_null("MarginContainer/PanelContainer/VBoxContainer/Header/HeaderHBox/Btn_Close")
 @onready var spin_cell_size: SpinBox = get_node_or_null("MarginContainer/PanelContainer/VBoxContainer/HBoxContainer/Spin_CellSize")
 @onready var spin_preview_fps: SpinBox = get_node_or_null("MarginContainer/PanelContainer/VBoxContainer/HBoxContainer2/Spin_PreviewFPS")
 @onready var spin_ui_scale: SpinBox = get_node_or_null("MarginContainer/PanelContainer/VBoxContainer/HBoxContainerUIScale/Spin_UIScale")
@@ -15,11 +17,18 @@ signal settings_applied(grid_cell_size: int, preview_fps: float, repo_path: Stri
 @onready var btn_apply: Button = get_node_or_null("MarginContainer/PanelContainer/VBoxContainer/HBoxContainer3/Btn_SettingsApply")
 @onready var fd_repo_dir: FileDialog = $FD_RepoDir
 
+var _dragging_window: bool = false
+var _drag_offset: Vector2i = Vector2i.ZERO
+
 func _ready() -> void:
 	_ensure_ui_scale_row()
 	call_deferred("_fit_to_contents")
 
 	fd_repo_dir.theme = theme
+	if header:
+		header.gui_input.connect(_on_header_gui_input)
+	if btn_close:
+		btn_close.pressed.connect(_on_cancel_pressed)
 	if btn_cancel:
 		btn_cancel.pressed.connect(_on_cancel_pressed)
 	if btn_apply:
@@ -107,3 +116,22 @@ func _fit_to_contents() -> void:
 	var min_size := content_vbox.get_combined_minimum_size()
 	size.x = max(size.x, int(ceil(min_size.x)) + 56)
 	size.y = max(size.y, int(ceil(min_size.y)) + 96)
+
+
+func _on_header_gui_input(event: InputEvent) -> void:
+	if not (event is InputEventMouseButton or event is InputEventMouseMotion):
+		return
+
+	if event is InputEventMouseButton:
+		var mb := event as InputEventMouseButton
+		if mb.button_index != MOUSE_BUTTON_LEFT:
+			return
+		if mb.pressed:
+			_dragging_window = true
+			_drag_offset = DisplayServer.mouse_get_position() - position
+		else:
+			_dragging_window = false
+		return
+
+	if event is InputEventMouseMotion and _dragging_window:
+		position = DisplayServer.mouse_get_position() - _drag_offset
